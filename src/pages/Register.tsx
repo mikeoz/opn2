@@ -61,7 +61,7 @@ const Register = () => {
       console.log('Attempting registration with metadata:', userMetadata);
 
       const { data, error } = await supabase.auth.signUp({
-        email: formData.email,
+        email: userType === 'individual' ? formData.email : formData.repEmail,
         password: formData.password,
         options: {
           data: userMetadata
@@ -193,17 +193,6 @@ const Register = () => {
                     type="email"
                     value={formData.repEmail}
                     onChange={(e) => setFormData({...formData, repEmail: e.target.value})}
-                    required
-                    disabled={loading}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="email">Login Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
                     required
                     disabled={loading}
                   />
