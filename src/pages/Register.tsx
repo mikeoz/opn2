@@ -60,8 +60,7 @@ const Register = () => {
         email: formData.email,
         password: formData.password,
         options: {
-          data: userMetadata,
-          emailRedirectTo: `${window.location.origin}/dashboard`
+          data: userMetadata
         }
       });
 
@@ -77,10 +76,10 @@ const Register = () => {
         toast({
           title: "Account created successfully!",
           description: userType === 'individual' 
-            ? `Welcome ${formData.firstName}! Your account has been created.`
-            : `Welcome ${formData.entityName}! Your organization account has been created.`,
+            ? `Welcome ${formData.firstName}! Please check your email to confirm your account.`
+            : `Welcome ${formData.entityName}! Please check your email to confirm your account.`,
         });
-        navigate('/dashboard');
+        // Don't navigate immediately, let user confirm email first
       }
     } catch (error: any) {
       console.error('Registration error:', error);
