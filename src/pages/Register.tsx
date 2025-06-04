@@ -39,6 +39,7 @@ const Register = () => {
     setLoading(true);
 
     try {
+      // Prepare user metadata based on account type
       const userMetadata: any = {
         account_type: userType,
       };
@@ -53,6 +54,8 @@ const Register = () => {
         userMetadata.rep_email = formData.repEmail;
       }
 
+      console.log('Attempting registration with metadata:', userMetadata);
+
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -62,9 +65,15 @@ const Register = () => {
         }
       });
 
-      if (error) throw error;
+      console.log('Registration response:', { data, error });
+
+      if (error) {
+        console.error('Registration error details:', error);
+        throw error;
+      }
 
       if (data.user) {
+        console.log('User created successfully:', data.user.id);
         toast({
           title: "Account created successfully!",
           description: userType === 'individual' 
@@ -77,7 +86,7 @@ const Register = () => {
       console.error('Registration error:', error);
       toast({
         title: "Registration failed",
-        description: error.message || "Failed to create account",
+        description: error.message || "Failed to create account. Please try again.",
         variant: "destructive",
       });
     } finally {
