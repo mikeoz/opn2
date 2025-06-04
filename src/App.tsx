@@ -11,6 +11,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import MyCards from "./pages/MyCards";
 import Directory from "./pages/Directory";
+import AdminCards from "./pages/AdminCards";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +40,11 @@ const App = () => (
             <Route path="/directory" element={
               <ProtectedRoute>
                 <Directory />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/cards" element={
+              <ProtectedRoute>
+                <AdminCards />
               </ProtectedRoute>
             } />
             {/* Future routes for card management */}

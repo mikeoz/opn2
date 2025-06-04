@@ -20,6 +20,36 @@ export const useAuth = () => {
   return context;
 };
 
+// Function to assign admin role to mike.ozburn@mac.com
+const assignAdminRoleIfNeeded = async (user: User) => {
+  if (user.email === 'mike.ozburn@mac.com') {
+    try {
+      // Check if user already has admin role
+      const { data: existingRole } = await supabase
+        .from('user_roles')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .single();
+
+      if (!existingRole) {
+        // Assign admin role
+        const { error } = await supabase
+          .from('user_roles')
+          .insert({ user_id: user.id, role: 'admin' });
+
+        if (error) {
+          console.error('Error assigning admin role:', error);
+        } else {
+          console.log('Admin role assigned to mike.ozburn@mac.com');
+        }
+      }
+    } catch (error) {
+      console.error('Error checking/assigning admin role:', error);
+    }
+  }
+};
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -28,11 +58,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+
+        // Assign admin role if needed when user signs in
+        if (session?.user && event === 'SIGNED_IN') {
+          setTimeout(() => {
+            assignAdminRoleIfNeeded(session.user);
+          }, 0);
+        }
       }
     );
 
@@ -41,6 +78,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+
+      // Assign admin role if needed for existing session
+      if (session?.user) {
+        setTimeout(() => {
+          assignAdminRoleIfNeeded(session.user);
+        }, 0);
+      }
     });
 
     return () => subscription.unsubscribe();
