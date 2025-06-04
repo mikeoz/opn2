@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
+import { cleanupAuthState } from '@/utils/authCleanup';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -29,6 +30,17 @@ const Login = () => {
     setLoading(true);
 
     try {
+      // Clean up existing auth state
+      cleanupAuthState();
+      
+      // Attempt global sign out first to ensure clean state
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Continue even if this fails
+        console.log('Previous session cleanup attempted');
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -41,7 +53,8 @@ const Login = () => {
           title: "Welcome back!",
           description: "You have successfully signed in.",
         });
-        navigate('/dashboard');
+        // Force page reload for clean state
+        window.location.href = '/dashboard';
       }
     } catch (error: any) {
       console.error('Login error:', error);
