@@ -44,14 +44,18 @@ const Register = () => {
         account_type: userType,
       };
 
+      console.log('User type selected:', userType);
+
       if (userType === 'individual') {
         userMetadata.first_name = formData.firstName;
         userMetadata.last_name = formData.lastName;
+        console.log('Individual metadata:', userMetadata);
       } else {
         userMetadata.entity_name = formData.entityName;
         userMetadata.rep_first_name = formData.repFirstName;
         userMetadata.rep_last_name = formData.repLastName;
         userMetadata.rep_email = formData.repEmail;
+        console.log('Organization metadata:', userMetadata);
       }
 
       console.log('Attempting registration with metadata:', userMetadata);
@@ -189,6 +193,17 @@ const Register = () => {
                     type="email"
                     value={formData.repEmail}
                     onChange={(e) => setFormData({...formData, repEmail: e.target.value})}
+                    required
+                    disabled={loading}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="email">Login Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
                     required
                     disabled={loading}
                   />
