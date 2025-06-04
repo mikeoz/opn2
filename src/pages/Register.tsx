@@ -51,6 +51,9 @@ const Register = () => {
         userMetadata.last_name = formData.lastName;
         console.log('Individual metadata:', userMetadata);
       } else {
+        // For organizations, send rep info as first_name/last_name so the trigger picks it up
+        userMetadata.first_name = formData.repFirstName;
+        userMetadata.last_name = formData.repLastName;
         userMetadata.entity_name = formData.entityName;
         userMetadata.rep_first_name = formData.repFirstName;
         userMetadata.rep_last_name = formData.repLastName;
