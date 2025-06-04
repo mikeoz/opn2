@@ -2,12 +2,14 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, CreditCard, Share2, Plus, LogOut } from 'lucide-react';
+import { Users, CreditCard, Share2, Plus, LogOut, Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserRole } from '@/hooks/useUserRole';
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
+  const { isAdmin, loading: roleLoading } = useUserRole();
   
   // Mock data for now - will be replaced with real data later
   const stats = {
@@ -15,6 +17,8 @@ const Dashboard = () => {
     cardsShared: 12,
     participantCards: 8
   };
+
+  console.log('Dashboard - User:', user?.email, 'isAdmin:', isAdmin, 'roleLoading:', roleLoading);
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
@@ -24,6 +28,7 @@ const Dashboard = () => {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Opnli Community Directory</h1>
             <p className="text-gray-600">
               Welcome back, {user?.email}
+              {isAdmin && <span className="ml-2 text-green-600 font-semibold">(Administrator)</span>}
             </p>
           </div>
           <Button onClick={signOut} variant="outline" className="flex items-center gap-2">
@@ -71,15 +76,15 @@ const Dashboard = () => {
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <Button asChild className="h-20 flex-col">
-            <Link to="/cards/create">
-              <Plus className="h-6 w-6 mb-2" />
-              Create Card
+            <Link to="/cards">
+              <CreditCard className="h-6 w-6 mb-2" />
+              My Cards
             </Link>
           </Button>
           
           <Button asChild variant="outline" className="h-20 flex-col">
             <Link to="/cards/add">
-              <CreditCard className="h-6 w-6 mb-2" />
+              <Plus className="h-6 w-6 mb-2" />
               Add Card
             </Link>
           </Button>
@@ -98,6 +103,21 @@ const Dashboard = () => {
             </Link>
           </Button>
         </div>
+
+        {/* Admin Section - Only show if user is admin */}
+        {isAdmin && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Administrator Tools</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <Button asChild className="h-20 flex-col bg-green-600 hover:bg-green-700">
+                <Link to="/admin/cards">
+                  <Settings className="h-6 w-6 mb-2" />
+                  Manage AdminCARDs
+                </Link>
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Recent Activity */}
         <Card>

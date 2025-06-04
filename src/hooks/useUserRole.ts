@@ -16,7 +16,10 @@ export const useUserRole = () => {
         return;
       }
 
+      console.log('Checking admin role for user:', user.email);
+
       try {
+        // First check if admin role exists
         const { data, error } = await supabase
           .from('user_roles')
           .select('role')
@@ -28,7 +31,26 @@ export const useUserRole = () => {
           console.error('Error checking admin role:', error);
         }
 
-        setIsAdmin(!!data);
+        const hasAdminRole = !!data;
+        console.log('Admin role check result:', hasAdminRole);
+
+        // If user is mike.ozburn@mac.com and doesn't have admin role, assign it
+        if (user.email === 'mike.ozburn@mac.com' && !hasAdminRole) {
+          console.log('Assigning admin role to mike.ozburn@mac.com');
+          
+          const { error: insertError } = await supabase
+            .from('user_roles')
+            .insert({ user_id: user.id, role: 'admin' });
+
+          if (insertError) {
+            console.error('Error assigning admin role:', insertError);
+          } else {
+            console.log('Admin role successfully assigned');
+            setIsAdmin(true);
+          }
+        } else {
+          setIsAdmin(hasAdminRole);
+        }
       } catch (error) {
         console.error('Error in checkAdminRole:', error);
         setIsAdmin(false);

@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,6 +23,8 @@ export const useAuth = () => {
 
 // Function to assign admin role to mike.ozburn@mac.com
 const assignAdminRoleIfNeeded = async (user: User) => {
+  console.log('Checking if admin role needed for:', user.email);
+  
   if (user.email === 'mike.ozburn@mac.com') {
     try {
       // Check if user already has admin role
@@ -33,6 +36,8 @@ const assignAdminRoleIfNeeded = async (user: User) => {
         .single();
 
       if (!existingRole) {
+        console.log('Assigning admin role to mike.ozburn@mac.com');
+        
         // Assign admin role
         const { error } = await supabase
           .from('user_roles')
@@ -43,6 +48,8 @@ const assignAdminRoleIfNeeded = async (user: User) => {
         } else {
           console.log('Admin role assigned to mike.ozburn@mac.com');
         }
+      } else {
+        console.log('Admin role already exists for mike.ozburn@mac.com');
       }
     } catch (error) {
       console.error('Error checking/assigning admin role:', error);
@@ -65,7 +72,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setLoading(false);
 
         // Assign admin role if needed when user signs in
-        if (session?.user && event === 'SIGNED_IN') {
+        if (session?.user && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
           setTimeout(() => {
             assignAdminRoleIfNeeded(session.user);
           }, 0);
@@ -75,6 +82,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Then check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session check:', session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
