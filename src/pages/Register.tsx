@@ -6,6 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/components/ui/use-toast';
 
 const Register = () => {
   const [userType, setUserType] = useState('individual');
@@ -19,29 +22,67 @@ const Register = () => {
     repLastName: '',
     repEmail: ''
   });
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Redirect if already logged in
+  React.useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement actual registration with GUID generation
-    console.log('Registration:', { userType, ...formData });
-    navigate('/dashboard');
-  };
+    setLoading(true);
 
-  const generateGUID = () => {
-    // Generate 3 random letters + 7 random digits
-    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const digits = '0123456789';
-    let guid = '';
-    
-    for (let i = 0; i < 3; i++) {
-      guid += letters.charAt(Math.floor(Math.random() * letters.length));
+    try {
+      const userMetadata: any = {
+        account_type: userType,
+      };
+
+      if (userType === 'individual') {
+        userMetadata.first_name = formData.firstName;
+        userMetadata.last_name = formData.lastName;
+      } else {
+        userMetadata.entity_name = formData.entityName;
+        userMetadata.rep_first_name = formData.repFirstName;
+        userMetadata.rep_last_name = formData.repLastName;
+        userMetadata.rep_email = formData.repEmail;
+      }
+
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: userMetadata,
+          emailRedirectTo: `${window.location.origin}/dashboard`
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        toast({
+          title: "Account created successfully!",
+          description: userType === 'individual' 
+            ? `Welcome ${formData.firstName}! Your account has been created.`
+            : `Welcome ${formData.entityName}! Your organization account has been created.`,
+        });
+        navigate('/dashboard');
+      }
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      toast({
+        title: "Registration failed",
+        description: error.message || "Failed to create account",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-    for (let i = 0; i < 7; i++) {
-      guid += digits.charAt(Math.floor(Math.random() * digits.length));
-    }
-    
-    return guid;
   };
 
   return (
@@ -61,7 +102,7 @@ const Register = () => {
                   <Label htmlFor="individual">Individual</Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="non-individual" id="non-individual" />
+                  <RadioGroupItem value="non_individual" id="non-individual" />
                   <Label htmlFor="non-individual">Non-Individual (Organization)</Label>
                 </div>
               </RadioGroup>
@@ -76,6 +117,7 @@ const Register = () => {
                     value={formData.firstName}
                     onChange={(e) => setFormData({...formData, firstName: e.target.value})}
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div>
@@ -85,6 +127,7 @@ const Register = () => {
                     value={formData.lastName}
                     onChange={(e) => setFormData({...formData, lastName: e.target.value})}
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div>
@@ -95,6 +138,7 @@ const Register = () => {
                     value={formData.email}
                     onChange={(e) => setFormData({...formData, email: e.target.value})}
                     required
+                    disabled={loading}
                   />
                 </div>
               </>
@@ -107,6 +151,7 @@ const Register = () => {
                     value={formData.entityName}
                     onChange={(e) => setFormData({...formData, entityName: e.target.value})}
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div>
@@ -116,6 +161,7 @@ const Register = () => {
                     value={formData.repFirstName}
                     onChange={(e) => setFormData({...formData, repFirstName: e.target.value})}
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div>
@@ -125,6 +171,7 @@ const Register = () => {
                     value={formData.repLastName}
                     onChange={(e) => setFormData({...formData, repLastName: e.target.value})}
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div>
@@ -135,6 +182,7 @@ const Register = () => {
                     value={formData.repEmail}
                     onChange={(e) => setFormData({...formData, repEmail: e.target.value})}
                     required
+                    disabled={loading}
                   />
                 </div>
               </>
@@ -148,11 +196,13 @@ const Register = () => {
                 value={formData.password}
                 onChange={(e) => setFormData({...formData, password: e.target.value})}
                 required
+                disabled={loading}
+                minLength={6}
               />
             </div>
 
-            <Button type="submit" className="w-full">
-              Create Account
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? 'Creating Account...' : 'Create Account'}
             </Button>
           </form>
           

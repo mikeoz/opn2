@@ -2,10 +2,13 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, CreditCard, Share2, Plus } from 'lucide-react';
+import { Users, CreditCard, Share2, Plus, LogOut } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Dashboard = () => {
+  const { user, signOut } = useAuth();
+  
   // Mock data for now - will be replaced with real data later
   const stats = {
     myCARDs: 5,
@@ -16,9 +19,17 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-6xl mx-auto">
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Opnli Community Directory</h1>
-          <p className="text-gray-600">Your community relationship dashboard</p>
+        <header className="mb-8 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Opnli Community Directory</h1>
+            <p className="text-gray-600">
+              Welcome back, {user?.email}
+            </p>
+          </div>
+          <Button onClick={signOut} variant="outline" className="flex items-center gap-2">
+            <LogOut className="h-4 w-4" />
+            Sign Out
+          </Button>
         </header>
 
         {/* Stats Overview */}

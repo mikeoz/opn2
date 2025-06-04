@@ -9,16 +9,63 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          account_type: Database["public"]["Enums"]["account_type"]
+          created_at: string
+          email: string | null
+          entity_name: string | null
+          first_name: string | null
+          guid: string
+          id: string
+          last_name: string | null
+          rep_email: string | null
+          rep_first_name: string | null
+          rep_last_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_type: Database["public"]["Enums"]["account_type"]
+          created_at?: string
+          email?: string | null
+          entity_name?: string | null
+          first_name?: string | null
+          guid: string
+          id: string
+          last_name?: string | null
+          rep_email?: string | null
+          rep_first_name?: string | null
+          rep_last_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_type?: Database["public"]["Enums"]["account_type"]
+          created_at?: string
+          email?: string | null
+          entity_name?: string | null
+          first_name?: string | null
+          guid?: string
+          id?: string
+          last_name?: string | null
+          rep_email?: string | null
+          rep_first_name?: string | null
+          rep_last_name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_guid: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
-      [_ in never]: never
+      account_type: "individual" | "non_individual"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +180,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      account_type: ["individual", "non_individual"],
+    },
   },
 } as const
