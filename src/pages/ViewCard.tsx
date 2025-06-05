@@ -140,14 +140,17 @@ const ViewCard = () => {
     
     console.log('ViewCard - Getting card title for card:', card.id);
     console.log('ViewCard - Field values:', card.field_values);
+    console.log('ViewCard - Template name:', card.template.name);
     
-    // First priority: Card Label field
-    if (card.field_values) {
+    // First priority: Look for any field with "card label" in the name (case insensitive)
+    if (card.field_values && card.field_values.length > 0) {
       const cardLabelValue = card.field_values.find(fv => 
         fv.field_name && fv.field_name.toLowerCase().includes('card label')
       );
-      console.log('ViewCard - Card Label value found:', cardLabelValue);
+      console.log('ViewCard - Card Label field found:', cardLabelValue);
+      
       if (cardLabelValue && cardLabelValue.value && cardLabelValue.value.trim()) {
+        console.log('ViewCard - Using Card Label value:', cardLabelValue.value.trim());
         return cardLabelValue.value.trim();
       }
       
@@ -156,8 +159,9 @@ const ViewCard = () => {
         const serviceNameValue = card.field_values.find(fv => 
           fv.field_name && fv.field_name.toLowerCase().includes('service name')
         );
-        console.log('ViewCard - Service Name value found:', serviceNameValue);
+        console.log('ViewCard - Service Name field found:', serviceNameValue);
         if (serviceNameValue && serviceNameValue.value && serviceNameValue.value.trim()) {
+          console.log('ViewCard - Using Service Name value:', serviceNameValue.value.trim());
           return serviceNameValue.value.trim();
         }
       }
@@ -239,6 +243,7 @@ const ViewCard = () => {
             <div className="flex justify-between items-start">
               <div>
                 <CardTitle className="text-xl">{getCardTitle()}</CardTitle>
+                <p className="text-sm text-gray-500 mt-1">Card Type: {card.template.name}</p>
                 {card.template.description && (
                   <p className="text-gray-600 mt-1">{card.template.description}</p>
                 )}

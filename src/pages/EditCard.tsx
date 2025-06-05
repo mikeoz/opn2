@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -117,16 +118,19 @@ const EditCard = () => {
     
     console.log('EditCard - Getting card title for card:', card.id);
     console.log('EditCard - Field values:', card.field_values);
+    console.log('EditCard - Template name:', card.template.name);
     
-    // First priority: Card Label field
-    if (card.field_values) {
+    // First priority: Look for Card Label field value
+    if (card.field_values && card.field_values.length > 0) {
       const cardLabelValue = card.field_values.find(fv => {
         // Find the field in template that matches this field value
         const templateField = card.template.fields.find(f => f.id === fv.template_field_id);
         return templateField && templateField.field_name.toLowerCase().includes('card label');
       });
       console.log('EditCard - Card Label value found:', cardLabelValue);
+      
       if (cardLabelValue && cardLabelValue.value && cardLabelValue.value.trim()) {
+        console.log('EditCard - Using Card Label value:', cardLabelValue.value.trim());
         return cardLabelValue.value.trim();
       }
       
@@ -138,6 +142,7 @@ const EditCard = () => {
         });
         console.log('EditCard - Service Name value found:', serviceNameValue);
         if (serviceNameValue && serviceNameValue.value && serviceNameValue.value.trim()) {
+          console.log('EditCard - Using Service Name value:', serviceNameValue.value.trim());
           return serviceNameValue.value.trim();
         }
       }
@@ -183,9 +188,13 @@ const EditCard = () => {
         }
       }
 
+      // Show success message with appropriate title
+      const cardTitle = getCardTitle();
+      const displayTitle = cardTitle !== card.template.name ? cardTitle : card.template.name;
+
       toast({
         title: "Card updated successfully!",
-        description: `Your ${card.template.name} card has been updated.`,
+        description: `Your "${displayTitle}" card has been updated.`,
       });
 
       navigate(`/cards/view/${card.id}`);
@@ -223,6 +232,7 @@ const EditCard = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Edit Card</h1>
           <p className="text-gray-600">Editing: {getCardTitle()}</p>
+          <p className="text-sm text-gray-500">Card Type: {card.template.name}</p>
         </div>
 
         <CardForm

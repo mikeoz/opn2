@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -74,7 +75,7 @@ const MyCards = () => {
         field_values: [] // Initialize as empty array
       })) || [];
 
-      // Fetch field values for all cards to get Card Label and Service Name
+      // Fetch field values for all cards to get Card Label and other field values
       const cardsWithFieldValues = await Promise.all(
         cardsWithTemplates.map(async (card) => {
           const { data: fieldValues, error: valuesError } = await supabase
@@ -155,38 +156,6 @@ const MyCards = () => {
     }
   }, [user]);
 
-  const addCardFromTemplate = async (templateId: string) => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('user_cards')
-        .insert({
-          user_id: user.id,
-          template_id: templateId,
-          card_code: await generateCardCode()
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      toast({
-        title: "Card added successfully!",
-        description: "The card has been added to your collection.",
-      });
-
-      fetchUserCards(); // Refresh the list
-    } catch (error) {
-      console.error('Error adding card:', error);
-      toast({
-        title: "Error adding card",
-        description: "Failed to add the card. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
   const generateCardCode = async (): Promise<string> => {
     const { data, error } = await supabase.rpc('generate_card_code');
     if (error) throw error;
@@ -194,16 +163,19 @@ const MyCards = () => {
   };
 
   const getCardTitle = (card: UserCard) => {
-    console.log('Getting card title for card:', card.id);
-    console.log('Field values:', card.field_values);
+    console.log('MyCards - Getting card title for card:', card.id);
+    console.log('MyCards - Field values:', card.field_values);
+    console.log('MyCards - Template name:', card.template.name);
     
-    // First priority: Card Label field
-    if (card.field_values) {
+    // First priority: Look for any field with "card label" in the name (case insensitive)
+    if (card.field_values && card.field_values.length > 0) {
       const cardLabelValue = card.field_values.find(fv => 
         fv.field_name && fv.field_name.toLowerCase().includes('card label')
       );
-      console.log('Card Label value found:', cardLabelValue);
+      console.log('MyCards - Card Label field found:', cardLabelValue);
+      
       if (cardLabelValue && cardLabelValue.value && cardLabelValue.value.trim()) {
+        console.log('MyCards - Using Card Label value:', cardLabelValue.value.trim());
         return cardLabelValue.value.trim();
       }
       
@@ -212,15 +184,16 @@ const MyCards = () => {
         const serviceNameValue = card.field_values.find(fv => 
           fv.field_name && fv.field_name.toLowerCase().includes('service name')
         );
-        console.log('Service Name value found:', serviceNameValue);
+        console.log('MyCards - Service Name field found:', serviceNameValue);
         if (serviceNameValue && serviceNameValue.value && serviceNameValue.value.trim()) {
+          console.log('MyCards - Using Service Name value:', serviceNameValue.value.trim());
           return serviceNameValue.value.trim();
         }
       }
     }
     
     // Fallback: Use template name
-    console.log('Using fallback template name:', card.template.name);
+    console.log('MyCards - Using fallback template name:', card.template.name);
     return card.template.name;
   };
 
@@ -241,12 +214,6 @@ const MyCards = () => {
             <p className="text-gray-600">Manage your information cards</p>
           </div>
           <div className="flex gap-2">
-            <Button asChild variant="outline">
-              <Link to="/cards/create">
-                <Plus className="h-4 w-4 mr-2" />
-                Create Card
-              </Link>
-            </Button>
             {isAdmin && (
               <Button asChild>
                 <Link to="/admin/cards">
@@ -322,6 +289,7 @@ const MyCards = () => {
                         </Badge>
                       </div>
                     </div>
+                    <p className="text-xs text-gray-500 mt-1">Card Type: {card.template.name}</p>
                   </CardHeader>
                   <CardContent>
                     <div className="flex gap-2">
