@@ -119,6 +119,16 @@ const CreateCard = () => {
         if (valuesError) throw valuesError;
       }
 
+      // Show success message with the card label if provided
+      const cardLabelField = template.fields.find(f => f.field_name.toLowerCase().includes('card label'));
+      const cardLabel = cardLabelField ? formData[`field_${cardLabelField.id}`] : '';
+      const displayName = cardLabel && cardLabel.trim() ? cardLabel.trim() : template.name;
+
+      toast({
+        title: "Card created successfully!",
+        description: `Your "${displayName}" card has been created.`,
+      });
+
       navigate('/cards');
     } catch (error) {
       console.error('Error creating card:', error);
@@ -147,7 +157,7 @@ const CreateCard = () => {
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Create New Card</h1>
-          <p className="text-gray-600">Fill out the information for your new card</p>
+          <p className="text-gray-600">Creating: {template.name}</p>
         </div>
 
         <CardForm

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -113,6 +112,42 @@ const EditCard = () => {
     }
   };
 
+  const getCardTitle = () => {
+    if (!card) return '';
+    
+    console.log('EditCard - Getting card title for card:', card.id);
+    console.log('EditCard - Field values:', card.field_values);
+    
+    // First priority: Card Label field
+    if (card.field_values) {
+      const cardLabelValue = card.field_values.find(fv => {
+        // Find the field in template that matches this field value
+        const templateField = card.template.fields.find(f => f.id === fv.template_field_id);
+        return templateField && templateField.field_name.toLowerCase().includes('card label');
+      });
+      console.log('EditCard - Card Label value found:', cardLabelValue);
+      if (cardLabelValue && cardLabelValue.value && cardLabelValue.value.trim()) {
+        return cardLabelValue.value.trim();
+      }
+      
+      // Second priority: For Social Media Profile, use Service Name
+      if (card.template.name === 'Social Media Profile') {
+        const serviceNameValue = card.field_values.find(fv => {
+          const templateField = card.template.fields.find(f => f.id === fv.template_field_id);
+          return templateField && templateField.field_name.toLowerCase().includes('service name');
+        });
+        console.log('EditCard - Service Name value found:', serviceNameValue);
+        if (serviceNameValue && serviceNameValue.value && serviceNameValue.value.trim()) {
+          return serviceNameValue.value.trim();
+        }
+      }
+    }
+    
+    // Fallback: Use template name
+    console.log('EditCard - Using fallback template name:', card.template.name);
+    return card.template.name;
+  };
+
   const handleSubmit = async (formData: Record<string, any>) => {
     if (!card) return;
 
@@ -185,6 +220,11 @@ const EditCard = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-4xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Edit Card</h1>
+          <p className="text-gray-600">Editing: {getCardTitle()}</p>
+        </div>
+
         <CardForm
           template={card.template}
           onSubmit={handleSubmit}

@@ -138,27 +138,33 @@ const ViewCard = () => {
   const getCardTitle = () => {
     if (!card) return '';
     
-    // First priority: Card Label field
-    const cardLabelField = card.template.fields.find(f => f.field_name === 'Card Label');
-    if (cardLabelField) {
-      const cardLabel = getFieldValue(cardLabelField.id);
-      if (cardLabel) {
-        return cardLabel;
-      }
-    }
+    console.log('ViewCard - Getting card title for card:', card.id);
+    console.log('ViewCard - Field values:', card.field_values);
     
-    // Second priority: For Social Media Profile, use Service Name
-    if (card.template.name === 'Social Media Profile') {
-      const serviceNameField = card.template.fields.find(f => f.field_name === 'Service Name');
-      if (serviceNameField) {
-        const serviceName = getFieldValue(serviceNameField.id);
-        if (serviceName) {
-          return serviceName;
+    // First priority: Card Label field
+    if (card.field_values) {
+      const cardLabelValue = card.field_values.find(fv => 
+        fv.field_name && fv.field_name.toLowerCase().includes('card label')
+      );
+      console.log('ViewCard - Card Label value found:', cardLabelValue);
+      if (cardLabelValue && cardLabelValue.value && cardLabelValue.value.trim()) {
+        return cardLabelValue.value.trim();
+      }
+      
+      // Second priority: For Social Media Profile, use Service Name
+      if (card.template.name === 'Social Media Profile') {
+        const serviceNameValue = card.field_values.find(fv => 
+          fv.field_name && fv.field_name.toLowerCase().includes('service name')
+        );
+        console.log('ViewCard - Service Name value found:', serviceNameValue);
+        if (serviceNameValue && serviceNameValue.value && serviceNameValue.value.trim()) {
+          return serviceNameValue.value.trim();
         }
       }
     }
     
     // Fallback: Use template name
+    console.log('ViewCard - Using fallback template name:', card.template.name);
     return card.template.name;
   };
 
