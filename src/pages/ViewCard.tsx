@@ -1,13 +1,12 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, FileText, Image, Upload } from 'lucide-react';
+import { ArrowLeft, FileText, Image, Upload, Edit } from 'lucide-react';
 
 interface TemplateField {
   id: string;
@@ -150,6 +149,10 @@ const ViewCard = () => {
     return card.template.name;
   };
 
+  const handleEdit = () => {
+    navigate(`/cards/edit/${cardId}`);
+  };
+
   const renderFieldValue = (field: TemplateField) => {
     const value = getFieldValue(field.id);
     
@@ -201,10 +204,14 @@ const ViewCard = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-4xl mx-auto">
-        <div className="mb-8 flex items-center gap-4">
+        <div className="mb-8 flex items-center justify-between">
           <Button variant="outline" onClick={() => navigate('/cards')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Cards
+          </Button>
+          <Button onClick={handleEdit}>
+            <Edit className="h-4 w-4 mr-2" />
+            Edit Card
           </Button>
         </div>
 

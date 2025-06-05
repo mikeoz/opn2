@@ -14,6 +14,7 @@ import Directory from "./pages/Directory";
 import AdminCards from "./pages/AdminCards";
 import CreateCard from "./pages/CreateCard";
 import ViewCard from "./pages/ViewCard";
+import EditCard from "./pages/EditCard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -57,6 +58,11 @@ const App = () => (
             <Route path="/cards/view/:cardId" element={
               <ProtectedRoute>
                 <ViewCard />
+              </ProtectedRoute>
+            } />
+            <Route path="/cards/edit/:cardId" element={
+              <ProtectedRoute>
+                <EditCard />
               </ProtectedRoute>
             } />
             {/* Future routes for card management */}
