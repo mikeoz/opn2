@@ -12,6 +12,7 @@ import Register from "./pages/Register";
 import MyCards from "./pages/MyCards";
 import Directory from "./pages/Directory";
 import AdminCards from "./pages/AdminCards";
+import CreateCard from "./pages/CreateCard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
