@@ -71,7 +71,8 @@ const MyCards = () => {
       const cardsWithTemplates = data?.map(card => ({
         id: card.id,
         card_code: card.card_code,
-        template: card.card_templates as CardTemplate
+        template: card.card_templates as CardTemplate,
+        field_values: [] // Initialize as empty array
       })) || [];
 
       // Fetch field values for all cards to get Card Label and Service Name
