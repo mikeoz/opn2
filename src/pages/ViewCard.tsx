@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -137,15 +138,27 @@ const ViewCard = () => {
   const getCardTitle = () => {
     if (!card) return '';
     
-    // For Social Media Profile, use the Service Name as the title
+    // First priority: Card Label field
+    const cardLabelField = card.template.fields.find(f => f.field_name === 'Card Label');
+    if (cardLabelField) {
+      const cardLabel = getFieldValue(cardLabelField.id);
+      if (cardLabel) {
+        return cardLabel;
+      }
+    }
+    
+    // Second priority: For Social Media Profile, use Service Name
     if (card.template.name === 'Social Media Profile') {
       const serviceNameField = card.template.fields.find(f => f.field_name === 'Service Name');
       if (serviceNameField) {
         const serviceName = getFieldValue(serviceNameField.id);
-        return serviceName || card.template.name;
+        if (serviceName) {
+          return serviceName;
+        }
       }
     }
     
+    // Fallback: Use template name
     return card.template.name;
   };
 

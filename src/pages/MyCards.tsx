@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -73,28 +74,26 @@ const MyCards = () => {
         template: card.card_templates as CardTemplate
       })) || [];
 
-      // Fetch field values for Social Media Profile cards to get Service Name
+      // Fetch field values for all cards to get Card Label and Service Name
       const cardsWithFieldValues = await Promise.all(
         cardsWithTemplates.map(async (card) => {
-          if (card.template.name === 'Social Media Profile') {
-            const { data: fieldValues, error: valuesError } = await supabase
-              .from('card_field_values')
-              .select(`
-                template_field_id,
-                value,
-                template_fields!inner (
-                  field_name
-                )
-              `)
-              .eq('user_card_id', card.id);
+          const { data: fieldValues, error: valuesError } = await supabase
+            .from('card_field_values')
+            .select(`
+              template_field_id,
+              value,
+              template_fields!inner (
+                field_name
+              )
+            `)
+            .eq('user_card_id', card.id);
 
-            if (!valuesError && fieldValues) {
-              card.field_values = fieldValues.map(fv => ({
-                template_field_id: fv.template_field_id,
-                value: fv.value || '',
-                field_name: fv.template_fields.field_name
-              }));
-            }
+          if (!valuesError && fieldValues) {
+            card.field_values = fieldValues.map(fv => ({
+              template_field_id: fv.template_field_id,
+              value: fv.value || '',
+              field_name: fv.template_fields.field_name
+            }));
           }
           return card;
         })
@@ -195,14 +194,23 @@ const MyCards = () => {
   };
 
   const getCardTitle = (card: UserCard) => {
-    // For Social Media Profile, use the Service Name as the title
-    if (card.template.name === 'Social Media Profile' && card.field_values) {
-      const serviceNameValue = card.field_values.find(fv => fv.field_name === 'Service Name');
-      if (serviceNameValue && serviceNameValue.value) {
-        return serviceNameValue.value;
+    // First priority: Card Label field
+    if (card.field_values) {
+      const cardLabelValue = card.field_values.find(fv => fv.field_name === 'Card Label');
+      if (cardLabelValue && cardLabelValue.value) {
+        return cardLabelValue.value;
+      }
+      
+      // Second priority: For Social Media Profile, use Service Name
+      if (card.template.name === 'Social Media Profile') {
+        const serviceNameValue = card.field_values.find(fv => fv.field_name === 'Service Name');
+        if (serviceNameValue && serviceNameValue.value) {
+          return serviceNameValue.value;
+        }
       }
     }
     
+    // Fallback: Use template name
     return card.template.name;
   };
 
