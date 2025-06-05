@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -195,23 +194,33 @@ const MyCards = () => {
   };
 
   const getCardTitle = (card: UserCard) => {
+    console.log('Getting card title for card:', card.id);
+    console.log('Field values:', card.field_values);
+    
     // First priority: Card Label field
     if (card.field_values) {
-      const cardLabelValue = card.field_values.find(fv => fv.field_name === 'Card Label');
-      if (cardLabelValue && cardLabelValue.value) {
-        return cardLabelValue.value;
+      const cardLabelValue = card.field_values.find(fv => 
+        fv.field_name && fv.field_name.toLowerCase().includes('card label')
+      );
+      console.log('Card Label value found:', cardLabelValue);
+      if (cardLabelValue && cardLabelValue.value && cardLabelValue.value.trim()) {
+        return cardLabelValue.value.trim();
       }
       
       // Second priority: For Social Media Profile, use Service Name
       if (card.template.name === 'Social Media Profile') {
-        const serviceNameValue = card.field_values.find(fv => fv.field_name === 'Service Name');
-        if (serviceNameValue && serviceNameValue.value) {
-          return serviceNameValue.value;
+        const serviceNameValue = card.field_values.find(fv => 
+          fv.field_name && fv.field_name.toLowerCase().includes('service name')
+        );
+        console.log('Service Name value found:', serviceNameValue);
+        if (serviceNameValue && serviceNameValue.value && serviceNameValue.value.trim()) {
+          return serviceNameValue.value.trim();
         }
       }
     }
     
     // Fallback: Use template name
+    console.log('Using fallback template name:', card.template.name);
     return card.template.name;
   };
 

@@ -65,22 +65,6 @@ const App = () => (
                 <EditCard />
               </ProtectedRoute>
             } />
-            {/* Future routes for card management */}
-            <Route path="/cards/create" element={
-              <ProtectedRoute>
-                <div className="p-8 text-center"><h2 className="text-2xl font-bold">Create Card Feature</h2><p className="text-gray-600 mt-2">Coming Soon - Future Development</p></div>
-              </ProtectedRoute>
-            } />
-            <Route path="/cards/add" element={
-              <ProtectedRoute>
-                <div className="p-8 text-center"><h2 className="text-2xl font-bold">Add Card Feature</h2><p className="text-gray-600 mt-2">Coming Soon - Future Development</p></div>
-              </ProtectedRoute>
-            } />
-            <Route path="/cards/share" element={
-              <ProtectedRoute>
-                <div className="p-8 text-center"><h2 className="text-2xl font-bold">Share Card Feature</h2><p className="text-gray-600 mt-2">Coming Soon - Future Development</p></div>
-              </ProtectedRoute>
-            } />
             <Route path="/cards/share/:id" element={
               <ProtectedRoute>
                 <div className="p-8 text-center"><h2 className="text-2xl font-bold">Share Specific Card</h2><p className="text-gray-600 mt-2">Coming Soon - Future Development</p></div>

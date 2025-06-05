@@ -83,14 +83,14 @@ const Dashboard = () => {
           </Button>
           
           <Button asChild variant="outline" className="h-20 flex-col">
-            <Link to="/cards/add">
+            <Link to="/cards">
               <Plus className="h-6 w-6 mb-2" />
-              Add Card
+              Create Card
             </Link>
           </Button>
           
           <Button asChild variant="outline" className="h-20 flex-col">
-            <Link to="/cards/share">
+            <Link to="/cards">
               <Share2 className="h-6 w-6 mb-2" />
               Share Card
             </Link>
