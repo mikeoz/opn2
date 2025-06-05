@@ -13,6 +13,7 @@ import MyCards from "./pages/MyCards";
 import Directory from "./pages/Directory";
 import AdminCards from "./pages/AdminCards";
 import CreateCard from "./pages/CreateCard";
+import ViewCard from "./pages/ViewCard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -51,6 +52,11 @@ const App = () => (
             <Route path="/cards/create/:templateId" element={
               <ProtectedRoute>
                 <CreateCard />
+              </ProtectedRoute>
+            } />
+            <Route path="/cards/view/:cardId" element={
+              <ProtectedRoute>
+                <ViewCard />
               </ProtectedRoute>
             } />
             {/* Future routes for card management */}

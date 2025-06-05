@@ -265,13 +265,14 @@ const MyCards = () => {
                         </Badge>
                       </div>
                     </div>
-                    <p className="text-sm text-gray-500">Code: {card.card_code}</p>
                   </CardHeader>
                   <CardContent>
                     <div className="flex gap-2">
-                      <Button size="sm" variant="outline" className="flex-1">
-                        <Eye className="h-4 w-4 mr-1" />
-                        View
+                      <Button size="sm" variant="outline" className="flex-1" asChild>
+                        <Link to={`/cards/view/${card.id}`}>
+                          <Eye className="h-4 w-4 mr-1" />
+                          View
+                        </Link>
                       </Button>
                       {card.template.transaction_code === 'S' && (
                         <Button size="sm" className="flex-1" asChild>
