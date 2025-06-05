@@ -48,6 +48,11 @@ const App = () => (
                 <AdminCards />
               </ProtectedRoute>
             } />
+            <Route path="/cards/create/:templateId" element={
+              <ProtectedRoute>
+                <CreateCard />
+              </ProtectedRoute>
+            } />
             {/* Future routes for card management */}
             <Route path="/cards/create" element={
               <ProtectedRoute>
