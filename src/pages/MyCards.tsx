@@ -73,7 +73,34 @@ const MyCards = () => {
         template: card.card_templates as CardTemplate
       })) || [];
 
-      setUserCards(cardsWithTemplates);
+      // Fetch field values for Social Media Profile cards to get Service Name
+      const cardsWithFieldValues = await Promise.all(
+        cardsWithTemplates.map(async (card) => {
+          if (card.template.name === 'Social Media Profile') {
+            const { data: fieldValues, error: valuesError } = await supabase
+              .from('card_field_values')
+              .select(`
+                template_field_id,
+                value,
+                template_fields!inner (
+                  field_name
+                )
+              `)
+              .eq('user_card_id', card.id);
+
+            if (!valuesError && fieldValues) {
+              card.field_values = fieldValues.map(fv => ({
+                template_field_id: fv.template_field_id,
+                value: fv.value || '',
+                field_name: fv.template_fields.field_name
+              }));
+            }
+          }
+          return card;
+        })
+      );
+
+      setUserCards(cardsWithFieldValues);
     } catch (error) {
       console.error('Error fetching user cards:', error);
       toast({
@@ -167,6 +194,18 @@ const MyCards = () => {
     return data;
   };
 
+  const getCardTitle = (card: UserCard) => {
+    // For Social Media Profile, use the Service Name as the title
+    if (card.template.name === 'Social Media Profile' && card.field_values) {
+      const serviceNameValue = card.field_values.find(fv => fv.field_name === 'Service Name');
+      if (serviceNameValue && serviceNameValue.value) {
+        return serviceNameValue.value;
+      }
+    }
+    
+    return card.template.name;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 p-4 flex items-center justify-center">
@@ -255,7 +294,7 @@ const MyCards = () => {
                 <Card key={card.id} className="hover:shadow-lg transition-shadow">
                   <CardHeader>
                     <div className="flex justify-between items-start">
-                      <CardTitle className="text-lg">{card.template.name}</CardTitle>
+                      <CardTitle className="text-lg">{getCardTitle(card)}</CardTitle>
                       <div className="flex flex-col gap-1">
                         <Badge variant={card.template.type === 'admin' ? 'default' : 'secondary'}>
                           {card.template.type === 'admin' ? 'Admin' : 'Custom'}
