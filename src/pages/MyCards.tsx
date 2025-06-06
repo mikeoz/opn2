@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { CreditCard, Plus, Share2, Eye, Settings, Library } from 'lucide-react';
+import { Plus, Eye, Edit, Trash2, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useUserRole } from '@/hooks/useUserRole';
-import { useToast } from '@/components/ui/use-toast';
-import StandardTemplateLibrary from '@/components/StandardTemplateLibrary';
+import { useToast } from '@/hooks/use-toast';
+import MobileLayout from '@/components/MobileLayout';
+
+interface TemplateField {
+  id: string;
+  field_name: string;
+  field_type: 'string' | 'image' | 'document';
+  is_required: boolean;
+  display_order: number;
+}
 
 interface CardTemplate {
   id: string;
@@ -17,38 +22,51 @@ interface CardTemplate {
   description: string;
   type: 'admin' | 'user' | 'access' | 'participant' | 'transaction';
   transaction_code: 'S' | 'N';
-  created_by: string | null;
-  fields?: Array<{
-    id: string;
-    field_name: string;
-    field_type: 'string' | 'image' | 'document';
-    is_required: boolean;
-    display_order: number;
-  }>;
+  fields: TemplateField[];
+}
+
+interface FieldValue {
+  template_field_id: string;
+  value: string;
 }
 
 interface UserCard {
   id: string;
   card_code: string;
   template: CardTemplate;
-  field_values?: Array<{
-    template_field_id: string;
-    value: string;
-    field_name: string;
-  }>;
+  field_values: FieldValue[];
 }
+
+const getCardTitle = (card: UserCard): string => {
+  const cardLabelField = card.template.fields.find(f => f.field_name.toLowerCase().includes('card label'));
+  if (cardLabelField) {
+    const fieldValue = card.field_values.find(fv => fv.template_field_id === cardLabelField.id);
+    if (fieldValue && fieldValue.value) {
+      return fieldValue.value.trim();
+    }
+  }
+  return card.template.name;
+};
 
 const MyCards = () => {
   const { user } = useAuth();
-  const { isAdmin } = useUserRole();
   const { toast } = useToast();
   const [userCards, setUserCards] = useState<UserCard[]>([]);
-  const [adminTemplates, setAdminTemplates] = useState<CardTemplate[]>([]);
+  const [availableTemplates, setAvailableTemplates] = useState<CardTemplate[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchUserCards = async () => {
-    if (!user) return;
+  useEffect(() => {
+    if (!user) {
+      console.log('No user found, redirecting to login');
+      return;
+    }
 
+    fetchUserCards();
+    fetchAvailableTemplates();
+  }, [user]);
+
+  const fetchUserCards = async () => {
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('user_cards')
@@ -62,57 +80,50 @@ const MyCards = () => {
             description,
             type,
             transaction_code,
-            created_by
+            template_fields (
+              id,
+              field_name,
+              field_type,
+              is_required,
+              display_order
+            )
+          ),
+          card_field_values (
+            template_field_id,
+            value
           )
         `)
         .eq('user_id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching user cards:', error);
+        throw error;
+      }
 
-      const cardsWithTemplates = data?.map(card => ({
+      const userCardsWithTemplate = data.map(card => ({
         id: card.id,
         card_code: card.card_code,
-        template: card.card_templates as CardTemplate,
-        field_values: [] // Initialize as empty array
-      })) || [];
+        template: {
+          ...card.card_templates,
+          fields: card.card_templates.template_fields || []
+        },
+        field_values: card.card_field_values || []
+      }));
 
-      // Fetch field values for all cards to get Card Label and other field values
-      const cardsWithFieldValues = await Promise.all(
-        cardsWithTemplates.map(async (card) => {
-          const { data: fieldValues, error: valuesError } = await supabase
-            .from('card_field_values')
-            .select(`
-              template_field_id,
-              value,
-              template_fields!inner (
-                field_name
-              )
-            `)
-            .eq('user_card_id', card.id);
-
-          if (!valuesError && fieldValues) {
-            card.field_values = fieldValues.map(fv => ({
-              template_field_id: fv.template_field_id,
-              value: fv.value || '',
-              field_name: fv.template_fields.field_name
-            }));
-          }
-          return card;
-        })
-      );
-
-      setUserCards(cardsWithFieldValues);
+      setUserCards(userCardsWithTemplate);
     } catch (error) {
       console.error('Error fetching user cards:', error);
       toast({
-        title: "Error loading cards",
+        title: "Error fetching cards",
         description: "Failed to load your cards. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const fetchAdminTemplates = async () => {
+  const fetchAvailableTemplates = async () => {
     try {
       const { data, error } = await supabase
         .from('card_templates')
@@ -121,222 +132,157 @@ const MyCards = () => {
           name,
           description,
           type,
-          transaction_code,
-          created_by,
-          template_fields (
-            id,
-            field_name,
-            field_type,
-            is_required,
-            display_order
-          )
+          transaction_code
         `)
-        .eq('type', 'admin')
-        .order('name');
+        .eq('type', 'user');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching available templates:', error);
+        throw error;
+      }
 
-      setAdminTemplates(data || []);
+      setAvailableTemplates(data);
     } catch (error) {
-      console.error('Error fetching admin templates:', error);
+      console.error('Error fetching available templates:', error);
+      toast({
+        title: "Error fetching templates",
+        description: "Failed to load available templates. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
-  useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      await Promise.all([
-        fetchUserCards(),
-        fetchAdminTemplates()
-      ]);
-      setLoading(false);
-    };
+  const handleDeleteCard = async (cardId: string) => {
+    try {
+      const { error } = await supabase
+        .from('user_cards')
+        .delete()
+        .eq('id', cardId)
+        .eq('user_id', user.id);
 
-    if (user) {
-      loadData();
-    }
-  }, [user]);
-
-  const generateCardCode = async (): Promise<string> => {
-    const { data, error } = await supabase.rpc('generate_card_code');
-    if (error) throw error;
-    return data;
-  };
-
-  const getCardTitle = (card: UserCard) => {
-    console.log('MyCards - Getting card title for card:', card.id);
-    console.log('MyCards - Field values:', card.field_values);
-    console.log('MyCards - Template name:', card.template.name);
-    
-    // First priority: Look for any field with "card label" in the name (case insensitive)
-    if (card.field_values && card.field_values.length > 0) {
-      const cardLabelValue = card.field_values.find(fv => 
-        fv.field_name && fv.field_name.toLowerCase().includes('card label')
-      );
-      console.log('MyCards - Card Label field found:', cardLabelValue);
-      
-      if (cardLabelValue && cardLabelValue.value && cardLabelValue.value.trim()) {
-        console.log('MyCards - Using Card Label value:', cardLabelValue.value.trim());
-        return cardLabelValue.value.trim();
+      if (error) {
+        console.error('Error deleting card:', error);
+        throw error;
       }
-      
-      // Second priority: For Social Media Profile, use Service Name
-      if (card.template.name === 'Social Media Profile') {
-        const serviceNameValue = card.field_values.find(fv => 
-          fv.field_name && fv.field_name.toLowerCase().includes('service name')
-        );
-        console.log('MyCards - Service Name field found:', serviceNameValue);
-        if (serviceNameValue && serviceNameValue.value && serviceNameValue.value.trim()) {
-          console.log('MyCards - Using Service Name value:', serviceNameValue.value.trim());
-          return serviceNameValue.value.trim();
-        }
-      }
-    }
-    
-    // Fallback: Use template name
-    console.log('MyCards - Using fallback template name:', card.template.name);
-    return card.template.name;
-  };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-4 flex items-center justify-center">
-        <div className="text-lg">Loading your cards...</div>
-      </div>
-    );
-  }
+      toast({
+        title: "Card deleted",
+        description: "The card has been successfully deleted.",
+      });
+
+      fetchUserCards(); // Refresh card list
+    } catch (error) {
+      console.error('Error deleting card:', error);
+      toast({
+        title: "Error deleting card",
+        description: "Failed to delete the card. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">My CARDs</h1>
-            <p className="text-gray-600">Manage your information cards</p>
-          </div>
-          <div className="flex gap-2">
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="outline">
-                  <Library className="h-4 w-4 mr-2" />
-                  Standard Templates
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-6xl max-h-[80vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Standard Card Template Library</DialogTitle>
-                </DialogHeader>
-                <StandardTemplateLibrary />
-              </DialogContent>
-            </Dialog>
-            {isAdmin && (
-              <Button asChild>
-                <Link to="/admin/cards">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Manage Templates
-                </Link>
-              </Button>
-            )}
-          </div>
+    <MobileLayout>
+      <div className="p-4">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-foreground mb-2">My Cards</h1>
+          <p className="text-muted-foreground">Manage your personal and professional cards</p>
         </div>
 
-        {/* Available AdminCARDs Section */}
-        {adminTemplates.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Available AdminCARDs</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {adminTemplates.map((template) => (
-                <Card key={template.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <CardTitle className="text-lg">{template.name}</CardTitle>
-                      <div className="flex flex-col gap-1">
-                        <Badge variant="default">Admin</Badge>
-                        <Badge variant={template.transaction_code === 'S' ? 'default' : 'destructive'}>
-                          {template.transaction_code === 'S' ? 'Sharable' : 'Non-Sharable'}
-                        </Badge>
+        {/* Available Templates */}
+        {availableTemplates.length > 0 && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Plus className="h-5 w-5 text-accent" />
+                Create New Card
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {availableTemplates.map((template) => (
+                  <Button
+                    key={template.id}
+                    asChild
+                    variant="outline"
+                    className="w-full justify-start h-auto p-4"
+                  >
+                    <Link to={`/cards/create/${template.id}`}>
+                      <div className="text-left">
+                        <div className="font-medium">{template.name}</div>
+                        <div className="text-sm text-muted-foreground">{template.description}</div>
                       </div>
-                    </div>
-                    <p className="text-sm text-gray-600">{template.description}</p>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2 mb-4">
-                      {template.fields?.map((field) => (
-                        <div key={field.id} className="flex justify-between text-sm">
-                          <span className="font-medium">{field.field_name}</span>
-                          <span className="text-gray-500 capitalize">{field.field_type}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <Button 
-                      asChild
-                      className="w-full"
-                      size="sm"
-                    >
-                      <Link to={`/cards/create/${template.id}`}>
-                        <Plus className="h-4 w-4 mr-1" />
-                        Create Card
-                      </Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
+                    </Link>
+                  </Button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         )}
 
-        {/* My Cards Section */}
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">My Cards</h2>
-          {userCards.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {userCards.map((card) => (
-                <Card key={card.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <CardTitle className="text-lg">{getCardTitle(card)}</CardTitle>
-                      <div className="flex flex-col gap-1">
-                        <Badge variant={card.template.type === 'admin' ? 'default' : 'secondary'}>
-                          {card.template.type === 'admin' ? 'Admin' : 'Custom'}
-                        </Badge>
-                        <Badge variant={card.template.transaction_code === 'S' ? 'default' : 'destructive'}>
-                          {card.template.transaction_code === 'S' ? 'Sharable' : 'Non-Sharable'}
-                        </Badge>
+        {/* User Cards List */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              Your Cards ({userCards.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="text-lg">Loading your cards...</div>
+              </div>
+            ) : userCards.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>You haven't created any cards yet.</p>
+                <p className="text-sm">Use the templates above to get started!</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {userCards.map((card) => (
+                  <div
+                    key={card.id}
+                    className="border border-border rounded-lg p-4 bg-card hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h3 className="font-medium">{getCardTitle(card)}</h3>
+                        <p className="text-sm text-muted-foreground">{card.template.name}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Code: {card.card_code}
+                        </p>
                       </div>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">Card Type: {card.template.name}</p>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" className="flex-1" asChild>
-                        <Link to={`/cards/view/${card.id}`}>
-                          <Eye className="h-4 w-4 mr-1" />
-                          View
-                        </Link>
-                      </Button>
-                      {card.template.transaction_code === 'S' && (
-                        <Button size="sm" className="flex-1" asChild>
-                          <Link to={`/cards/share/${card.id}`}>
-                            <Share2 className="h-4 w-4 mr-1" />
-                            Share
+                      <div className="flex gap-2 ml-4">
+                        <Button size="sm" variant="ghost" asChild>
+                          <Link to={`/cards/view/${card.id}`}>
+                            <Eye className="h-4 w-4" />
                           </Link>
                         </Button>
-                      )}
+                        <Button size="sm" variant="ghost" asChild>
+                          <Link to={`/cards/edit/${card.id}`}>
+                            <Edit className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDeleteCard(card.id)}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <CreditCard className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No cards yet</h3>
-              <p className="text-gray-500 mb-4">Get started by creating cards from the available templates above</p>
-            </div>
-          )}
-        </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
-    </div>
+    </MobileLayout>
   );
 };
 
