@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,7 +17,7 @@ interface CardTemplate {
   id: string;
   name: string;
   description: string;
-  type: 'admin' | 'user';
+  type: 'admin' | 'user' | 'access' | 'participant' | 'transaction';
   transaction_code: 'S' | 'N';
   created_by: string | null;
   created_at: string;
