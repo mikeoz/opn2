@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -141,7 +142,13 @@ const MyCards = () => {
         throw error;
       }
 
-      setAvailableTemplates(data);
+      // Add empty fields array to match CardTemplate interface
+      const templatesWithFields = data.map(template => ({
+        ...template,
+        fields: [] as TemplateField[]
+      }));
+
+      setAvailableTemplates(templatesWithFields);
     } catch (error) {
       console.error('Error fetching available templates:', error);
       toast({
@@ -201,19 +208,24 @@ const MyCards = () => {
             <CardContent>
               <div className="space-y-2">
                 {availableTemplates.map((template) => (
-                  <Button
+                  <div
                     key={template.id}
-                    asChild
-                    variant="outline"
-                    className="w-full justify-start h-auto p-4"
+                    className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors"
                   >
-                    <Link to={`/cards/create/${template.id}`}>
-                      <div className="text-left">
-                        <div className="font-medium">{template.name}</div>
-                        <div className="text-sm text-muted-foreground">{template.description}</div>
-                      </div>
-                    </Link>
-                  </Button>
+                    <div className="flex-1">
+                      <h3 className="font-medium">{template.name}</h3>
+                      <p className="text-sm text-muted-foreground">{template.description}</p>
+                    </div>
+                    <Button
+                      asChild
+                      size="sm"
+                      className="ml-4"
+                    >
+                      <Link to={`/cards/create/${template.id}`}>
+                        <Plus className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </div>
                 ))}
               </div>
             </CardContent>
@@ -244,36 +256,34 @@ const MyCards = () => {
                 {userCards.map((card) => (
                   <div
                     key={card.id}
-                    className="border border-border rounded-lg p-4 bg-card hover:bg-muted/50 transition-colors"
+                    className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors"
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h3 className="font-medium">{getCardTitle(card)}</h3>
-                        <p className="text-sm text-muted-foreground">{card.template.name}</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Code: {card.card_code}
-                        </p>
-                      </div>
-                      <div className="flex gap-2 ml-4">
-                        <Button size="sm" variant="ghost" asChild>
-                          <Link to={`/cards/view/${card.id}`}>
-                            <Eye className="h-4 w-4" />
-                          </Link>
-                        </Button>
-                        <Button size="sm" variant="ghost" asChild>
-                          <Link to={`/cards/edit/${card.id}`}>
-                            <Edit className="h-4 w-4" />
-                          </Link>
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleDeleteCard(card.id)}
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                    <div className="flex-1">
+                      <h3 className="font-medium">{getCardTitle(card)}</h3>
+                      <p className="text-sm text-muted-foreground">{card.template.name}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Code: {card.card_code}
+                      </p>
+                    </div>
+                    <div className="flex gap-2 ml-4">
+                      <Button size="sm" variant="ghost" asChild>
+                        <Link to={`/cards/view/${card.id}`}>
+                          <Eye className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                      <Button size="sm" variant="ghost" asChild>
+                        <Link to={`/cards/edit/${card.id}`}>
+                          <Edit className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleDeleteCard(card.id)}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 ))}

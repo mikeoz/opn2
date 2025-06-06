@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -66,7 +67,11 @@ const AdminCards = () => {
           type,
           transaction_code,
           template_fields (
-            id
+            id,
+            field_name,
+            field_type,
+            is_required,
+            display_order
           )
         `)
         .eq('type', 'admin');
@@ -75,7 +80,8 @@ const AdminCards = () => {
 
       const templatesWithFieldCount = data.map(template => ({
         ...template,
-        field_count: template.template_fields.length
+        template_fields: template.template_fields || [],
+        field_count: template.template_fields?.length || 0
       }));
 
       setTemplates(templatesWithFieldCount);
@@ -216,10 +222,23 @@ const AdminCards = () => {
         {showTemplateLibrary && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
             <div className="bg-background rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
-              <StandardTemplateLibrary
-                onTemplateCreated={handleTemplateCreated}
-                onClose={() => setShowTemplateLibrary(false)}
-              />
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold">Create Admin Template</h2>
+                  <Button variant="ghost" onClick={() => setShowTemplateLibrary(false)}>
+                    ×
+                  </Button>
+                </div>
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>Template creation interface coming soon</p>
+                  <Button 
+                    onClick={handleTemplateCreated}
+                    className="mt-4"
+                  >
+                    Close
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         )}
