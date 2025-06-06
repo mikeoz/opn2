@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, FileText, Image, Upload, Edit } from 'lucide-react';
+import { getCardTitle } from '@/utils/cardUtils';
 
 interface TemplateField {
   id: string;
@@ -135,43 +136,6 @@ const ViewCard = () => {
     return fieldValue?.value || '';
   };
 
-  const getCardTitle = () => {
-    if (!card) return '';
-    
-    console.log('ViewCard - Getting card title for card:', card.id);
-    console.log('ViewCard - Field values:', card.field_values);
-    console.log('ViewCard - Template name:', card.template.name);
-    
-    // First priority: Look for any field with "card label" in the name (case insensitive)
-    if (card.field_values && card.field_values.length > 0) {
-      const cardLabelValue = card.field_values.find(fv => 
-        fv.field_name && fv.field_name.toLowerCase().includes('card label')
-      );
-      console.log('ViewCard - Card Label field found:', cardLabelValue);
-      
-      if (cardLabelValue && cardLabelValue.value && cardLabelValue.value.trim()) {
-        console.log('ViewCard - Using Card Label value:', cardLabelValue.value.trim());
-        return cardLabelValue.value.trim();
-      }
-      
-      // Second priority: For Social Media Profile, use Service Name
-      if (card.template.name === 'Social Media Profile') {
-        const serviceNameValue = card.field_values.find(fv => 
-          fv.field_name && fv.field_name.toLowerCase().includes('service name')
-        );
-        console.log('ViewCard - Service Name field found:', serviceNameValue);
-        if (serviceNameValue && serviceNameValue.value && serviceNameValue.value.trim()) {
-          console.log('ViewCard - Using Service Name value:', serviceNameValue.value.trim());
-          return serviceNameValue.value.trim();
-        }
-      }
-    }
-    
-    // Fallback: Use template name
-    console.log('ViewCard - Using fallback template name:', card.template.name);
-    return card.template.name;
-  };
-
   const handleEdit = () => {
     navigate(`/cards/edit/${cardId}`);
   };
@@ -242,7 +206,7 @@ const ViewCard = () => {
           <CardHeader>
             <div className="flex justify-between items-start">
               <div>
-                <CardTitle className="text-xl">{getCardTitle()}</CardTitle>
+                <CardTitle className="text-xl">{getCardTitle(card)}</CardTitle>
                 <p className="text-sm text-gray-500 mt-1">Card Type: {card.template.name}</p>
                 {card.template.description && (
                   <p className="text-gray-600 mt-1">{card.template.description}</p>

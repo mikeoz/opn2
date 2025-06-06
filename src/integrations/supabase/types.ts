@@ -51,8 +51,44 @@ export type Database = {
           },
         ]
       }
+      card_labels: {
+        Row: {
+          created_at: string
+          id: string
+          label: string
+          updated_at: string
+          user_card_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label: string
+          updated_at?: string
+          user_card_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string
+          updated_at?: string
+          user_card_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_labels_user_card_id_fkey"
+            columns: ["user_card_id"]
+            isOneToOne: false
+            referencedRelation: "user_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       card_templates: {
         Row: {
+          card_type: Database["public"]["Enums"]["card_type"]
           created_at: string
           created_by: string | null
           description: string | null
@@ -63,6 +99,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          card_type?: Database["public"]["Enums"]["card_type"]
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -73,6 +110,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          card_type?: Database["public"]["Enums"]["card_type"]
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -125,6 +163,42 @@ export type Database = {
           rep_email?: string | null
           rep_first_name?: string | null
           rep_last_name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      providers: {
+        Row: {
+          capabilities: Json | null
+          contact_info: Json | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          provider_type: string
+          standards: Json | null
+          updated_at: string
+        }
+        Insert: {
+          capabilities?: Json | null
+          contact_info?: Json | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          provider_type: string
+          standards?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          capabilities?: Json | null
+          contact_info?: Json | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          provider_type?: string
+          standards?: Json | null
           updated_at?: string
         }
         Relationships: []
@@ -202,6 +276,50 @@ export type Database = {
           },
         ]
       }
+      user_provider_relationships: {
+        Row: {
+          access_permissions: Json | null
+          created_at: string
+          id: string
+          provider_id: string
+          relationship_type: string
+          status: string
+          transaction_controls: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_permissions?: Json | null
+          created_at?: string
+          id?: string
+          provider_id: string
+          relationship_type?: string
+          status?: string
+          transaction_controls?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_permissions?: Json | null
+          created_at?: string
+          id?: string
+          provider_id?: string
+          relationship_type?: string
+          status?: string
+          transaction_controls?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_provider_relationships_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -247,7 +365,7 @@ export type Database = {
     Enums: {
       account_type: "individual" | "non_individual"
       app_role: "admin" | "user"
-      card_type: "admin" | "user"
+      card_type: "admin" | "user" | "access" | "participant" | "transaction"
       field_type: "string" | "image" | "document"
       transaction_code: "S" | "N"
     }
@@ -367,7 +485,7 @@ export const Constants = {
     Enums: {
       account_type: ["individual", "non_individual"],
       app_role: ["admin", "user"],
-      card_type: ["admin", "user"],
+      card_type: ["admin", "user", "access", "participant", "transaction"],
       field_type: ["string", "image", "document"],
       transaction_code: ["S", "N"],
     },
