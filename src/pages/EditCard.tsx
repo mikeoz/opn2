@@ -46,11 +46,13 @@ const EditCard = () => {
 
   useEffect(() => {
     if (!user) {
+      console.log('No user found, redirecting to login');
       navigate('/login');
       return;
     }
 
     if (!cardId) {
+      console.log('No card ID provided');
       toast({
         title: "Missing card ID",
         description: "No card specified for editing.",
@@ -60,12 +62,13 @@ const EditCard = () => {
       return;
     }
 
+    console.log('Fetching card for editing with ID:', cardId);
     fetchCard(cardId);
   }, [cardId, user, navigate, toast]);
 
   const fetchCard = async (cardId: string) => {
     try {
-      console.log('Fetching card for editing with ID:', cardId);
+      console.log('Starting card fetch for editing with ID:', cardId);
       
       // Fetch the user card with template
       const { data: cardData, error: cardError } = await supabase
@@ -95,7 +98,13 @@ const EditCard = () => {
 
       console.log('Card data query result:', { cardData, cardError });
 
-      if (cardError || !cardData) {
+      if (cardError) {
+        console.error('Database error fetching card:', cardError);
+        throw new Error(`Database error: ${cardError.message}`);
+      }
+
+      if (!cardData) {
+        console.log('Card not found or access denied');
         throw new Error('Card not found or access denied');
       }
 

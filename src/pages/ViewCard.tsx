@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -51,11 +52,13 @@ const ViewCard = () => {
 
   useEffect(() => {
     if (!user) {
+      console.log('No user found, redirecting to login');
       navigate('/login');
       return;
     }
 
     if (!cardId) {
+      console.log('No card ID provided');
       toast({
         title: "Missing card ID",
         description: "No card specified for viewing.",
@@ -65,12 +68,13 @@ const ViewCard = () => {
       return;
     }
 
+    console.log('Fetching card with ID:', cardId);
     fetchCard(cardId);
   }, [cardId, user, navigate, toast]);
 
   const fetchCard = async (cardId: string) => {
     try {
-      console.log('Fetching card with ID:', cardId);
+      console.log('Starting card fetch for ID:', cardId);
       
       // Fetch the user card with template
       const { data: cardData, error: cardError } = await supabase
@@ -100,7 +104,13 @@ const ViewCard = () => {
 
       console.log('Card data query result:', { cardData, cardError });
 
-      if (cardError || !cardData) {
+      if (cardError) {
+        console.error('Database error fetching card:', cardError);
+        throw new Error(`Database error: ${cardError.message}`);
+      }
+
+      if (!cardData) {
+        console.log('Card not found or access denied');
         throw new Error('Card not found or access denied');
       }
 

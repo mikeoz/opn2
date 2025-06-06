@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { useUserRole } from '@/hooks/useUserRole';
 
 interface CardTemplate {
   id: string;
@@ -33,9 +34,9 @@ const AdminCards = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { isAdmin, loading: roleLoading } = useUserRole();
   const [templates, setTemplates] = useState<CardTemplate[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [newTemplate, setNewTemplate] = useState({
     name: '',
@@ -44,40 +45,32 @@ const AdminCards = () => {
   });
 
   useEffect(() => {
-    if (user) {
-      checkAdminRole();
-    } else {
+    if (!user) {
+      console.log('No user, redirecting to login');
       navigate('/login');
+      return;
     }
-  }, [user, navigate]);
 
-  const checkAdminRole = async () => {
-    if (!user) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .eq('role', 'admin')
-        .single();
-
-      if (!error && data) {
-        setIsAdmin(true);
-        fetchTemplates();
-      } else {
-        navigate('/dashboard');
-      }
-    } catch (error) {
-      console.error('Error checking admin role:', error);
+    if (!roleLoading && !isAdmin) {
+      console.log('User is not admin, redirecting to dashboard');
+      toast({
+        title: "Access denied",
+        description: "Admin privileges required to access this page.",
+        variant: "destructive",
+      });
       navigate('/dashboard');
-    } finally {
-      setLoading(false);
+      return;
     }
-  };
+
+    if (!roleLoading && isAdmin) {
+      console.log('User is admin, fetching templates');
+      fetchTemplates();
+    }
+  }, [user, isAdmin, roleLoading, navigate, toast]);
 
   const fetchTemplates = async () => {
     try {
+      console.log('Fetching admin templates...');
       const { data, error } = await supabase
         .from('card_templates')
         .select(`
@@ -99,6 +92,8 @@ const AdminCards = () => {
         .eq('type', 'admin')
         .order('created_at', { ascending: false });
 
+      console.log('Templates fetch result:', { data, error });
+
       if (error) throw error;
       setTemplates(data || []);
     } catch (error) {
@@ -108,6 +103,8 @@ const AdminCards = () => {
         description: "Failed to load admin card templates.",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -176,7 +173,7 @@ const AdminCards = () => {
     }
   };
 
-  if (loading) {
+  if (roleLoading || loading) {
     return (
       <div className="min-h-screen bg-gray-50 p-4 flex items-center justify-center">
         <div className="text-lg">Loading admin templates...</div>

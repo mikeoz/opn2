@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import CardForm from '@/components/CardForm';
 import { createCardFromStandardTemplate } from '@/utils/standardTemplateUtils';
 
@@ -33,11 +34,13 @@ const CreateCard = () => {
 
   useEffect(() => {
     if (!user) {
+      console.log('No user found, redirecting to login');
       navigate('/login');
       return;
     }
 
     if (!templateId) {
+      console.log('No template ID provided');
       toast({
         title: "Missing template ID",
         description: "No template specified for card creation.",
@@ -47,12 +50,13 @@ const CreateCard = () => {
       return;
     }
 
+    console.log('Fetching template with ID:', templateId);
     fetchTemplate(templateId);
   }, [templateId, user, navigate, toast]);
 
   const fetchTemplate = async (templateId: string) => {
     try {
-      console.log('Fetching template with ID:', templateId);
+      console.log('Starting template fetch for ID:', templateId);
       
       // First try to get it as a regular card template
       const { data: regularTemplate, error: regularError } = await supabase
@@ -77,6 +81,7 @@ const CreateCard = () => {
       console.log('Regular template query result:', { regularTemplate, regularError });
 
       if (!regularError && regularTemplate) {
+        console.log('Found regular template, setting up...');
         setTemplate({
           ...regularTemplate,
           fields: regularTemplate.template_fields || []
@@ -85,6 +90,8 @@ const CreateCard = () => {
         return;
       }
 
+      console.log('Regular template not found, checking standard templates...');
+      
       // If not found, check if it's a standard template and create a card template from it
       const { data: standardTemplate, error: standardError } = await supabase
         .from('standard_card_templates')
@@ -95,9 +102,11 @@ const CreateCard = () => {
       console.log('Standard template query result:', { standardTemplate, standardError });
 
       if (standardError || !standardTemplate) {
+        console.log('Template not found in either table');
         throw new Error('Template not found in either regular or standard templates');
       }
 
+      console.log('Found standard template, creating card template...');
       // Create a card template from the standard template
       const newTemplateId = await createCardFromStandardTemplate(templateId, user!.id);
       console.log('Created new template ID:', newTemplateId);
@@ -124,7 +133,10 @@ const CreateCard = () => {
 
       console.log('New template query result:', { newTemplate, newError });
 
-      if (newError) throw newError;
+      if (newError) {
+        console.error('Error fetching newly created template:', newError);
+        throw newError;
+      }
 
       setTemplate({
         ...newTemplate,
