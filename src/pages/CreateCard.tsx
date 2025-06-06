@@ -18,7 +18,7 @@ interface CardTemplate {
   id: string;
   name: string;
   description: string;
-  type: 'admin' | 'user';
+  type: 'admin' | 'user' | 'access' | 'participant' | 'transaction';
   transaction_code: 'S' | 'N';
   fields: TemplateField[];
 }
