@@ -67,7 +67,10 @@ const App = () => (
             } />
             <Route path="/cards/share/:id" element={
               <ProtectedRoute>
-                <div className="p-8 text-center"><h2 className="text-2xl font-bold">Share Specific Card</h2><p className="text-gray-600 mt-2">Coming Soon - Future Development</p></div>
+                <div className="p-8 text-center">
+                  <h2 className="text-2xl font-bold">Share Specific Card</h2>
+                  <p className="text-gray-600 mt-2">Coming Soon - Future Development</p>
+                </div>
               </ProtectedRoute>
             } />
             <Route path="*" element={<NotFound />} />

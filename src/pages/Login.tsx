@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
@@ -15,29 +15,27 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Redirect if already logged in
+  // Only redirect if user is already logged in AND we're not explicitly on the login page
   React.useEffect(() => {
-    if (user) {
+    if (user && location.pathname !== '/login') {
       navigate('/dashboard');
     }
-  }, [user, navigate]);
+  }, [user, navigate, location.pathname]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Clean up existing auth state
       cleanupAuthState();
       
-      // Attempt global sign out first to ensure clean state
       try {
         await supabase.auth.signOut({ scope: 'global' });
       } catch (err) {
-        // Continue even if this fails
         console.log('Previous session cleanup attempted');
       }
 
@@ -53,7 +51,6 @@ const Login = () => {
           title: "Welcome back!",
           description: "You have successfully signed in.",
         });
-        // Force page reload for clean state
         window.location.href = '/dashboard';
       }
     } catch (error: any) {

@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
@@ -24,22 +23,22 @@ const Register = () => {
   });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Redirect if already logged in
+  // Only redirect if user is already logged in AND we're not explicitly on the register page
   React.useEffect(() => {
-    if (user) {
+    if (user && location.pathname !== '/register') {
       navigate('/dashboard');
     }
-  }, [user, navigate]);
+  }, [user, navigate, location.pathname]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Prepare user metadata based on account type
       const userMetadata: any = {
         account_type: userType,
       };
@@ -51,7 +50,6 @@ const Register = () => {
         userMetadata.last_name = formData.lastName;
         console.log('Individual metadata:', userMetadata);
       } else {
-        // For organizations, send rep info as first_name/last_name so the trigger picks it up
         userMetadata.first_name = formData.repFirstName;
         userMetadata.last_name = formData.repLastName;
         userMetadata.entity_name = formData.entityName;
@@ -86,7 +84,6 @@ const Register = () => {
             ? `Welcome ${formData.firstName}! Please check your email to confirm your account.`
             : `Welcome ${formData.entityName}! Please check your email to confirm your account.`,
         });
-        // Don't navigate immediately, let user confirm email first
       }
     } catch (error: any) {
       console.error('Registration error:', error);

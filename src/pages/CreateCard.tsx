@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import CardForm from '@/components/CardForm';
+import { createCardFromStandardTemplate } from '@/utils/standardTemplateUtils';
 
 interface TemplateField {
   id: string;
@@ -32,17 +33,17 @@ const CreateCard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (templateId) {
+    if (templateId && user) {
       fetchTemplate(templateId);
     } else {
-      // If no templateId, redirect to cards page
       navigate('/cards');
     }
-  }, [templateId, navigate]);
+  }, [templateId, navigate, user]);
 
   const fetchTemplate = async (templateId: string) => {
     try {
-      const { data, error } = await supabase
+      // First try to get it as a regular card template
+      const { data: regularTemplate, error: regularError } = await supabase
         .from('card_templates')
         .select(`
           id,
@@ -61,11 +62,54 @@ const CreateCard = () => {
         .eq('id', templateId)
         .single();
 
-      if (error) throw error;
+      if (!regularError && regularTemplate) {
+        setTemplate({
+          ...regularTemplate,
+          fields: regularTemplate.template_fields || []
+        });
+        setLoading(false);
+        return;
+      }
+
+      // If not found, check if it's a standard template and create a card template from it
+      const { data: standardTemplate, error: standardError } = await supabase
+        .from('standard_card_templates')
+        .select('*')
+        .eq('id', templateId)
+        .single();
+
+      if (standardError) {
+        throw new Error('Template not found');
+      }
+
+      // Create a card template from the standard template
+      const newTemplateId = await createCardFromStandardTemplate(templateId, user!.id);
+      
+      // Now fetch the newly created template
+      const { data: newTemplate, error: newError } = await supabase
+        .from('card_templates')
+        .select(`
+          id,
+          name,
+          description,
+          type,
+          transaction_code,
+          template_fields (
+            id,
+            field_name,
+            field_type,
+            is_required,
+            display_order
+          )
+        `)
+        .eq('id', newTemplateId)
+        .single();
+
+      if (newError) throw newError;
 
       setTemplate({
-        ...data,
-        fields: data.template_fields || []
+        ...newTemplate,
+        fields: newTemplate.template_fields || []
       });
     } catch (error) {
       console.error('Error fetching template:', error);
@@ -90,7 +134,6 @@ const CreateCard = () => {
     if (!user || !template) return;
 
     try {
-      // Create the user card first
       const cardCode = await generateCardCode();
       const { data: userCard, error: cardError } = await supabase
         .from('user_cards')
@@ -104,7 +147,6 @@ const CreateCard = () => {
 
       if (cardError) throw cardError;
 
-      // Save field values
       const fieldValues = template.fields.map(field => ({
         user_card_id: userCard.id,
         template_field_id: field.id,
@@ -119,7 +161,6 @@ const CreateCard = () => {
         if (valuesError) throw valuesError;
       }
 
-      // Show success message with the card label if provided
       const cardLabelField = template.fields.find(f => f.field_name.toLowerCase().includes('card label'));
       const cardLabel = cardLabelField ? formData[`field_${cardLabelField.id}`] : '';
       const displayName = cardLabel && cardLabel.trim() ? cardLabel.trim() : template.name;
