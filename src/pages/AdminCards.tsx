@@ -9,7 +9,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, Edit, Trash2, Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useUserRole } from '@/hooks/useUserRole';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -32,11 +31,11 @@ interface CardTemplate {
 
 const AdminCards = () => {
   const { user } = useAuth();
-  const { isAdmin, loading: roleLoading } = useUserRole();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [templates, setTemplates] = useState<CardTemplate[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [newTemplate, setNewTemplate] = useState({
     name: '',
@@ -45,14 +44,37 @@ const AdminCards = () => {
   });
 
   useEffect(() => {
-    if (!roleLoading && !isAdmin) {
+    if (user) {
+      checkAdminRole();
+    } else {
+      navigate('/login');
+    }
+  }, [user, navigate]);
+
+  const checkAdminRole = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .single();
+
+      if (!error && data) {
+        setIsAdmin(true);
+        fetchTemplates();
+      } else {
+        navigate('/dashboard');
+      }
+    } catch (error) {
+      console.error('Error checking admin role:', error);
       navigate('/dashboard');
-      return;
+    } finally {
+      setLoading(false);
     }
-    if (user && isAdmin) {
-      fetchTemplates();
-    }
-  }, [user, isAdmin, roleLoading, navigate]);
+  };
 
   const fetchTemplates = async () => {
     try {
@@ -86,8 +108,6 @@ const AdminCards = () => {
         description: "Failed to load admin card templates.",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -156,7 +176,7 @@ const AdminCards = () => {
     }
   };
 
-  if (roleLoading || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 p-4 flex items-center justify-center">
         <div className="text-lg">Loading admin templates...</div>

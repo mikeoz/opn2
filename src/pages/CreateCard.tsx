@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -33,15 +32,28 @@ const CreateCard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (templateId && user) {
-      fetchTemplate(templateId);
-    } else {
-      navigate('/cards');
+    if (!user) {
+      navigate('/login');
+      return;
     }
-  }, [templateId, navigate, user]);
+
+    if (!templateId) {
+      toast({
+        title: "Missing template ID",
+        description: "No template specified for card creation.",
+        variant: "destructive",
+      });
+      navigate('/cards');
+      return;
+    }
+
+    fetchTemplate(templateId);
+  }, [templateId, user, navigate, toast]);
 
   const fetchTemplate = async (templateId: string) => {
     try {
+      console.log('Fetching template with ID:', templateId);
+      
       // First try to get it as a regular card template
       const { data: regularTemplate, error: regularError } = await supabase
         .from('card_templates')
@@ -60,7 +72,9 @@ const CreateCard = () => {
           )
         `)
         .eq('id', templateId)
-        .single();
+        .maybeSingle();
+
+      console.log('Regular template query result:', { regularTemplate, regularError });
 
       if (!regularError && regularTemplate) {
         setTemplate({
@@ -76,14 +90,17 @@ const CreateCard = () => {
         .from('standard_card_templates')
         .select('*')
         .eq('id', templateId)
-        .single();
+        .maybeSingle();
 
-      if (standardError) {
-        throw new Error('Template not found');
+      console.log('Standard template query result:', { standardTemplate, standardError });
+
+      if (standardError || !standardTemplate) {
+        throw new Error('Template not found in either regular or standard templates');
       }
 
       // Create a card template from the standard template
       const newTemplateId = await createCardFromStandardTemplate(templateId, user!.id);
+      console.log('Created new template ID:', newTemplateId);
       
       // Now fetch the newly created template
       const { data: newTemplate, error: newError } = await supabase
@@ -104,6 +121,8 @@ const CreateCard = () => {
         `)
         .eq('id', newTemplateId)
         .single();
+
+      console.log('New template query result:', { newTemplate, newError });
 
       if (newError) throw newError;
 

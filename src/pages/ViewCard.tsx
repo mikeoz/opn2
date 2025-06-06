@@ -50,13 +50,28 @@ const ViewCard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (cardId && user) {
-      fetchCard(cardId);
+    if (!user) {
+      navigate('/login');
+      return;
     }
-  }, [cardId, user]);
+
+    if (!cardId) {
+      toast({
+        title: "Missing card ID",
+        description: "No card specified for viewing.",
+        variant: "destructive",
+      });
+      navigate('/cards');
+      return;
+    }
+
+    fetchCard(cardId);
+  }, [cardId, user, navigate, toast]);
 
   const fetchCard = async (cardId: string) => {
     try {
+      console.log('Fetching card with ID:', cardId);
+      
       // Fetch the user card with template
       const { data: cardData, error: cardError } = await supabase
         .from('user_cards')
@@ -81,9 +96,13 @@ const ViewCard = () => {
         `)
         .eq('id', cardId)
         .eq('user_id', user!.id)
-        .single();
+        .maybeSingle();
 
-      if (cardError) throw cardError;
+      console.log('Card data query result:', { cardData, cardError });
+
+      if (cardError || !cardData) {
+        throw new Error('Card not found or access denied');
+      }
 
       // Fetch field values
       const { data: fieldValues, error: valuesError } = await supabase
@@ -98,7 +117,11 @@ const ViewCard = () => {
         `)
         .eq('user_card_id', cardId);
 
-      if (valuesError) throw valuesError;
+      console.log('Field values query result:', { fieldValues, valuesError });
+
+      if (valuesError) {
+        console.warn('Error fetching field values:', valuesError);
+      }
 
       const template = cardData.card_templates as CardTemplate & {
         template_fields: TemplateField[];
