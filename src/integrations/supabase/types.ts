@@ -86,6 +86,57 @@ export type Database = {
           },
         ]
       }
+      card_relationships: {
+        Row: {
+          card_id: string
+          created_by: string
+          expires_at: string | null
+          id: string
+          permissions: Json | null
+          relationship_type: string
+          shared_at: string
+          shared_with_provider_id: string | null
+          shared_with_user_id: string | null
+        }
+        Insert: {
+          card_id: string
+          created_by: string
+          expires_at?: string | null
+          id?: string
+          permissions?: Json | null
+          relationship_type: string
+          shared_at?: string
+          shared_with_provider_id?: string | null
+          shared_with_user_id?: string | null
+        }
+        Update: {
+          card_id?: string
+          created_by?: string
+          expires_at?: string | null
+          id?: string
+          permissions?: Json | null
+          relationship_type?: string
+          shared_at?: string
+          shared_with_provider_id?: string | null
+          shared_with_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_relationships_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "user_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "card_relationships_shared_with_provider_id_fkey"
+            columns: ["shared_with_provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       card_templates: {
         Row: {
           card_type: Database["public"]["Enums"]["card_type"]
@@ -200,6 +251,77 @@ export type Database = {
           provider_type?: string
           standards?: Json | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      relationship_interactions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          interaction_data: Json | null
+          interaction_type: string
+          relationship_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          interaction_data?: Json | null
+          interaction_type: string
+          relationship_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          interaction_data?: Json | null
+          interaction_type?: string
+          relationship_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "relationship_interactions_relationship_id_fkey"
+            columns: ["relationship_id"]
+            isOneToOne: false
+            referencedRelation: "user_provider_relationships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      standard_card_templates: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          template_data: Json
+          updated_at: string
+          version: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          template_data: Json
+          updated_at?: string
+          version?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          template_data?: Json
+          updated_at?: string
+          version?: string
         }
         Relationships: []
       }
@@ -363,11 +485,19 @@ export type Database = {
       }
     }
     Enums: {
+      access_permission_type:
+        | "view_basic"
+        | "view_detailed"
+        | "edit"
+        | "share"
+        | "delete"
+        | "admin"
       account_type: "individual" | "non_individual"
       app_role: "admin" | "user"
       card_type: "admin" | "user" | "access" | "participant" | "transaction"
       field_type: "string" | "image" | "document"
       transaction_code: "S" | "N"
+      transaction_control_type: "read" | "write" | "share" | "delete" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -483,11 +613,20 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      access_permission_type: [
+        "view_basic",
+        "view_detailed",
+        "edit",
+        "share",
+        "delete",
+        "admin",
+      ],
       account_type: ["individual", "non_individual"],
       app_role: ["admin", "user"],
       card_type: ["admin", "user", "access", "participant", "transaction"],
       field_type: ["string", "image", "document"],
       transaction_code: ["S", "N"],
+      transaction_control_type: ["read", "write", "share", "delete", "admin"],
     },
   },
 } as const

@@ -1,14 +1,15 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CreditCard, Plus, Share2, Eye, Settings } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { CreditCard, Plus, Share2, Eye, Settings, Library } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useToast } from '@/components/ui/use-toast';
+import StandardTemplateLibrary from '@/components/StandardTemplateLibrary';
 
 interface CardTemplate {
   id: string;
@@ -214,6 +215,20 @@ const MyCards = () => {
             <p className="text-gray-600">Manage your information cards</p>
           </div>
           <div className="flex gap-2">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Library className="h-4 w-4 mr-2" />
+                  Standard Templates
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-6xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Standard Card Template Library</DialogTitle>
+                </DialogHeader>
+                <StandardTemplateLibrary />
+              </DialogContent>
+            </Dialog>
             {isAdmin && (
               <Button asChild>
                 <Link to="/admin/cards">
