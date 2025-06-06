@@ -29,7 +29,10 @@ export const fetchStandardTemplates = async (): Promise<StandardCardTemplate[]> 
     .order('name', { ascending: true });
 
   if (error) throw error;
-  return data || [];
+  return (data || []).map(template => ({
+    ...template,
+    template_data: template.template_data as StandardCardTemplate['template_data']
+  }));
 };
 
 export const getTemplatesByCategory = (templates: StandardCardTemplate[]) => {
@@ -72,7 +75,8 @@ export const createCardFromStandardTemplate = async (
   if (cardTemplateError) throw cardTemplateError;
 
   // Create template fields
-  const fields = standardTemplate.template_data.fields.map((field: any) => ({
+  const templateData = standardTemplate.template_data as StandardCardTemplate['template_data'];
+  const fields = templateData.fields.map((field: any) => ({
     template_id: cardTemplate.id,
     field_name: field.name,
     field_type: field.type,

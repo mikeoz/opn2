@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { Share2, Users, Building, Calendar } from 'lucide-react';
 import { CardRelationship, AccessPermissionType, PERMISSION_LABELS } from '@/utils/permissionUtils';
 
@@ -40,7 +40,21 @@ const CardRelationships: React.FC<CardRelationshipsProps> = ({ cardId }) => {
         .eq('card_id', cardId);
 
       if (error) throw error;
-      setRelationships(data || []);
+      
+      // Type cast the data to match our CardRelationship interface
+      const typedRelationships: CardRelationship[] = (data || []).map(item => ({
+        id: item.id,
+        card_id: item.card_id,
+        shared_with_user_id: item.shared_with_user_id || undefined,
+        shared_with_provider_id: item.shared_with_provider_id || undefined,
+        relationship_type: item.relationship_type as CardRelationship['relationship_type'],
+        permissions: (item.permissions as any) || {},
+        shared_at: item.shared_at,
+        expires_at: item.expires_at || undefined,
+        created_by: item.created_by
+      }));
+      
+      setRelationships(typedRelationships);
     } catch (error) {
       console.error('Error fetching relationships:', error);
     }
