@@ -19,9 +19,9 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
   };
 
   return (
-    <div className="h-screen bg-background flex flex-col overflow-hidden">
+    <div className="fixed inset-0 bg-background flex flex-col">
       {/* Top Bar - Fixed at top */}
-      <header className="h-[10vh] bg-primary text-primary-foreground px-4 py-2 flex items-center justify-between flex-shrink-0">
+      <header className="h-16 bg-primary text-primary-foreground px-4 py-2 flex items-center justify-between flex-shrink-0 z-10">
         <div className="flex-1">
           <h1 className="text-lg font-bold">Opnli Community Directory</h1>
           <p className="text-sm opacity-90">{user?.email}</p>
@@ -49,12 +49,12 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
       </header>
 
       {/* Body - Scrollable content area */}
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden">
         {children}
       </main>
 
       {/* Bottom Bar - Fixed at bottom */}
-      <nav className="h-[10vh] bg-card border-t border-border flex items-center justify-around px-2 flex-shrink-0">
+      <nav className="h-16 bg-card border-t border-border flex items-center justify-around px-2 flex-shrink-0 z-10">
         <Button
           variant="ghost"
           size="sm"
