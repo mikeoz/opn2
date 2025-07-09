@@ -92,19 +92,23 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
           variant="ghost"
           size="sm"
           className="flex-col h-full gap-1 text-xs"
-          disabled
+          asChild
         >
-          <Share2 className="h-5 w-5" />
-          Share
+          <Link to="/cards">
+            <Share2 className="h-5 w-5" />
+            Share
+          </Link>
         </Button>
         <Button
           variant="ghost"
           size="sm"
           className="flex-col h-full gap-1 text-xs"
-          disabled
+          asChild
         >
-          <Eye className="h-5 w-5" />
-          Views
+          <Link to="/cards">
+            <Eye className="h-5 w-5" />
+            Views
+          </Link>
         </Button>
       </nav>
     </div>

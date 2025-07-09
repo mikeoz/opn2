@@ -3,12 +3,14 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Eye, Edit, Trash2, Users } from 'lucide-react';
+import { Plus, Eye, Edit, Trash2, Users, Share2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import MobileLayout from '@/components/MobileLayout';
+import CardRelationships from '@/components/CardRelationships';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 interface TemplateField {
   id: string;
@@ -56,6 +58,7 @@ const MyCards = () => {
   const [userCards, setUserCards] = useState<UserCard[]>([]);
   const [availableTemplates, setAvailableTemplates] = useState<CardTemplate[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCardForSharing, setSelectedCardForSharing] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -308,6 +311,19 @@ const MyCards = () => {
                           <Edit className="h-4 w-4" />
                         </Link>
                       </Button>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button size="sm" variant="ghost">
+                            <Share2 className="h-4 w-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                          <DialogHeader>
+                            <DialogTitle>Share Card: {getCardTitle(card)}</DialogTitle>
+                          </DialogHeader>
+                          <CardRelationships cardId={card.id} />
+                        </DialogContent>
+                      </Dialog>
                       <Button
                         size="sm"
                         variant="ghost"
