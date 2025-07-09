@@ -32,6 +32,7 @@ interface CardTemplate {
 const AdminCards = () => {
   const [templates, setTemplates] = useState<CardTemplate[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const { user } = useAuth();
   const { isAdmin, loading: roleLoading } = useUserRole();
   const { toast } = useToast();
@@ -45,15 +46,47 @@ const AdminCards = () => {
       return;
     }
 
+    fetchUserProfile();
+  }, [user, navigate]);
+
+  useEffect(() => {
     if (!isAdmin && !roleLoading) {
       console.log('User is not an admin, redirecting to dashboard');
       navigate('/dashboard');
       return;
     }
 
-    console.log('Fetching admin card templates');
-    fetchTemplates();
-  }, [user, isAdmin, roleLoading, navigate]);
+    if (isAdmin && userProfile) {
+      console.log('Fetching admin card templates');
+      fetchTemplates();
+    }
+  }, [isAdmin, roleLoading, userProfile, navigate]);
+
+  const fetchUserProfile = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('account_type, entity_name')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+      setUserProfile(data);
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      toast({
+        title: "Error loading profile",
+        description: "Failed to load user profile information.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const canCreateTemplates = () => {
+    return isAdmin && userProfile?.account_type === 'non_individual';
+  };
 
   const fetchTemplates = async () => {
     setLoading(true);
@@ -139,24 +172,40 @@ const AdminCards = () => {
           <p className="text-muted-foreground">Manage card templates and system configuration</p>
         </div>
 
-        {/* Create Template */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Plus className="h-5 w-5 text-accent" />
-              Create New Template
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Button 
-              onClick={() => setShowTemplateLibrary(true)}
-              className="w-full bg-accent hover:bg-accent/90"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Create New Admin Template
-            </Button>
-          </CardContent>
-        </Card>
+        {/* Create Template - Only for Non-Individual Admin Users */}
+        {canCreateTemplates() && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Plus className="h-5 w-5 text-accent" />
+                Create CARD Template
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                Create new card templates that can be shared with other users.
+              </p>
+              <Button 
+                onClick={() => setShowTemplateLibrary(true)}
+                className="w-full bg-accent hover:bg-accent/90"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create New Admin Template
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {!canCreateTemplates() && isAdmin && userProfile?.account_type === 'individual' && (
+          <Card className="mb-6 border-muted">
+            <CardContent className="pt-6">
+              <div className="text-center text-muted-foreground">
+                <Settings className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">Template creation is only available for Organization accounts.</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Templates List */}
         <Card>
@@ -224,7 +273,7 @@ const AdminCards = () => {
             <div className="bg-background rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
               <div className="p-6">
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold">Create Admin Template</h2>
+                  <h2 className="text-xl font-semibold">Create CARD Template</h2>
                   <Button variant="ghost" onClick={() => setShowTemplateLibrary(false)}>
                     ×
                   </Button>

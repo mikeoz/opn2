@@ -130,7 +130,29 @@ const MyCards = () => {
 
   const fetchAvailableTemplates = async () => {
     try {
-      // Fetch user templates
+      // Fetch admin templates (available to everyone)
+      const { data: adminTemplates, error: adminError } = await supabase
+        .from('card_templates')
+        .select(`
+          id,
+          name,
+          description,
+          type,
+          transaction_code
+        `)
+        .eq('type', 'admin');
+
+      if (adminError) throw adminError;
+
+      // Fetch standard templates
+      const { data: standardTemplates, error: standardError } = await supabase
+        .from('standard_card_templates')
+        .select('id, name, description')
+        .eq('is_active', true);
+
+      if (standardError) throw standardError;
+
+      // Fetch user's own templates
       const { data: userTemplates, error: userError } = await supabase
         .from('card_templates')
         .select(`
@@ -140,41 +162,28 @@ const MyCards = () => {
           type,
           transaction_code
         `)
-        .eq('type', 'user');
+        .eq('type', 'user')
+        .eq('created_by', user.id);
 
       if (userError) throw userError;
 
-      // Check if user is admin and fetch admin templates if so
-      const { data: userRoles } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id);
-
-      const isAdmin = userRoles?.some(role => role.role === 'admin');
-      let adminTemplates = [];
-
-      if (isAdmin) {
-        const { data: adminTemplateData, error: adminError } = await supabase
-          .from('card_templates')
-          .select(`
-            id,
-            name,
-            description,
-            type,
-            transaction_code
-          `)
-          .eq('type', 'admin');
-
-        if (!adminError) {
-          adminTemplates = adminTemplateData || [];
-        }
-      }
-
-      // Combine templates with fields array to match CardTemplate interface
-      const allTemplates = [...(userTemplates || []), ...adminTemplates].map(template => ({
-        ...template,
-        fields: [] as TemplateField[]
-      }));
+      // Combine all available templates
+      const allTemplates = [
+        ...(adminTemplates || []).map(template => ({
+          ...template,
+          fields: [] as TemplateField[]
+        })),
+        ...(standardTemplates || []).map(template => ({
+          ...template,
+          type: 'admin' as const,
+          transaction_code: 'S' as const,
+          fields: [] as TemplateField[]
+        })),
+        ...(userTemplates || []).map(template => ({
+          ...template,
+          fields: [] as TemplateField[]
+        }))
+      ];
 
       setAvailableTemplates(allTemplates);
     } catch (error) {
@@ -230,7 +239,7 @@ const MyCards = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Plus className="h-5 w-5 text-accent" />
-                Create New Card
+                Add New Card
               </CardTitle>
             </CardHeader>
             <CardContent>
