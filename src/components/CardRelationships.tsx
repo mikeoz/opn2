@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Share2, Users, Building, Calendar } from 'lucide-react';
 import { CardRelationship, AccessPermissionType, PERMISSION_LABELS } from '@/utils/permissionUtils';
+import { useSharingTemplates } from '@/hooks/useSharingTemplates';
 
 interface CardRelationshipsProps {
   cardId: string;
@@ -275,6 +276,8 @@ const ShareCardDialog: React.FC<ShareCardDialogProps> = ({
   const [userEmail, setUserEmail] = useState<string>('');
   const [selectedPermissions, setSelectedPermissions] = useState<AccessPermissionType[]>(['view_basic']);
   const [open, setOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<string>('');
+  const { templates } = useSharingTemplates();
 
   const handleShare = async () => {
     if (shareType === 'provider' && selectedProvider) {
@@ -293,10 +296,17 @@ const ShareCardDialog: React.FC<ShareCardDialogProps> = ({
 
   const togglePermission = (permission: AccessPermissionType) => {
     setSelectedPermissions(prev => 
-      prev.includes(permission)
+      prev.includes(permission) 
         ? prev.filter(p => p !== permission)
         : [...prev, permission]
     );
+  };
+
+  const applyTemplate = (templateId: string) => {
+    const template = templates.find(t => t.id === templateId);
+    if (template && template.template_permissions.cards) {
+      setSelectedPermissions(template.template_permissions.cards);
+    }
   };
 
   return (
@@ -353,6 +363,25 @@ const ShareCardDialog: React.FC<ShareCardDialogProps> = ({
               </Select>
             </div>
           )}
+          
+          <div>
+            <label className="text-sm font-medium">Quick Templates</label>
+            <Select value={selectedTemplate} onValueChange={(value) => {
+              setSelectedTemplate(value);
+              applyTemplate(value);
+            }}>
+              <SelectTrigger>
+                <SelectValue placeholder="Choose a permission template" />
+              </SelectTrigger>
+              <SelectContent>
+                {templates.filter(t => t.is_public).map((template) => (
+                  <SelectItem key={template.id} value={template.id}>
+                    {template.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           
           <div>
             <label className="text-sm font-medium">Permissions</label>
