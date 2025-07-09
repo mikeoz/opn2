@@ -76,7 +76,7 @@ const CardRelationships: React.FC<CardRelationshipsProps> = ({ cardId }) => {
     }
   };
 
-  const handleShareCard = async (providerId: string, permissions: AccessPermissionType[]) => {
+  const handleShareWithProvider = async (providerId: string, permissions: AccessPermissionType[]) => {
     if (!user) return;
 
     setIsSharing(true);
@@ -93,16 +93,6 @@ const CardRelationships: React.FC<CardRelationshipsProps> = ({ cardId }) => {
 
       if (error) throw error;
 
-      // Log the interaction
-      await supabase
-        .from('relationship_interactions')
-        .insert({
-          relationship_id: '', // Will be updated after we get the relationship
-          interaction_type: 'card_shared',
-          interaction_data: { card_id: cardId, provider_id: providerId, permissions },
-          created_by: user.id
-        });
-
       toast({
         title: "Card shared successfully!",
         description: "The card has been shared with the selected provider.",
@@ -114,6 +104,59 @@ const CardRelationships: React.FC<CardRelationshipsProps> = ({ cardId }) => {
       toast({
         title: "Error sharing card",
         description: "Failed to share the card. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  const handleShareWithUser = async (userEmail: string, permissions: AccessPermissionType[]) => {
+    if (!user) return;
+
+    setIsSharing(true);
+    try {
+      // First, find the user by email
+      const { data: targetUser, error: userError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', userEmail)
+        .maybeSingle();
+
+      if (userError) throw userError;
+      
+      if (!targetUser) {
+        toast({
+          title: "User not found",
+          description: "No user found with that email address.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { error } = await supabase
+        .from('card_relationships')
+        .insert({
+          card_id: cardId,
+          shared_with_user_id: targetUser.id,
+          relationship_type: 'member_of',
+          permissions: { default: permissions },
+          created_by: user.id
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Organization membership granted!",
+        description: "The user has been added as a member of this organization.",
+      });
+
+      fetchRelationships();
+    } catch (error) {
+      console.error('Error sharing card with user:', error);
+      toast({
+        title: "Error adding member",
+        description: "Failed to add the user as a member. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -156,11 +199,14 @@ const CardRelationships: React.FC<CardRelationshipsProps> = ({ cardId }) => {
             <Share2 className="h-5 w-5" />
             Card Relationships
           </CardTitle>
-          <ShareCardDialog 
-            providers={providers}
-            onShare={handleShareCard}
-            isSharing={isSharing}
-          />
+          <div className="flex gap-2">
+            <ShareCardDialog 
+              providers={providers}
+              onShareWithProvider={handleShareWithProvider}
+              onShareWithUser={handleShareWithUser}
+              isSharing={isSharing}
+            />
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -169,25 +215,34 @@ const CardRelationships: React.FC<CardRelationshipsProps> = ({ cardId }) => {
             relationships.map((relationship) => (
               <div key={relationship.id} className="flex items-center justify-between p-3 border rounded-lg">
                 <div className="flex items-center gap-3">
-                  <Building className="h-4 w-4 text-gray-500" />
+                  {relationship.shared_with_user_id ? (
+                    <Users className="h-4 w-4 text-blue-500" />
+                  ) : (
+                    <Building className="h-4 w-4 text-gray-500" />
+                  )}
                   <div>
-                    <p className="font-medium">Provider Relationship</p>
+                    <p className="font-medium">
+                      {relationship.shared_with_user_id ? 'Organization Member' : 'Provider Relationship'}
+                    </p>
                     <p className="text-sm text-gray-600">
-                      Shared on {new Date(relationship.shared_at).toLocaleDateString()}
+                      {relationship.relationship_type === 'member_of' ? 'Member since' : 'Shared on'} {new Date(relationship.shared_at).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge variant={relationship.relationship_type === 'shared' ? 'default' : 'destructive'}>
-                    {relationship.relationship_type}
+                  <Badge variant={
+                    relationship.relationship_type === 'shared' || relationship.relationship_type === 'member_of' 
+                      ? 'default' : 'destructive'
+                  }>
+                    {relationship.relationship_type.replace('_', ' ')}
                   </Badge>
-                  {relationship.relationship_type === 'shared' && (
+                  {(relationship.relationship_type === 'shared' || relationship.relationship_type === 'member_of') && (
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => revokeRelationship(relationship.id)}
                     >
-                      Revoke
+                      {relationship.relationship_type === 'member_of' ? 'Remove' : 'Revoke'}
                     </Button>
                   )}
                 </div>
@@ -204,21 +259,35 @@ const CardRelationships: React.FC<CardRelationshipsProps> = ({ cardId }) => {
 
 interface ShareCardDialogProps {
   providers: Array<{ id: string; name: string }>;
-  onShare: (providerId: string, permissions: AccessPermissionType[]) => Promise<void>;
+  onShareWithProvider: (providerId: string, permissions: AccessPermissionType[]) => Promise<void>;
+  onShareWithUser: (userEmail: string, permissions: AccessPermissionType[]) => Promise<void>;
   isSharing: boolean;
 }
 
-const ShareCardDialog: React.FC<ShareCardDialogProps> = ({ providers, onShare, isSharing }) => {
+const ShareCardDialog: React.FC<ShareCardDialogProps> = ({ 
+  providers, 
+  onShareWithProvider, 
+  onShareWithUser, 
+  isSharing 
+}) => {
+  const [shareType, setShareType] = useState<'provider' | 'user'>('user');
   const [selectedProvider, setSelectedProvider] = useState<string>('');
+  const [userEmail, setUserEmail] = useState<string>('');
   const [selectedPermissions, setSelectedPermissions] = useState<AccessPermissionType[]>(['view_basic']);
   const [open, setOpen] = useState(false);
 
   const handleShare = async () => {
-    if (!selectedProvider) return;
+    if (shareType === 'provider' && selectedProvider) {
+      await onShareWithProvider(selectedProvider, selectedPermissions);
+    } else if (shareType === 'user' && userEmail) {
+      await onShareWithUser(userEmail, selectedPermissions);
+    } else {
+      return;
+    }
     
-    await onShare(selectedProvider, selectedPermissions);
     setOpen(false);
     setSelectedProvider('');
+    setUserEmail('');
     setSelectedPermissions(['view_basic']);
   };
 
@@ -244,20 +313,46 @@ const ShareCardDialog: React.FC<ShareCardDialogProps> = ({ providers, onShare, i
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium">Select Provider</label>
-            <Select value={selectedProvider} onValueChange={setSelectedProvider}>
+            <label className="text-sm font-medium">Share with</label>
+            <Select value={shareType} onValueChange={(value) => setShareType(value as 'provider' | 'user')}>
               <SelectTrigger>
-                <SelectValue placeholder="Choose a provider" />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {providers.map((provider) => (
-                  <SelectItem key={provider.id} value={provider.id}>
-                    {provider.name}
-                  </SelectItem>
-                ))}
+                <SelectItem value="user">Individual User</SelectItem>
+                <SelectItem value="provider">Service Provider</SelectItem>
               </SelectContent>
             </Select>
           </div>
+
+          {shareType === 'user' ? (
+            <div>
+              <label className="text-sm font-medium">User Email</label>
+              <input
+                type="email"
+                value={userEmail}
+                onChange={(e) => setUserEmail(e.target.value)}
+                placeholder="Enter user's email address"
+                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          ) : (
+            <div>
+              <label className="text-sm font-medium">Select Provider</label>
+              <Select value={selectedProvider} onValueChange={setSelectedProvider}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a provider" />
+                </SelectTrigger>
+                <SelectContent>
+                  {providers.map((provider) => (
+                    <SelectItem key={provider.id} value={provider.id}>
+                      {provider.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           
           <div>
             <label className="text-sm font-medium">Permissions</label>
@@ -277,10 +372,14 @@ const ShareCardDialog: React.FC<ShareCardDialogProps> = ({ providers, onShare, i
 
           <Button 
             onClick={handleShare} 
-            disabled={!selectedProvider || isSharing}
+            disabled={
+              (shareType === 'provider' && !selectedProvider) || 
+              (shareType === 'user' && !userEmail) || 
+              isSharing
+            }
             className="w-full"
           >
-            {isSharing ? 'Sharing...' : 'Share Card'}
+            {isSharing ? 'Adding...' : `Add ${shareType === 'user' ? 'Member' : 'Share with Provider'}`}
           </Button>
         </div>
       </DialogContent>

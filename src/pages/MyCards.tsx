@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Plus, Eye, Edit, Trash2, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -126,7 +127,8 @@ const MyCards = () => {
 
   const fetchAvailableTemplates = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch user templates
+      const { data: userTemplates, error: userError } = await supabase
         .from('card_templates')
         .select(`
           id,
@@ -137,18 +139,41 @@ const MyCards = () => {
         `)
         .eq('type', 'user');
 
-      if (error) {
-        console.error('Error fetching available templates:', error);
-        throw error;
+      if (userError) throw userError;
+
+      // Check if user is admin and fetch admin templates if so
+      const { data: userRoles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id);
+
+      const isAdmin = userRoles?.some(role => role.role === 'admin');
+      let adminTemplates = [];
+
+      if (isAdmin) {
+        const { data: adminTemplateData, error: adminError } = await supabase
+          .from('card_templates')
+          .select(`
+            id,
+            name,
+            description,
+            type,
+            transaction_code
+          `)
+          .eq('type', 'admin');
+
+        if (!adminError) {
+          adminTemplates = adminTemplateData || [];
+        }
       }
 
-      // Add empty fields array to match CardTemplate interface
-      const templatesWithFields = data.map(template => ({
+      // Combine templates with fields array to match CardTemplate interface
+      const allTemplates = [...(userTemplates || []), ...adminTemplates].map(template => ({
         ...template,
         fields: [] as TemplateField[]
       }));
 
-      setAvailableTemplates(templatesWithFields);
+      setAvailableTemplates(allTemplates);
     } catch (error) {
       console.error('Error fetching available templates:', error);
       toast({
@@ -213,13 +238,20 @@ const MyCards = () => {
                     className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors"
                   >
                     <div className="flex-1">
-                      <h3 className="font-medium">{template.name}</h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-medium">{template.name}</h3>
+                        {template.type === 'admin' && (
+                          <Badge variant="secondary" className="text-xs">
+                            {template.name === 'Organization' ? 'Organization' : 'Admin'}
+                          </Badge>
+                        )}
+                      </div>
                       <p className="text-sm text-muted-foreground">{template.description}</p>
                     </div>
                     <Button
                       asChild
                       size="sm"
-                      className="ml-4"
+                      className={`ml-4 ${template.name === 'Organization' ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
                     >
                       <Link to={`/cards/create/${template.id}`}>
                         <Plus className="h-4 w-4" />

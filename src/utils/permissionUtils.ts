@@ -19,7 +19,7 @@ export interface CardRelationship {
   card_id: string;
   shared_with_user_id?: string;
   shared_with_provider_id?: string;
-  relationship_type: 'shared' | 'requested' | 'verified' | 'revoked';
+  relationship_type: 'shared' | 'requested' | 'verified' | 'revoked' | 'member_of';
   permissions: Record<string, AccessPermissionType[]>;
   shared_at: string;
   expires_at?: string;
