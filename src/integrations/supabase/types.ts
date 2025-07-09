@@ -14,6 +14,78 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          id: string
+          ip_address: unknown | null
+          new_values: Json | null
+          old_values: Json | null
+          operation: string
+          record_id: string | null
+          table_name: string
+          timestamp: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          ip_address?: unknown | null
+          new_values?: Json | null
+          old_values?: Json | null
+          operation: string
+          record_id?: string | null
+          table_name: string
+          timestamp?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          ip_address?: unknown | null
+          new_values?: Json | null
+          old_values?: Json | null
+          operation?: string
+          record_id?: string | null
+          table_name?: string
+          timestamp?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      card_categories: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          sort_order: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       card_field_values: {
         Row: {
           created_at: string
@@ -145,6 +217,7 @@ export type Database = {
       card_templates: {
         Row: {
           card_type: Database["public"]["Enums"]["card_type"]
+          category_id: string | null
           created_at: string
           created_by: string | null
           description: string | null
@@ -156,6 +229,7 @@ export type Database = {
         }
         Insert: {
           card_type?: Database["public"]["Enums"]["card_type"]
+          category_id?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -167,6 +241,7 @@ export type Database = {
         }
         Update: {
           card_type?: Database["public"]["Enums"]["card_type"]
+          category_id?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -175,6 +250,56 @@ export type Database = {
           transaction_code?: Database["public"]["Enums"]["transaction_code"]
           type?: Database["public"]["Enums"]["card_type"]
           updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_templates_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "card_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_memberships: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          individual_user_id: string
+          joined_at: string | null
+          membership_type: string
+          organization_user_id: string
+          permissions: Json | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          individual_user_id: string
+          joined_at?: string | null
+          membership_type?: string
+          organization_user_id: string
+          permissions?: Json | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          individual_user_id?: string
+          joined_at?: string | null
+          membership_type?: string
+          organization_user_id?: string
+          permissions?: Json | null
+          status?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -293,6 +418,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      sharing_templates: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_public: boolean | null
+          name: string
+          template_permissions: Json
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          name: string
+          template_permissions?: Json
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          name?: string
+          template_permissions?: Json
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       standard_card_templates: {
         Row: {
