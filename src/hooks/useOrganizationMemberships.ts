@@ -35,27 +35,41 @@ export const useOrganizationMemberships = () => {
     
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // Get memberships first
+      const { data: membershipData, error: membershipError } = await supabase
         .from('organization_memberships')
-        .select(`
-          *,
-          individual_profile:profiles!organization_memberships_individual_user_id_fkey(
-            first_name,
-            last_name,
-            email
-          ),
-          organization_profile:profiles!organization_memberships_organization_user_id_fkey(
-            entity_name,
-            email
-          )
-        `)
+        .select('*')
         .order('joined_at', { ascending: false });
 
-      if (error) throw error;
-      setMemberships((data || []).map(item => ({
-        ...item,
-        permissions: item.permissions as Record<string, any> || {}
-      })));
+      if (membershipError) throw membershipError;
+
+      // Get all profile IDs we need
+      const profileIds = new Set<string>();
+      membershipData?.forEach(membership => {
+        profileIds.add(membership.individual_user_id);
+        profileIds.add(membership.organization_user_id);
+      });
+
+      // Get profiles
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name, email, entity_name')
+        .in('id', Array.from(profileIds));
+
+      if (profileError) throw profileError;
+
+      // Create profile lookup
+      const profileLookup = new Map(profileData?.map(p => [p.id, p]) || []);
+
+      // Combine data
+      const enrichedMemberships = membershipData?.map(membership => ({
+        ...membership,
+        permissions: membership.permissions as Record<string, any> || {},
+        individual_profile: profileLookup.get(membership.individual_user_id),
+        organization_profile: profileLookup.get(membership.organization_user_id)
+      })) || [];
+
+      setMemberships(enrichedMemberships);
     } catch (error) {
       console.error('Error fetching memberships:', error);
       toast.error('Failed to load memberships');
