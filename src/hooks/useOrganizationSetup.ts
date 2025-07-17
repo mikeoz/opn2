@@ -29,6 +29,8 @@ export const useOrganizationSetup = () => {
         throw new Error('User is not an organization account');
       }
 
+      console.log('Profile data:', data);
+
       // Check if provider already exists by fetching all providers and filtering
       const { data: allProviders } = await supabase
         .from('providers')
@@ -48,19 +50,31 @@ export const useOrganizationSetup = () => {
         return { success: true, provider_id: existingProvider.id };
       }
 
+      // Create provider name - prioritize entity_name, fallback to rep name, then first/last name
+      const providerName = data.entity_name || 
+                          (data.rep_first_name && data.rep_last_name 
+                            ? `${data.rep_first_name} ${data.rep_last_name}` 
+                            : `${data.first_name} ${data.last_name}`);
+
+      // Create representative name for contact info
+      const representativeName = data.rep_first_name && data.rep_last_name 
+        ? `${data.rep_first_name} ${data.rep_last_name}`
+        : null;
+
+      console.log('Creating provider with name:', providerName);
+      console.log('Representative name:', representativeName);
+
       // Create new provider with correct field mapping
       const { data: newProvider, error: providerError } = await supabase
         .from('providers')
         .insert({
-          name: data.entity_name || `${data.first_name} ${data.last_name}`,
+          name: providerName,
           provider_type: 'business',
           description: 'Organization provider account',
           capabilities: ["organization_services", "card_sharing"],
           contact_info: {
             email: data.email,
-            representative: data.rep_first_name && data.rep_last_name 
-              ? `${data.rep_first_name} ${data.rep_last_name}` 
-              : null
+            representative: representativeName
           }
         })
         .select()
