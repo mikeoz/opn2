@@ -21,9 +21,9 @@ const Login = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Only redirect if user is already logged in AND we're not explicitly on the login page
+  // Only redirect authenticated users to dashboard, but allow navigation between auth pages
   React.useEffect(() => {
-    if (user && location.pathname !== '/login') {
+    if (user && location.pathname === '/login') {
       navigate('/dashboard');
     }
   }, [user, navigate, location.pathname]);

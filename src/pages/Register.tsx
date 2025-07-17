@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,9 +28,9 @@ const Register = () => {
   const { user, handlePostRegistrationSetup } = useAuth();
   const { toast } = useToast();
 
-  // Only redirect if user is already logged in AND we're not explicitly on the register page
+  // Only redirect authenticated users to dashboard, but allow navigation between auth pages
   React.useEffect(() => {
-    if (user && location.pathname !== '/register') {
+    if (user && location.pathname === '/register') {
       navigate('/dashboard');
     }
   }, [user, navigate, location.pathname]);
