@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -73,6 +74,17 @@ const Register = () => {
 
       if (error) {
         console.error('Registration error details:', error);
+        
+        // Handle the specific "user already exists" error
+        if (error.message === 'User already registered' || error.code === 'user_already_exists') {
+          toast({
+            title: "Account already exists",
+            description: "An account with this email already exists. Please try logging in instead, or contact support if you need help accessing your account.",
+            variant: "destructive",
+          });
+          return;
+        }
+        
         throw error;
       }
 
@@ -222,6 +234,12 @@ const Register = () => {
             <Button variant="link" onClick={() => navigate('/login')}>
               Already have an account? Sign in
             </Button>
+          </div>
+
+          <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+            <p className="text-sm text-yellow-800">
+              <strong>Note:</strong> If you see "User already registered" error, the email you're trying to use already exists in the system. Please try logging in instead or use a different email address.
+            </p>
           </div>
         </CardContent>
       </Card>
