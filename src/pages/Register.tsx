@@ -17,10 +17,7 @@ const Register = () => {
     lastName: '',
     email: '',
     password: '',
-    entityName: '',
-    repFirstName: '',
-    repLastName: '',
-    repEmail: ''
+    organizationName: ''
   });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -42,28 +39,19 @@ const Register = () => {
     try {
       const userMetadata: any = {
         account_type: userType,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
       };
 
-      console.log('User type selected:', userType);
-
-      if (userType === 'individual') {
-        userMetadata.first_name = formData.firstName;
-        userMetadata.last_name = formData.lastName;
-        console.log('Individual metadata:', userMetadata);
-      } else {
-        userMetadata.first_name = formData.repFirstName;
-        userMetadata.last_name = formData.repLastName;
-        userMetadata.entity_name = formData.entityName;
-        userMetadata.rep_first_name = formData.repFirstName;
-        userMetadata.rep_last_name = formData.repLastName;
-        userMetadata.rep_email = formData.repEmail;
-        console.log('Organization metadata:', userMetadata);
+      // Add organization name for non-individual accounts
+      if (userType === 'non_individual') {
+        userMetadata.organization_name = formData.organizationName;
       }
 
       console.log('Attempting registration with metadata:', userMetadata);
 
       const { data, error } = await supabase.auth.signUp({
-        email: userType === 'individual' ? formData.email : formData.repEmail,
+        email: formData.email,
         password: formData.password,
         options: {
           data: userMetadata
@@ -98,7 +86,7 @@ const Register = () => {
           title: "Account created successfully!",
           description: userType === 'individual' 
             ? `Welcome ${formData.firstName}! Please check your email to confirm your account.`
-            : `Welcome ${formData.entityName}! Your organization account has been created successfully.`,
+            : `Welcome ${formData.organizationName}! Your organization account has been created successfully.`,
         });
 
         // Navigate to dashboard after successful registration
@@ -136,90 +124,63 @@ const Register = () => {
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="non_individual" id="non-individual" />
-                  <Label htmlFor="non-individual">Non-Individual (Organization)</Label>
+                  <Label htmlFor="non-individual">Organization</Label>
                 </div>
               </RadioGroup>
             </div>
 
-            {userType === 'individual' ? (
-              <>
-                <div>
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input
-                    id="firstName"
-                    value={formData.firstName}
-                    onChange={(e) => setFormData({...formData, firstName: e.target.value})}
-                    required
-                    disabled={loading}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input
-                    id="lastName"
-                    value={formData.lastName}
-                    onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-                    required
-                    disabled={loading}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    required
-                    disabled={loading}
-                  />
-                </div>
-              </>
-            ) : (
-              <>
-                <div>
-                  <Label htmlFor="entityName">Entity Name</Label>
-                  <Input
-                    id="entityName"
-                    value={formData.entityName}
-                    onChange={(e) => setFormData({...formData, entityName: e.target.value})}
-                    required
-                    disabled={loading}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="repFirstName">Representative First Name</Label>
-                  <Input
-                    id="repFirstName"
-                    value={formData.repFirstName}
-                    onChange={(e) => setFormData({...formData, repFirstName: e.target.value})}
-                    required
-                    disabled={loading}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="repLastName">Representative Last Name</Label>
-                  <Input
-                    id="repLastName"
-                    value={formData.repLastName}
-                    onChange={(e) => setFormData({...formData, repLastName: e.target.value})}
-                    required
-                    disabled={loading}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="repEmail">Representative Email</Label>
-                  <Input
-                    id="repEmail"
-                    type="email"
-                    value={formData.repEmail}
-                    onChange={(e) => setFormData({...formData, repEmail: e.target.value})}
-                    required
-                    disabled={loading}
-                  />
-                </div>
-              </>
+            {userType === 'non_individual' && (
+              <div>
+                <Label htmlFor="organizationName">Organization Name</Label>
+                <Input
+                  id="organizationName"
+                  value={formData.organizationName}
+                  onChange={(e) => setFormData({...formData, organizationName: e.target.value})}
+                  required
+                  disabled={loading}
+                />
+              </div>
             )}
+
+            <div>
+              <Label htmlFor="firstName">
+                {userType === 'individual' ? 'First Name' : 'Representative First Name'}
+              </Label>
+              <Input
+                id="firstName"
+                value={formData.firstName}
+                onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                required
+                disabled={loading}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="lastName">
+                {userType === 'individual' ? 'Last Name' : 'Representative Last Name'}
+              </Label>
+              <Input
+                id="lastName"
+                value={formData.lastName}
+                onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                required
+                disabled={loading}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="email">
+                {userType === 'individual' ? 'Email' : 'Representative Email'}
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                required
+                disabled={loading}
+              />
+            </div>
 
             <div>
               <Label htmlFor="password">Password</Label>
@@ -247,7 +208,7 @@ const Register = () => {
 
           <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-md">
             <p className="text-sm text-green-800">
-              <strong>✅ System Status:</strong> Registration system has been rebuilt and is now bulletproof. Both individual and organization accounts are fully supported.
+              <strong>✅ System Status:</strong> Registration system simplified and unified. Single form now handles both individual and organization accounts with clean field structure.
             </p>
           </div>
         </CardContent>

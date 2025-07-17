@@ -50,21 +50,19 @@ export const useOrganizationSetup = () => {
         return { success: true, provider_id: existingProvider.id };
       }
 
-      // Create provider name - prioritize entity_name, fallback to rep name, then first/last name
-      const providerName = data.entity_name || 
-                          (data.rep_first_name && data.rep_last_name 
-                            ? `${data.rep_first_name} ${data.rep_last_name}` 
-                            : `${data.first_name} ${data.last_name}`);
+      // Create provider name - prioritize organization_name, fallback to representative name
+      const providerName = data.organization_name || 
+                          `${data.first_name} ${data.last_name}`;
 
       // Create representative name for contact info
-      const representativeName = data.rep_first_name && data.rep_last_name 
-        ? `${data.rep_first_name} ${data.rep_last_name}`
+      const representativeName = data.first_name && data.last_name 
+        ? `${data.first_name} ${data.last_name}`
         : null;
 
       console.log('Creating provider with name:', providerName);
       console.log('Representative name:', representativeName);
 
-      // Create new provider with correct field mapping
+      // Create new provider
       const { data: newProvider, error: providerError } = await supabase
         .from('providers')
         .insert({

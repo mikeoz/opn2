@@ -439,42 +439,33 @@ export type Database = {
           account_type: Database["public"]["Enums"]["account_type"]
           created_at: string
           email: string | null
-          entity_name: string | null
           first_name: string | null
           guid: string
           id: string
           last_name: string | null
-          rep_email: string | null
-          rep_first_name: string | null
-          rep_last_name: string | null
+          organization_name: string | null
           updated_at: string
         }
         Insert: {
           account_type: Database["public"]["Enums"]["account_type"]
           created_at?: string
           email?: string | null
-          entity_name?: string | null
           first_name?: string | null
           guid: string
           id: string
           last_name?: string | null
-          rep_email?: string | null
-          rep_first_name?: string | null
-          rep_last_name?: string | null
+          organization_name?: string | null
           updated_at?: string
         }
         Update: {
           account_type?: Database["public"]["Enums"]["account_type"]
           created_at?: string
           email?: string | null
-          entity_name?: string | null
           first_name?: string | null
           guid?: string
           id?: string
           last_name?: string | null
-          rep_email?: string | null
-          rep_first_name?: string | null
-          rep_last_name?: string | null
+          organization_name?: string | null
           updated_at?: string
         }
         Relationships: []
