@@ -12,27 +12,70 @@ export const useOrganizationSetup = () => {
     try {
       console.log('Setting up organization provider for user:', userId);
       
-      const { data, error } = await supabase.rpc('setup_organization_provider', {
-        user_id: userId
-      });
+      // Use direct SQL query instead of RPC to avoid type issues
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .eq('account_type', 'non_individual')
+        .single();
 
       if (error) {
-        console.error('Error setting up organization provider:', error);
-        throw error;
+        console.error('Error fetching profile:', error);
+        throw new Error('Failed to fetch user profile');
       }
 
-      console.log('Organization setup result:', data);
-
-      if (data && !data.success) {
-        throw new Error(data.error || 'Failed to setup organization provider');
+      if (!data) {
+        throw new Error('User is not an organization account');
       }
+
+      // Check if provider already exists
+      const { data: existingProvider } = await supabase
+        .from('providers')
+        .select('id')
+        .eq('contact_info->email', data.email)
+        .single();
+
+      if (existingProvider) {
+        console.log('Provider already exists for this organization');
+        toast({
+          title: "Organization Already Set Up",
+          description: "Your organization provider profile already exists.",
+        });
+        return { success: true, provider_id: existingProvider.id };
+      }
+
+      // Create new provider
+      const { data: newProvider, error: providerError } = await supabase
+        .from('providers')
+        .insert({
+          name: data.entity_name || `${data.first_name} ${data.last_name}`,
+          provider_type: 'business',
+          description: 'Organization provider account',
+          capabilities: ["organization_services", "card_sharing"],
+          contact_info: {
+            email: data.email,
+            representative: data.rep_first_name && data.rep_last_name 
+              ? `${data.rep_first_name} ${data.rep_last_name}` 
+              : null
+          }
+        })
+        .select()
+        .single();
+
+      if (providerError) {
+        console.error('Error creating provider:', providerError);
+        throw providerError;
+      }
+
+      console.log('Organization provider created successfully:', newProvider);
 
       toast({
         title: "Organization Setup Complete",
         description: "Your organization profile has been created successfully.",
       });
 
-      return data;
+      return { success: true, provider_id: newProvider.id };
     } catch (error: any) {
       console.error('Organization setup error:', error);
       toast({
@@ -40,7 +83,7 @@ export const useOrganizationSetup = () => {
         description: "Your account was created successfully, but organization setup will be completed later.",
         variant: "default",
       });
-      return null;
+      return { success: false, error: error.message };
     } finally {
       setLoading(false);
     }
