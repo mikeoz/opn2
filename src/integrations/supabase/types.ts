@@ -53,6 +53,62 @@ export type Database = {
         }
         Relationships: []
       }
+      bulk_import_jobs: {
+        Row: {
+          created_at: string
+          created_by: string
+          error_details: Json | null
+          failed_rows: number | null
+          file_path: string | null
+          id: string
+          job_name: string
+          organization_id: string | null
+          processed_rows: number | null
+          status: string
+          template_selection: Json
+          total_rows: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          error_details?: Json | null
+          failed_rows?: number | null
+          file_path?: string | null
+          id?: string
+          job_name: string
+          organization_id?: string | null
+          processed_rows?: number | null
+          status?: string
+          template_selection: Json
+          total_rows?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          error_details?: Json | null
+          failed_rows?: number | null
+          file_path?: string | null
+          id?: string
+          job_name?: string
+          organization_id?: string | null
+          processed_rows?: number | null
+          status?: string
+          template_selection?: Json
+          total_rows?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bulk_import_jobs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       card_categories: {
         Row: {
           created_at: string | null
@@ -122,6 +178,66 @@ export type Database = {
           {
             foreignKeyName: "card_field_values_user_card_id_fkey"
             columns: ["user_card_id"]
+            isOneToOne: false
+            referencedRelation: "user_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      card_invitations: {
+        Row: {
+          accepted_at: string | null
+          bulk_import_job_id: string
+          card_id: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          invitation_data: Json | null
+          invitation_token: string | null
+          recipient_email: string
+          recipient_name: string | null
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          bulk_import_job_id: string
+          card_id?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          invitation_data?: Json | null
+          invitation_token?: string | null
+          recipient_email: string
+          recipient_name?: string | null
+          sent_at?: string | null
+          status?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          bulk_import_job_id?: string
+          card_id?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          invitation_data?: Json | null
+          invitation_token?: string | null
+          recipient_email?: string
+          recipient_name?: string | null
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_invitations_bulk_import_job_id_fkey"
+            columns: ["bulk_import_job_id"]
+            isOneToOne: false
+            referencedRelation: "bulk_import_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "card_invitations_card_id_fkey"
+            columns: ["card_id"]
             isOneToOne: false
             referencedRelation: "user_cards"
             referencedColumns: ["id"]

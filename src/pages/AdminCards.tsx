@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import StandardTemplateLibrary from '@/components/StandardTemplateLibrary';
 import MobileLayout from '@/components/MobileLayout';
+import { BulkImportManager } from '@/components/BulkImportManager';
 
 interface TemplateField {
   id: string;
@@ -205,6 +206,13 @@ const AdminCards = () => {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {/* Bulk Import Manager - Only for Non-Individual Admin Users */}
+        {canCreateTemplates() && (
+          <div className="mb-6">
+            <BulkImportManager />
+          </div>
         )}
 
         {/* Templates List */}
