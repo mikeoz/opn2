@@ -481,6 +481,7 @@ export type Database = {
           provider_type: string
           standards: Json | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           capabilities?: Json | null
@@ -492,6 +493,7 @@ export type Database = {
           provider_type: string
           standards?: Json | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           capabilities?: Json | null
@@ -503,8 +505,17 @@ export type Database = {
           provider_type?: string
           standards?: Json | null
           updated_at?: string
+          user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "providers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       relationship_interactions: {
         Row: {

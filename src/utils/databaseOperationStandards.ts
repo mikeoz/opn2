@@ -2,7 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { FieldMapper } from './formValidationStandards';
 
-// Standard database operation patterns
+// Standard database operation patterns for the unified profile model
 export class DatabaseOperations {
   // Verify table exists before operations
   static async verifyTableExists(tableName: string): Promise<boolean> {
@@ -36,6 +36,7 @@ export class DatabaseOperations {
             ...(tableName === 'card_templates' && { name: 'test', type: 'user' }),
             ...(tableName === 'profiles' && { account_type: 'individual', guid: 'test' }),
             ...(tableName === 'user_cards' && { card_code: 'test', template_id: 'test', user_id: 'test' }),
+            ...(tableName === 'providers' && { name: 'test', provider_type: 'business' }),
           });
           // If it's a validation error, RLS is working. If it's permission error, RLS failed
           return !insertError || !insertError.message.includes('permission');
@@ -69,7 +70,7 @@ export class DatabaseOperations {
         }
       }
 
-      // 3. Map form fields to database fields
+      // 3. Map form fields to database fields for the unified model
       const mappedData = FieldMapper.mapFormToDatabase(formData);
 
       // 4. Add audit fields

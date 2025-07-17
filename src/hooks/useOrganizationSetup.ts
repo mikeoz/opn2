@@ -31,15 +31,12 @@ export const useOrganizationSetup = () => {
 
       console.log('Profile data:', data);
 
-      // Check if provider already exists by fetching all providers and filtering
-      const { data: allProviders } = await supabase
+      // Check if provider already exists by user_id
+      const { data: existingProvider } = await supabase
         .from('providers')
-        .select('id, contact_info');
-
-      const existingProvider = allProviders?.find(provider => {
-        const contactInfo = provider.contact_info as any;
-        return contactInfo?.email === data.email;
-      });
+        .select('id')
+        .eq('user_id', userId)
+        .single();
 
       if (existingProvider) {
         console.log('Provider already exists for this organization');
@@ -66,6 +63,7 @@ export const useOrganizationSetup = () => {
       const { data: newProvider, error: providerError } = await supabase
         .from('providers')
         .insert({
+          user_id: userId,
           name: providerName,
           provider_type: 'business',
           description: 'Organization provider account',

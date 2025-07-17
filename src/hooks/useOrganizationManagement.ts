@@ -1,8 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { Tables } from '@/integrations/supabase/types';
 
 type OrganizationMember = {
   id: string;
@@ -103,7 +103,7 @@ export const useOrganizationManagement = () => {
 
     setInviteLoading(true);
     try {
-      // First, check if user exists by email
+      // Check if user exists by email
       const { data: existingProfiles, error: profileError } = await supabase
         .from('profiles')
         .select('id')
