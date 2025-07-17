@@ -7,7 +7,8 @@ export class DatabaseOperations {
   // Verify table exists before operations
   static async verifyTableExists(tableName: string): Promise<boolean> {
     try {
-      const { error } = await supabase
+      // Use type assertion to bypass strict typing for dynamic table names
+      const { error } = await (supabase as any)
         .from(tableName)
         .select('*')
         .limit(1);
@@ -21,14 +22,21 @@ export class DatabaseOperations {
   // Test RLS policies before form submission
   static async testRLSAccess(tableName: string, operation: 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE'): Promise<boolean> {
     try {
+      const client = supabase as any;
+      
       switch (operation) {
         case 'SELECT':
-          const { error: selectError } = await supabase.from(tableName).select('*').limit(1);
+          const { error: selectError } = await client.from(tableName).select('*').limit(1);
           return !selectError;
         
         case 'INSERT':
           // Test with minimal valid data - will fail validation but should pass RLS
-          const { error: insertError } = await supabase.from(tableName).insert({});
+          const { error: insertError } = await client.from(tableName).insert({
+            // Provide minimal required fields that most tables have
+            ...(tableName === 'card_templates' && { name: 'test', type: 'user' }),
+            ...(tableName === 'profiles' && { account_type: 'individual', guid: 'test' }),
+            ...(tableName === 'user_cards' && { card_code: 'test', template_id: 'test', user_id: 'test' }),
+          });
           // If it's a validation error, RLS is working. If it's permission error, RLS failed
           return !insertError || !insertError.message.includes('permission');
         
@@ -41,7 +49,7 @@ export class DatabaseOperations {
   }
 
   // Safe insert with field mapping and validation
-  static async safeInsert<T>(
+  static async safeInsert<T = any>(
     tableName: string,
     formData: Record<string, any>,
     validateFunction?: (data: any) => { success: boolean; error?: any }
@@ -71,8 +79,8 @@ export class DatabaseOperations {
         updated_at: new Date().toISOString(),
       };
 
-      // 5. Attempt insert
-      const { data, error } = await supabase
+      // 5. Attempt insert using type assertion
+      const { data, error } = await (supabase as any)
         .from(tableName)
         .insert(dataWithAudit)
         .select()

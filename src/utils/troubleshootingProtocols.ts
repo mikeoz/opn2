@@ -1,162 +1,162 @@
 
-// Systematic troubleshooting protocols for card templates and forms
+import { supabase } from '@/integrations/supabase/client';
+import { DatabaseOperations } from './databaseOperationStandards';
 
 export class TroubleshootingProtocols {
-  // Protocol 1: Database-First Error Investigation
-  static async investigateDatabaseFirst(tableName: string, operation: string) {
-    console.log(`🔍 TROUBLESHOOTING PROTOCOL: Database-First Investigation`);
-    console.log(`Table: ${tableName}, Operation: ${operation}`);
+  // Database-first investigation approach
+  static async investigateDatabaseFirst(tableName: string, operation: 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE') {
+    console.log(`🔍 Investigating database readiness for ${tableName} (${operation})`);
     
-    const steps = [
-      '1. Check if table exists',
-      '2. Verify RLS policies allow operation',
-      '3. Test database function/trigger if applicable',
-      '4. Check for schema mismatches',
-      '5. Verify user authentication state'
-    ];
-    
-    console.log('Investigation steps:', steps);
-    
-    // Import and use our database operations
-    const { DatabaseOperations } = await import('./databaseOperationStandards');
-    
-    // Step 1: Table existence
-    const tableExists = await DatabaseOperations.verifyTableExists(tableName);
-    console.log(`✅ Table exists: ${tableExists}`);
-    
-    // Step 2: RLS permissions
-    if (tableExists) {
-      const canSelect = await DatabaseOperations.testRLSAccess(tableName, 'SELECT');
-      const canInsert = await DatabaseOperations.testRLSAccess(tableName, 'INSERT');
-      console.log(`✅ Can SELECT: ${canSelect}`);
-      console.log(`✅ Can INSERT: ${canInsert}`);
-    }
-    
-    return { tableExists };
-  }
-
-  // Protocol 2: Form-to-Database Flow Verification
-  static verifyFormDatabaseFlow(
-    formData: Record<string, any>,
-    expectedDbFields: string[]
-  ) {
-    console.log(`🔍 TROUBLESHOOTING PROTOCOL: Form-to-Database Flow`);
-    
-    // Import field mapper
-    const { FieldMapper } = require('./formValidationStandards');
-    
-    console.log('Original form data:', formData);
-    
-    const mappedData = FieldMapper.mapFormToDatabase(formData);
-    console.log('Mapped database data:', mappedData);
-    
-    const missingFields = expectedDbFields.filter(field => !(field in mappedData));
-    const extraFields = Object.keys(mappedData).filter(field => !expectedDbFields.includes(field));
-    
-    if (missingFields.length > 0) {
-      console.warn('⚠️ Missing required database fields:', missingFields);
-    }
-    
-    if (extraFields.length > 0) {
-      console.log('ℹ️ Extra fields (may be optional):', extraFields);
-    }
-    
-    return {
-      mappedData,
-      missingFields,
-      extraFields,
-      isValid: missingFields.length === 0
+    const investigation = {
+      tableExists: false,
+      hasRLSPermission: false,
+      canPerformOperation: false,
+      errors: [] as string[]
     };
+
+    try {
+      // Step 1: Check if table exists
+      investigation.tableExists = await DatabaseOperations.verifyTableExists(tableName);
+      if (!investigation.tableExists) {
+        investigation.errors.push(`Table ${tableName} does not exist or is not accessible`);
+        return investigation;
+      }
+
+      // Step 2: Test RLS permissions
+      investigation.hasRLSPermission = await DatabaseOperations.testRLSAccess(tableName, operation);
+      if (!investigation.hasRLSPermission) {
+        investigation.errors.push(`No ${operation} permission on ${tableName} due to RLS policies`);
+      }
+
+      // Step 3: Mark as ready if all checks pass
+      investigation.canPerformOperation = investigation.tableExists && investigation.hasRLSPermission;
+
+      console.log(`✅ Database investigation complete for ${tableName}:`, investigation);
+      return investigation;
+
+    } catch (error: any) {
+      investigation.errors.push(`Database investigation failed: ${error.message}`);
+      console.error(`❌ Database investigation failed for ${tableName}:`, error);
+      return investigation;
+    }
   }
 
-  // Protocol 3: Error Classification and Response
-  static classifyError(error: any): {
-    type: 'database' | 'validation' | 'permission' | 'network' | 'unknown';
-    suggested_action: string;
-    investigation_steps: string[];
-  } {
-    const errorMessage = error?.message || error?.toString() || '';
+  // Error classification system
+  static classifyError(error: any): 'database' | 'validation' | 'permissions' | 'network' | 'unknown' {
+    if (!error) return 'unknown';
     
+    const errorMessage = error.message || error.toString();
+    
+    // Database errors
     if (errorMessage.includes('relation') && errorMessage.includes('does not exist')) {
-      return {
-        type: 'database',
-        suggested_action: 'Check if table exists and migrations are applied',
-        investigation_steps: [
-          'Verify table exists in Supabase dashboard',
-          'Check if migrations have been run',
-          'Verify table name spelling and case'
-        ]
-      };
+      return 'database';
     }
     
-    if (errorMessage.includes('row-level security') || errorMessage.includes('permission')) {
-      return {
-        type: 'permission',
-        suggested_action: 'Check RLS policies and user authentication',
-        investigation_steps: [
-          'Verify user is authenticated',
-          'Check RLS policies on target table',
-          'Verify user has required permissions'
-        ]
-      };
+    // Permission errors
+    if (errorMessage.includes('permission') || errorMessage.includes('RLS') || errorMessage.includes('policy')) {
+      return 'permissions';
     }
     
-    if (errorMessage.includes('violates') || errorMessage.includes('constraint')) {
-      return {
-        type: 'validation',
-        suggested_action: 'Check data validation and constraints',
-        investigation_steps: [
-          'Verify required fields are provided',
-          'Check data types match schema',
-          'Verify foreign key constraints'
-        ]
-      };
+    // Validation errors
+    if (errorMessage.includes('validation') || errorMessage.includes('required') || errorMessage.includes('invalid')) {
+      return 'validation';
     }
     
-    if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
-      return {
-        type: 'network',
-        suggested_action: 'Check network connectivity and Supabase status',
-        investigation_steps: [
-          'Verify internet connection',
-          'Check Supabase project status',
-          'Verify API keys are correct'
-        ]
-      };
+    // Network errors
+    if (errorMessage.includes('network') || errorMessage.includes('fetch') || errorMessage.includes('connection')) {
+      return 'network';
     }
     
-    return {
-      type: 'unknown',
-      suggested_action: 'Follow systematic debugging approach',
-      investigation_steps: [
-        'Check browser console for additional errors',
-        'Verify complete error stack trace',
-        'Test in isolation with minimal data'
-      ]
+    return 'unknown';
+  }
+
+  // Systematic debugging checklist
+  static async runDiagnostics(tableName: string, formData: Record<string, any>) {
+    console.log(`🔬 Running full diagnostics for ${tableName}`);
+    
+    const diagnostics = {
+      timestamp: new Date().toISOString(),
+      tableName,
+      formData,
+      results: {
+        tableExists: false,
+        selectPermission: false,
+        insertPermission: false,
+        fieldMappingWorks: false,
+        validationPasses: false
+      },
+      errors: [] as string[],
+      recommendations: [] as string[]
     };
+
+    try {
+      // Test table existence
+      diagnostics.results.tableExists = await DatabaseOperations.verifyTableExists(tableName);
+      if (!diagnostics.results.tableExists) {
+        diagnostics.errors.push(`Table ${tableName} does not exist`);
+        diagnostics.recommendations.push(`Create table ${tableName} in database`);
+      }
+
+      // Test permissions
+      diagnostics.results.selectPermission = await DatabaseOperations.testRLSAccess(tableName, 'SELECT');
+      diagnostics.results.insertPermission = await DatabaseOperations.testRLSAccess(tableName, 'INSERT');
+      
+      if (!diagnostics.results.selectPermission) {
+        diagnostics.errors.push(`No SELECT permission on ${tableName}`);
+        diagnostics.recommendations.push(`Check RLS policies for SELECT on ${tableName}`);
+      }
+      
+      if (!diagnostics.results.insertPermission) {
+        diagnostics.errors.push(`No INSERT permission on ${tableName}`);
+        diagnostics.recommendations.push(`Check RLS policies for INSERT on ${tableName}`);
+      }
+
+      // Test field mapping
+      try {
+        const { FieldMapper } = await import('./formValidationStandards');
+        FieldMapper.mapFormToDatabase(formData);
+        diagnostics.results.fieldMappingWorks = true;
+      } catch (err: any) {
+        diagnostics.errors.push(`Field mapping failed: ${err.message}`);
+        diagnostics.recommendations.push(`Review field mapping configuration`);
+      }
+
+      console.log(`📊 Diagnostics complete for ${tableName}:`, diagnostics);
+      return diagnostics;
+
+    } catch (error: any) {
+      diagnostics.errors.push(`Diagnostics failed: ${error.message}`);
+      console.error(`❌ Diagnostics failed for ${tableName}:`, error);
+      return diagnostics;
+    }
+  }
+
+  // Generate troubleshooting report
+  static generateTroubleshootingReport(diagnostics: any) {
+    const report = {
+      summary: diagnostics.errors.length === 0 ? 'All systems operational' : `${diagnostics.errors.length} issues found`,
+      criticalIssues: diagnostics.errors.filter((err: string) => err.includes('does not exist') || err.includes('permission')),
+      recommendations: diagnostics.recommendations,
+      nextSteps: [] as string[]
+    };
+
+    // Generate next steps based on findings
+    if (!diagnostics.results.tableExists) {
+      report.nextSteps.push('1. Create missing database table');
+    }
+    
+    if (!diagnostics.results.selectPermission || !diagnostics.results.insertPermission) {
+      report.nextSteps.push('2. Review and update RLS policies');
+    }
+    
+    if (!diagnostics.results.fieldMappingWorks) {
+      report.nextSteps.push('3. Fix field mapping configuration');
+    }
+    
+    if (report.nextSteps.length === 0) {
+      report.nextSteps.push('System is ready for operations');
+    }
+
+    return report;
   }
 }
-
-// Mandatory pre-checks for any new card template or form
-export const mandatoryPreChecks = {
-  beforeCreatingForm: [
-    'Verify target database table exists',
-    'Test RLS policies with sample data',
-    'Confirm field naming conventions match database',
-    'Validate form schema against database schema'
-  ],
-  
-  beforeSubmittingForm: [
-    'Validate form data against schema',
-    'Map form fields to database fields',
-    'Test database connectivity',
-    'Verify user authentication status'
-  ],
-  
-  afterError: [
-    'Classify error type using TroubleshootingProtocols.classifyError()',
-    'Follow database-first investigation if applicable',
-    'Check form-to-database flow mapping',
-    'Test each component in isolation'
-  ]
-};
