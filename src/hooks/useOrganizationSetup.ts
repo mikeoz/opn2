@@ -48,7 +48,7 @@ export const useOrganizationSetup = () => {
         return { success: true, provider_id: existingProvider.id };
       }
 
-      // Create new provider
+      // Create new provider with correct field mapping
       const { data: newProvider, error: providerError } = await supabase
         .from('providers')
         .insert({
