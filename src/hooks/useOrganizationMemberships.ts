@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -20,7 +21,9 @@ export interface OrganizationMembership {
     email?: string;
   };
   organization_profile?: {
-    entity_name?: string;
+    organization_name?: string;
+    first_name?: string;
+    last_name?: string;
     email?: string;
   };
 }
@@ -50,10 +53,10 @@ export const useOrganizationMemberships = () => {
         profileIds.add(membership.organization_user_id);
       });
 
-      // Get profiles
+      // Get profiles - using the new unified field structure
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, email, entity_name')
+        .select('id, first_name, last_name, email, organization_name')
         .in('id', Array.from(profileIds));
 
       if (profileError) throw profileError;

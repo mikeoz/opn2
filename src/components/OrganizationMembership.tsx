@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useOrganizationMemberships } from '@/hooks/useOrganizationMemberships';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -212,7 +213,8 @@ export const OrganizationMembership: React.FC<OrganizationMembershipProps> = ({ 
                         <Building className="h-4 w-4 text-muted-foreground" />
                         <div>
                           <p className="font-medium">
-                            {membership.organization_profile?.entity_name}
+                            {membership.organization_profile?.organization_name || 
+                             `${membership.organization_profile?.first_name} ${membership.organization_profile?.last_name}`}
                           </p>
                           <p className="text-sm text-muted-foreground">
                             {membership.organization_profile?.email}
