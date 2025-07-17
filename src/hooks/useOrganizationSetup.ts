@@ -12,7 +12,7 @@ export const useOrganizationSetup = () => {
     try {
       console.log('Setting up organization provider for user:', userId);
       
-      // Use direct SQL query instead of RPC to avoid type issues
+      // Get the user's profile
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -29,12 +29,15 @@ export const useOrganizationSetup = () => {
         throw new Error('User is not an organization account');
       }
 
-      // Check if provider already exists
-      const { data: existingProvider } = await supabase
+      // Check if provider already exists by fetching all providers and filtering
+      const { data: allProviders } = await supabase
         .from('providers')
-        .select('id')
-        .eq('contact_info->email', data.email)
-        .single();
+        .select('id, contact_info');
+
+      const existingProvider = allProviders?.find(provider => {
+        const contactInfo = provider.contact_info as any;
+        return contactInfo?.email === data.email;
+      });
 
       if (existingProvider) {
         console.log('Provider already exists for this organization');
