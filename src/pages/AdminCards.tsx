@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import StandardTemplateLibrary from '@/components/StandardTemplateLibrary';
 import MobileLayout from '@/components/MobileLayout';
 import { BulkImportManager } from '@/components/BulkImportManager';
+import OrganizationManagement from '@/components/OrganizationManagement';
 
 interface TemplateField {
   id: string;
@@ -215,7 +216,12 @@ const AdminCards = () => {
           </div>
         )}
 
-        {/* Templates List */}
+        {/* Organization Management - Only for Non-Individual Admin Users */}
+        {canCreateTemplates() && (
+          <div className="mb-6">
+            <OrganizationManagement />
+          </div>
+        )}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
