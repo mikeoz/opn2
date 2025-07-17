@@ -3,12 +3,14 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { cleanupAuthState } from '@/utils/authCleanup';
+import { useOrganizationSetup } from '@/hooks/useOrganizationSetup';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  handlePostRegistrationSetup: (user: User, accountType: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -61,6 +63,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const { setupOrganizationProvider } = useOrganizationSetup();
+
+  const handlePostRegistrationSetup = async (user: User, accountType: string) => {
+    console.log('Post-registration setup for:', user.email, 'Account type:', accountType);
+    
+    // Handle admin role assignment
+    setTimeout(() => {
+      assignAdminRoleIfNeeded(user);
+    }, 0);
+
+    // Handle organization provider setup
+    if (accountType === 'non_individual') {
+      console.log('Setting up organization provider for:', user.email);
+      setTimeout(() => {
+        setupOrganizationProvider(user.id);
+      }, 1000); // Small delay to ensure profile is created
+    }
+  };
 
   useEffect(() => {
     // Set up auth state listener first
@@ -71,7 +91,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(session?.user ?? null);
         setLoading(false);
 
-        // Assign admin role if needed when user signs in
+        // Only handle admin role assignment for existing sessions
         if (session?.user && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
           setTimeout(() => {
             assignAdminRoleIfNeeded(session.user);
@@ -121,6 +141,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     session,
     loading,
     signOut,
+    handlePostRegistrationSetup,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
