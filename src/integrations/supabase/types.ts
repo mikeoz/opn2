@@ -321,13 +321,6 @@ export type Database = {
             referencedRelation: "user_cards"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "card_relationships_shared_with_provider_id_fkey"
-            columns: ["shared_with_provider_id"]
-            isOneToOne: false
-            referencedRelation: "providers"
-            referencedColumns: ["id"]
-          },
         ]
       }
       card_templates: {
@@ -733,15 +726,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "user_provider_relationships_provider_id_fkey"
-            columns: ["provider_id"]
-            isOneToOne: false
-            referencedRelation: "providers"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       user_roles: {
         Row: {
