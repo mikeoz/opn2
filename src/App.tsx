@@ -16,6 +16,7 @@ import CreateCard from "./pages/CreateCard";
 import ViewCard from "./pages/ViewCard";
 import EditCard from "./pages/EditCard";
 import NotFound from "./pages/NotFound";
+import StandardTemplateLibrary from "./components/StandardTemplateLibrary";
 
 const queryClient = new QueryClient();
 
@@ -63,6 +64,11 @@ const App = () => (
             <Route path="/cards/edit/:cardId" element={
               <ProtectedRoute>
                 <EditCard />
+              </ProtectedRoute>
+            } />
+            <Route path="/templates/standard" element={
+              <ProtectedRoute>
+                <StandardTemplateLibrary />
               </ProtectedRoute>
             } />
             <Route path="/cards/share/:id" element={
