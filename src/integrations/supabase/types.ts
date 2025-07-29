@@ -437,6 +437,7 @@ export type Database = {
       profiles: {
         Row: {
           account_type: Database["public"]["Enums"]["account_type"]
+          avatar_url: string | null
           created_at: string
           email: string | null
           first_name: string | null
@@ -445,9 +446,11 @@ export type Database = {
           last_name: string | null
           organization_name: string | null
           updated_at: string
+          username: string | null
         }
         Insert: {
           account_type: Database["public"]["Enums"]["account_type"]
+          avatar_url?: string | null
           created_at?: string
           email?: string | null
           first_name?: string | null
@@ -456,9 +459,11 @@ export type Database = {
           last_name?: string | null
           organization_name?: string | null
           updated_at?: string
+          username?: string | null
         }
         Update: {
           account_type?: Database["public"]["Enums"]["account_type"]
+          avatar_url?: string | null
           created_at?: string
           email?: string | null
           first_name?: string | null
@@ -467,6 +472,7 @@ export type Database = {
           last_name?: string | null
           organization_name?: string | null
           updated_at?: string
+          username?: string | null
         }
         Relationships: []
       }

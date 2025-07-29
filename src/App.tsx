@@ -19,6 +19,7 @@ import NotFound from "./pages/NotFound";
 import StandardTemplateLibrary from "./components/StandardTemplateLibrary";
 import SecurityDashboard from "./pages/SecurityDashboard";
 import BulkImport from "./pages/BulkImport";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +62,11 @@ const App = () => (
           <Route path="/admin/bulk-import" element={
             <ProtectedRoute>
               <BulkImport />
+            </ProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <Profile />
             </ProtectedRoute>
           } />
             <Route path="/cards/create/:templateId" element={
