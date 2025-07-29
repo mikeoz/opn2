@@ -18,6 +18,7 @@ import EditCard from "./pages/EditCard";
 import NotFound from "./pages/NotFound";
 import StandardTemplateLibrary from "./components/StandardTemplateLibrary";
 import SecurityDashboard from "./pages/SecurityDashboard";
+import BulkImport from "./pages/BulkImport";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +56,11 @@ const App = () => (
           <Route path="/admin/security" element={
             <ProtectedRoute>
               <SecurityDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/bulk-import" element={
+            <ProtectedRoute>
+              <BulkImport />
             </ProtectedRoute>
           } />
             <Route path="/cards/create/:templateId" element={

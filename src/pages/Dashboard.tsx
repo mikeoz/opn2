@@ -197,12 +197,20 @@ const Dashboard = () => {
         {isAdmin && (
           <div className="pt-6 border-t border-border">
             <h2 className="text-lg font-semibold text-muted-foreground mb-4">Administrator Tools</h2>
-            <Button asChild className="w-full bg-primary hover:bg-primary/90 mb-4">
-              <Link to="/admin/cards">
-                <Settings className="h-4 w-4 mr-2" />
-                Manage AdminCARDs
-              </Link>
-            </Button>
+            <div className="space-y-2">
+              <Button asChild className="w-full bg-primary hover:bg-primary/90">
+                <Link to="/admin/cards">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Manage AdminCARDs
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full">
+                <Link to="/admin/bulk-import">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Bulk Import Manager
+                </Link>
+              </Button>
+            </div>
           </div>
         )}
       </div>
