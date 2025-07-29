@@ -157,18 +157,15 @@ export const useOrganizationManagement = () => {
 
       if (membershipError) throw membershipError;
 
-      // If inviting as admin, grant admin role
+      // If inviting as admin, grant admin role using secure function
       if (inviteData.membershipType === 'admin') {
-        const { error: roleError } = await supabase
-          .from('user_roles')
-          .insert({
-            user_id: targetUserId,
-            role: 'admin'
-          });
+        const { error: roleError } = await supabase.rpc('assign_admin_role', {
+          target_user_id: targetUserId
+        });
 
-        if (roleError && !roleError.message.includes('duplicate')) {
-          // Ignore duplicate role errors
-          throw roleError;
+        if (roleError) {
+          console.error('Error assigning admin role:', roleError);
+          // Continue with membership creation even if role assignment fails
         }
       }
 
@@ -205,28 +202,27 @@ export const useOrganizationManagement = () => {
 
       if (membershipError) throw membershipError;
 
-      // Handle admin role
+      // Handle admin role using secure functions
       if (newMembershipType === 'admin') {
-        // Grant admin role
-        const { error: roleError } = await supabase
-          .from('user_roles')
-          .insert({
-            user_id: member.individual_user_id,
-            role: 'admin'
-          });
+        // Grant admin role using secure function
+        const { error: roleError } = await supabase.rpc('assign_admin_role', {
+          target_user_id: member.individual_user_id
+        });
 
-        if (roleError && !roleError.message.includes('duplicate')) {
+        if (roleError) {
+          console.error('Error assigning admin role:', roleError);
           throw roleError;
         }
       } else {
-        // Remove admin role
-        const { error: roleError } = await supabase
-          .from('user_roles')
-          .delete()
-          .eq('user_id', member.individual_user_id)
-          .eq('role', 'admin');
+        // Remove admin role using secure function
+        const { error: roleError } = await supabase.rpc('revoke_admin_role', {
+          target_user_id: member.individual_user_id
+        });
 
-        if (roleError) throw roleError;
+        if (roleError) {
+          console.error('Error revoking admin role:', roleError);
+          throw roleError;
+        }
       }
 
       toast({
@@ -260,14 +256,17 @@ export const useOrganizationManagement = () => {
 
       if (membershipError) throw membershipError;
 
-      // Remove admin role if they had it
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .delete()
-        .eq('user_id', member.individual_user_id)
-        .eq('role', 'admin');
-
-      // Ignore role deletion errors as they might not have had admin role
+      // Remove admin role if they had it using secure function
+      if (member.user_roles.some(role => role.role === 'admin')) {
+        const { error: roleError } = await supabase.rpc('revoke_admin_role', {
+          target_user_id: member.individual_user_id
+        });
+        
+        if (roleError) {
+          console.error('Error revoking admin role during member removal:', roleError);
+          // Continue with removal even if role revocation fails
+        }
+      }
       
       toast({
         title: "Success",

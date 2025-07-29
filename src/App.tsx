@@ -17,6 +17,7 @@ import ViewCard from "./pages/ViewCard";
 import EditCard from "./pages/EditCard";
 import NotFound from "./pages/NotFound";
 import StandardTemplateLibrary from "./components/StandardTemplateLibrary";
+import SecurityDashboard from "./pages/SecurityDashboard";
 
 const queryClient = new QueryClient();
 
@@ -46,11 +47,16 @@ const App = () => (
                 <Directory />
               </ProtectedRoute>
             } />
-            <Route path="/admin/cards" element={
-              <ProtectedRoute>
-                <AdminCards />
-              </ProtectedRoute>
-            } />
+          <Route path="/admin/cards" element={
+            <ProtectedRoute>
+              <AdminCards />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/security" element={
+            <ProtectedRoute>
+              <SecurityDashboard />
+            </ProtectedRoute>
+          } />
             <Route path="/cards/create/:templateId" element={
               <ProtectedRoute>
                 <CreateCard />

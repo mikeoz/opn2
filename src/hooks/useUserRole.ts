@@ -43,42 +43,11 @@ export const useUserRole = () => {
           const hasAdminRole = !!roleData;
           console.log('Fallback admin role check result:', hasAdminRole);
 
-          // If user is mike.ozburn@mac.com and doesn't have admin role, assign it
-          if (user.email === 'mike.ozburn@mac.com' && !hasAdminRole) {
-            console.log('Assigning admin role to mike.ozburn@mac.com');
-            
-            const { error: insertError } = await supabase
-              .from('user_roles')
-              .insert({ user_id: user.id, role: 'admin' });
-
-            if (insertError) {
-              console.error('Error assigning admin role:', insertError);
-            } else {
-              console.log('Admin role successfully assigned');
-              setIsAdmin(true);
-            }
-          } else {
-            setIsAdmin(hasAdminRole);
-          }
+          setIsAdmin(hasAdminRole);
         } else {
           console.log('has_role function result:', data);
           setIsAdmin(data === true);
           
-          // If user is mike.ozburn@mac.com and doesn't have admin role, assign it
-          if (user.email === 'mike.ozburn@mac.com' && !data) {
-            console.log('Assigning admin role to mike.ozburn@mac.com via function result');
-            
-            const { error: insertError } = await supabase
-              .from('user_roles')
-              .insert({ user_id: user.id, role: 'admin' });
-
-            if (insertError) {
-              console.error('Error assigning admin role:', insertError);
-            } else {
-              console.log('Admin role successfully assigned');
-              setIsAdmin(true);
-            }
-          }
         }
       } catch (error) {
         console.error('Error in checkAdminRole:', error);
@@ -93,9 +62,9 @@ export const useUserRole = () => {
 
   const assignAdminRole = async (userId: string) => {
     try {
-      const { error } = await supabase
-        .from('user_roles')
-        .insert({ user_id: userId, role: 'admin' });
+      const { data, error } = await supabase.rpc('assign_admin_role', {
+        target_user_id: userId
+      });
 
       if (error) throw error;
       
@@ -103,6 +72,8 @@ export const useUserRole = () => {
       if (user?.id === userId) {
         setIsAdmin(true);
       }
+      
+      return data;
     } catch (error) {
       console.error('Error assigning admin role:', error);
       throw error;

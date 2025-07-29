@@ -23,41 +23,8 @@ export const useAuth = () => {
   return context;
 };
 
-// Function to assign admin role to mike.ozburn@mac.com
-const assignAdminRoleIfNeeded = async (user: User) => {
-  console.log('Checking if admin role needed for:', user.email);
-  
-  if (user.email === 'mike.ozburn@mac.com') {
-    try {
-      // Check if user already has admin role
-      const { data: existingRole } = await supabase
-        .from('user_roles')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('role', 'admin')
-        .single();
-
-      if (!existingRole) {
-        console.log('Assigning admin role to mike.ozburn@mac.com');
-        
-        // Assign admin role
-        const { error } = await supabase
-          .from('user_roles')
-          .insert({ user_id: user.id, role: 'admin' });
-
-        if (error) {
-          console.error('Error assigning admin role:', error);
-        } else {
-          console.log('Admin role assigned to mike.ozburn@mac.com');
-        }
-      } else {
-        console.log('Admin role already exists for mike.ozburn@mac.com');
-      }
-    } catch (error) {
-      console.error('Error checking/assigning admin role:', error);
-    }
-  }
-};
+// Admin role assignment is now handled securely through dedicated functions
+// No automatic hardcoded admin assignment for security
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -68,10 +35,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const handlePostRegistrationSetup = async (user: User, accountType: string) => {
     console.log('Post-registration setup for:', user.email, 'Account type:', accountType);
     
-    // Handle admin role assignment
-    setTimeout(() => {
-      assignAdminRoleIfNeeded(user);
-    }, 0);
+    // Admin role assignment is now handled securely by existing admins only
 
     // Handle organization provider setup
     if (accountType === 'non_individual') {
@@ -91,12 +55,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(session?.user ?? null);
         setLoading(false);
 
-        // Only handle admin role assignment for existing sessions
-        if (session?.user && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
-          setTimeout(() => {
-            assignAdminRoleIfNeeded(session.user);
-          }, 0);
-        }
+        // Admin role assignment is now handled securely by existing admins only
       }
     );
 
@@ -107,12 +66,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(session?.user ?? null);
       setLoading(false);
 
-      // Assign admin role if needed for existing session
-      if (session?.user) {
-        setTimeout(() => {
-          assignAdminRoleIfNeeded(session.user);
-        }, 0);
-      }
+      // Admin role assignment is now handled securely by existing admins only
     });
 
     return () => subscription.unsubscribe();

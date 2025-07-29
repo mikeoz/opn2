@@ -756,6 +756,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      assign_admin_role: {
+        Args: { target_user_id: string }
+        Returns: boolean
+      }
       generate_card_code: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -769,6 +773,10 @@ export type Database = {
           _user_id: string
           _role: Database["public"]["Enums"]["app_role"]
         }
+        Returns: boolean
+      }
+      revoke_admin_role: {
+        Args: { target_user_id: string }
         Returns: boolean
       }
     }
