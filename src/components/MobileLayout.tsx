@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Home, LogOut, Users, CreditCard, Plus, Share2, Eye, User } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useProfile } from '@/hooks/useProfile';
+// import { useProfile } from '@/hooks/useProfile';
 
 interface MobileLayoutProps {
   children: React.ReactNode;
@@ -13,7 +13,7 @@ interface MobileLayoutProps {
 
 const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
   const { user, signOut } = useAuth();
-  const { profile } = useProfile();
+  // const { profile } = useProfile();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -47,16 +47,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
             asChild
           >
             <Link to="/profile">
-              {profile?.avatar_url ? (
-                <Avatar className="h-5 w-5">
-                  <AvatarImage src={profile.avatar_url} alt="Profile" />
-                  <AvatarFallback>
-                    <User className="h-3 w-3" />
-                  </AvatarFallback>
-                </Avatar>
-              ) : (
-                <User className="h-5 w-5" />
-              )}
+              <User className="h-5 w-5" />
             </Link>
           </Button>
           <Button
