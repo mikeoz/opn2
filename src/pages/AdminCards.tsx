@@ -70,7 +70,7 @@ const AdminCards = () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('account_type, entity_name')
+        .select('account_type, organization_name')
         .eq('id', user.id)
         .single();
 
