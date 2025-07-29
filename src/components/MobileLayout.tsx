@@ -2,9 +2,10 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Home, LogOut, Users, CreditCard, Plus, Share2, Eye, User } from 'lucide-react';
+import { Home, LogOut, Users, CreditCard, Plus, Share2, Eye, User, Settings, Upload } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserRole } from '@/hooks/useUserRole';
 // import { useProfile } from '@/hooks/useProfile';
 
 interface MobileLayoutProps {
@@ -13,6 +14,7 @@ interface MobileLayoutProps {
 
 const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
   const { user, signOut } = useAuth();
+  const { isAdmin } = useUserRole();
   // const { profile } = useProfile();
   const navigate = useNavigate();
 
@@ -40,6 +42,32 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
               <Home className="h-5 w-5" />
             </Link>
           </Button>
+          {isAdmin && (
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-primary-foreground hover:bg-primary/20"
+                asChild
+                title="Admin Cards"
+              >
+                <Link to="/admin/cards">
+                  <Settings className="h-5 w-5" />
+                </Link>
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-primary-foreground hover:bg-primary/20"
+                asChild
+                title="Bulk Import"
+              >
+                <Link to="/admin/bulk-import">
+                  <Upload className="h-5 w-5" />
+                </Link>
+              </Button>
+            </>
+          )}
           <Button
             variant="ghost"
             size="icon"
