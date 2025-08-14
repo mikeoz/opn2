@@ -21,6 +21,7 @@ import StandardTemplateLibrary from "./components/StandardTemplateLibrary";
 import SecurityDashboard from "./pages/SecurityDashboard";
 import BulkImport from "./pages/BulkImport";
 import Profile from "./pages/Profile";
+import UserGuide from "./pages/UserGuide";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -75,6 +76,11 @@ const App = () => (
           <Route path="/profile" element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          } />
+          <Route path="/user-guide" element={
+            <ProtectedRoute>
+              <UserGuide />
             </ProtectedRoute>
           } />
             <Route path="/cards/create/:templateId" element={
