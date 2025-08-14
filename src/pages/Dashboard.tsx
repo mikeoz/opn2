@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Settings, Clock, Users, MapPin, Heart, Target } from 'lucide-react';
+import { Settings, Clock, Users, MapPin, Heart, Target, FileText, Upload } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -193,6 +193,19 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
+        {/* Help & Resources Section - Available to all users */}
+        <div className="pt-6 border-t border-border">
+          <h2 className="text-lg font-semibold text-muted-foreground mb-4">Help & Resources</h2>
+          <div className="space-y-2">
+            <Button asChild variant="outline" className="w-full">
+              <Link to="/user-guide">
+                <FileText className="h-4 w-4 mr-2" />
+                User Guide
+              </Link>
+            </Button>
+          </div>
+        </div>
+
         {/* Admin Section - At bottom of scroll */}
         {isAdmin && (
           <div className="pt-6 border-t border-border">
@@ -206,7 +219,7 @@ const Dashboard = () => {
               </Button>
               <Button asChild variant="outline" className="w-full">
                 <Link to="/admin/bulk-import">
-                  <Settings className="h-4 w-4 mr-2" />
+                  <Upload className="h-4 w-4 mr-2" />
                   Bulk Import Manager
                 </Link>
               </Button>
