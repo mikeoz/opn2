@@ -14,14 +14,21 @@ interface ImportJob {
 }
 
 Deno.serve(async (req) => {
+  console.log('=== BULK IMPORT PROCESS START ===');
+  console.log('Request method:', req.method);
+  console.log('Request URL:', req.url);
+  
   if (req.method === 'OPTIONS') {
+    console.log('Handling CORS preflight request');
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
+    console.log('Parsing request body...');
     const { jobId } = await req.json()
     console.log('Processing bulk import job:', jobId)
 
+    console.log('Initializing Supabase client...');
     // Initialize Supabase client with service role key
     const supabaseServiceRole = createClient(
       'https://dkhrkignepqfidzdyper.supabase.co',
@@ -33,13 +40,15 @@ Deno.serve(async (req) => {
         }
       }
     )
+    console.log('Supabase client initialized');
 
+    console.log('Fetching import job details...');
     // Fetch the import job details
     const { data: job, error: jobError } = await supabaseServiceRole
       .from('bulk_import_jobs')
       .select('*')
       .eq('id', jobId)
-      .single()
+      .maybeSingle()
 
     if (jobError || !job) {
       console.error('Job not found:', jobError)
@@ -137,7 +146,11 @@ Deno.serve(async (req) => {
     })
 
   } catch (error) {
-    console.error('Error processing bulk import:', error)
+    console.error('=== BULK IMPORT ERROR ===');
+    console.error('Error type:', typeof error);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    console.error('Full error object:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
