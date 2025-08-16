@@ -1,1 +1,4 @@
 project_id = "dkhrkignepqfidzdyper"
+
+[functions.process-bulk-import]
+verify_jwt = false

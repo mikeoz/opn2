@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Upload, Download, FileSpreadsheet, Users, Mail } from 'lucide-react';
+import { Upload, Download, FileSpreadsheet, Users, Mail, Play } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -36,6 +36,7 @@ interface BulkImportJob {
   processed_rows: number;
   failed_rows: number;
   created_at: string;
+  file_path: string | null;
 }
 
 export const BulkImportManager = () => {
@@ -135,6 +136,29 @@ export const BulkImportManager = () => {
     toast({ title: "Template downloaded successfully!" });
   };
 
+  // Process bulk import job
+  const processJobMutation = useMutation({
+    mutationFn: async (jobId: string) => {
+      const response = await supabase.functions.invoke('process-bulk-import', {
+        body: { jobId }
+      });
+      
+      if (response.error) throw response.error;
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bulk-import-jobs'] });
+      toast({ title: "Processing started successfully!" });
+    },
+    onError: (error) => {
+      toast({ 
+        title: "Error processing import job", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    }
+  });
+
   // Create bulk import job
   const createImportJobMutation = useMutation({
     mutationFn: async (jobData: { job_name: string; template_selection: any; file?: File }) => {
@@ -212,6 +236,7 @@ export const BulkImportManager = () => {
       pending: 'bg-yellow-100 text-yellow-800',
       processing: 'bg-blue-100 text-blue-800', 
       completed: 'bg-green-100 text-green-800',
+      completed_with_errors: 'bg-orange-100 text-orange-800',
       failed: 'bg-red-100 text-red-800'
     };
     return <Badge className={statusColors[status as keyof typeof statusColors] || 'bg-gray-100 text-gray-800'}>{status}</Badge>;
@@ -368,6 +393,17 @@ export const BulkImportManager = () => {
                     )}
                   </div>
                   <div className="flex items-center gap-2">
+                    {job.status === 'pending' && job.file_path && (
+                      <Button 
+                        variant="default" 
+                        size="sm"
+                        onClick={() => processJobMutation.mutate(job.id)}
+                        disabled={processJobMutation.isPending}
+                      >
+                        <Play className="h-4 w-4 mr-2" />
+                        {processJobMutation.isPending ? 'Processing...' : 'Process Now'}
+                      </Button>
+                    )}
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button variant="outline" size="sm">
