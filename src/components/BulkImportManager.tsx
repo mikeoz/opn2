@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Upload, Download, FileSpreadsheet, Users, Mail, Play } from 'lucide-react';
+import { Upload, Download, FileSpreadsheet, Users, Mail, Play, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -135,6 +135,29 @@ export const BulkImportManager = () => {
 
     toast({ title: "Template downloaded successfully!" });
   };
+
+  // Delete bulk import job
+  const deleteJobMutation = useMutation({
+    mutationFn: async (jobId: string) => {
+      const { error } = await supabase
+        .from('bulk_import_jobs')
+        .delete()
+        .eq('id', jobId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bulk-import-jobs'] });
+      toast({ title: "Import job deleted successfully!" });
+    },
+    onError: (error) => {
+      toast({ 
+        title: "Error deleting import job", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    }
+  });
 
   // Process bulk import job
   const processJobMutation = useMutation({
@@ -404,6 +427,16 @@ export const BulkImportManager = () => {
                         {processJobMutation.isPending ? 'Processing...' : 'Process Now'}
                       </Button>
                     )}
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => deleteJobMutation.mutate(job.id)}
+                      disabled={deleteJobMutation.isPending}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      {deleteJobMutation.isPending ? 'Deleting...' : 'Delete'}
+                    </Button>
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button variant="outline" size="sm">
