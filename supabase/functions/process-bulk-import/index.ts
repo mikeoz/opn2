@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
 
     // Initialize Supabase client with service role key
     const supabaseServiceRole = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
+      'https://dkhrkignepqfidzdyper.supabase.co',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       {
         auth: {
