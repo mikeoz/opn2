@@ -162,7 +162,7 @@ export const BulkImportManager = () => {
   // Process bulk import job
   const processJobMutation = useMutation({
     mutationFn: async (jobId: string) => {
-      const response = await supabase.functions.invoke('process_bulk_import', {
+      const response = await supabase.functions.invoke('process-bulk-import', {
         body: { jobId }
       });
       
