@@ -3,5 +3,8 @@ project_id = "dkhrkignepqfidzdyper"
 [functions."process-bulk-import"]
 verify_jwt = false
 
+[functions."process_bulk_import"]
+verify_jwt = false
+
 [functions."test-function"]
 verify_jwt = false
