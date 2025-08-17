@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Upload, Download, FileSpreadsheet, Users, Mail, Play, Trash2 } from 'lucide-react';
+import { Upload, Download, FileSpreadsheet, Users, Mail, Play, Trash2, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -37,6 +37,7 @@ interface BulkImportJob {
   failed_rows: number;
   created_at: string;
   file_path: string | null;
+  error_details?: any;
 }
 
 export const BulkImportManager = () => {
@@ -508,6 +509,29 @@ export const BulkImportManager = () => {
                         </div>
                       </DialogContent>
                     </Dialog>
+
+                    {job.status === 'failed' && job.error_details && (
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+                            <AlertCircle className="h-4 w-4 mr-2" />
+                            View Errors
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-3xl">
+                          <DialogHeader>
+                            <DialogTitle>Error details for {job.job_name}</DialogTitle>
+                            <DialogDescription>Review the issues found during processing</DialogDescription>
+                          </DialogHeader>
+                          <div className="mt-4 max-h-[60vh] overflow-auto rounded-md border p-3 text-sm">
+                            <pre className="whitespace-pre-wrap break-words">
+{JSON.stringify(job.error_details, null, 2)}
+                            </pre>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    )}
+
                   </div>
                 </div>
               ))}
