@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -89,6 +89,56 @@ export const BulkImportManager = () => {
       return data as BulkImportJob[];
     }
   });
+
+  // Real-time listener for bulk import job updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('bulk-import-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'bulk_import_jobs'
+        },
+        (payload) => {
+          console.log('Real-time update received:', payload);
+          
+          // Invalidate and refetch the jobs query to get updated data
+          queryClient.invalidateQueries({ queryKey: ['bulk-import-jobs'] });
+          
+          // Show toast notification for status changes
+          if (payload.new && payload.old) {
+            const newStatus = payload.new.status;
+            const oldStatus = payload.old.status;
+            
+            if (newStatus !== oldStatus) {
+              const jobName = payload.new.job_name;
+              
+              if (newStatus === 'processing') {
+                toast({ title: `Processing started for "${jobName}"` });
+              } else if (newStatus === 'completed') {
+                toast({ 
+                  title: `✅ Import completed successfully!`,
+                  description: `"${jobName}" has finished processing.`
+                });
+              } else if (newStatus === 'failed') {
+                toast({ 
+                  title: `❌ Import failed`,
+                  description: `"${jobName}" encountered an error.`,
+                  variant: "destructive"
+                });
+              }
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient, toast]);
 
   // Generate template spreadsheet
   const generateTemplate = () => {
