@@ -370,6 +370,59 @@ export type Database = {
           },
         ]
       }
+      merchant_qr_codes: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_name: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          merchant_id: string
+          metadata: Json | null
+          qr_code_data: string
+          qr_type: string
+          scan_count: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_name?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          merchant_id: string
+          metadata?: Json | null
+          qr_code_data: string
+          qr_type?: string
+          scan_count?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_name?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          merchant_id?: string
+          metadata?: Json | null
+          qr_code_data?: string
+          qr_type?: string
+          scan_count?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_qr_codes_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_memberships: {
         Row: {
           created_at: string | null
@@ -444,6 +497,7 @@ export type Database = {
           guid: string
           id: string
           last_name: string | null
+          logo_url: string | null
           organization_name: string | null
           updated_at: string
           username: string | null
@@ -457,6 +511,7 @@ export type Database = {
           guid: string
           id: string
           last_name?: string | null
+          logo_url?: string | null
           organization_name?: string | null
           updated_at?: string
           username?: string | null
@@ -470,6 +525,7 @@ export type Database = {
           guid?: string
           id?: string
           last_name?: string | null
+          logo_url?: string | null
           organization_name?: string | null
           updated_at?: string
           username?: string | null
@@ -774,12 +830,30 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      generate_qr_code_data: {
+        Args: { merchant_id: string; qr_type?: string }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_qr_scan_count: {
+        Args: { qr_code_id: string }
+        Returns: undefined
+      }
+      log_merchant_interaction: {
+        Args: {
+          p_interaction_data?: Json
+          p_interaction_type: string
+          p_merchant_id: string
+          p_qr_code_id?: string
+          p_user_id: string
+        }
+        Returns: string
       }
       revoke_admin_role: {
         Args: { target_user_id: string }
