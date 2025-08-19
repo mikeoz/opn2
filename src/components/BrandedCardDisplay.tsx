@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Building2, FileText, Image, Upload } from 'lucide-react';
 import { useProfile } from '@/hooks/useProfile';
 import { supabase } from '@/integrations/supabase/client';
-import opnliLogo from "@/assets/opnli-logo.png";
+import opnliLogo from "@/assets/opnli-logo.svg";
 
 interface TemplateField {
   id: string;
