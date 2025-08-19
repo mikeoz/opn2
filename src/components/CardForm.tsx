@@ -7,8 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Badge } from '@/components/ui/badge';
-import { Upload, FileText, Image } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Upload, FileText, Image, Building2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { useProfile } from '@/hooks/useProfile';
 
 interface TemplateField {
   id: string;
@@ -42,9 +44,11 @@ const CardForm: React.FC<CardFormProps> = ({
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { profile } = useProfile();
   const form = useForm();
 
   const sortedFields = template.fields?.sort((a, b) => a.display_order - b.display_order) || [];
+  const isOrganizationCard = profile?.account_type === 'non_individual';
 
   const handleSubmit = async (data: Record<string, any>) => {
     setIsSubmitting(true);
@@ -131,11 +135,33 @@ const CardForm: React.FC<CardFormProps> = ({
     <Card className="max-w-2xl mx-auto">
       <CardHeader>
         <div className="flex justify-between items-start">
-          <div>
-            <CardTitle className="text-xl">{isEditing ? 'Edit' : 'Create'} {template.name}</CardTitle>
-            {template.description && (
-              <p className="text-gray-600 mt-1">{template.description}</p>
+          <div className="flex items-center gap-3">
+            {/* Organization Logo Preview */}
+            {isOrganizationCard && (
+              <Avatar className="h-12 w-12 border-2 border-muted">
+                <AvatarImage 
+                  src={profile?.logo_url} 
+                  alt={`${profile?.organization_name} logo`}
+                  className="object-contain"
+                />
+                <AvatarFallback>
+                  <Building2 className="h-6 w-6" />
+                </AvatarFallback>
+              </Avatar>
             )}
+            <div>
+              <CardTitle className="text-xl">
+                {isEditing ? 'Edit' : 'Create'} {template.name}
+                {isOrganizationCard && profile?.organization_name && (
+                  <span className="text-base font-normal text-muted-foreground ml-2">
+                    for {profile.organization_name}
+                  </span>
+                )}
+              </CardTitle>
+              {template.description && (
+                <p className="text-muted-foreground mt-1">{template.description}</p>
+              )}
+            </div>
           </div>
           <div className="flex flex-col gap-1">
             <Badge variant={template.type === 'admin' ? 'default' : 'secondary'}>
@@ -144,6 +170,12 @@ const CardForm: React.FC<CardFormProps> = ({
             <Badge variant={template.transaction_code === 'S' ? 'default' : 'destructive'}>
               {template.transaction_code === 'S' ? 'Sharable' : 'Non-Sharable'}
             </Badge>
+            {isOrganizationCard && (
+              <Badge variant="outline" className="text-xs">
+                <Building2 className="h-3 w-3 mr-1" />
+                Organization
+              </Badge>
+            )}
           </div>
         </div>
       </CardHeader>

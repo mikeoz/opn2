@@ -6,8 +6,11 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Camera, Save, Lock, User } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Camera, Save, Lock, User, Building2 } from 'lucide-react';
 import MobileLayout from '@/components/MobileLayout';
+import OrganizationBrandingSettings from '@/components/OrganizationBrandingSettings';
+import OrganizationManagement from '@/components/OrganizationManagement';
 import { useProfile } from '@/hooks/useProfile';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useToast } from '@/hooks/use-toast';
@@ -132,214 +135,248 @@ const Profile = () => {
   return (
     <MobileLayout>
       <div className="container mx-auto px-4 py-6 space-y-6">
-        {/* Avatar Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Profile Picture
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center space-y-4">
-            <div className="relative">
-              <Avatar className="h-24 w-24">
-                <AvatarImage src={profile.avatar_url} alt="Profile" />
-                <AvatarFallback className="text-lg">
-                  {getInitials().toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <Label
-                htmlFor="avatar-upload"
-                className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-2 cursor-pointer hover:bg-primary/90"
-              >
-                <Camera className="h-4 w-4" />
-                <Input
-                  id="avatar-upload"
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleAvatarUpload}
-                />
-              </Label>
-            </div>
-            <p className="text-sm text-muted-foreground text-center">
-              Click the camera icon to upload a new profile picture
-              <br />
-              (Max 5MB, JPG/PNG/WebP)
-            </p>
-          </CardContent>
-        </Card>
+        <div className="flex items-center gap-2 mb-6">
+          <User className="h-6 w-6" />
+          <h1 className="text-2xl font-bold">Profile Settings</h1>
+        </div>
 
-        {/* Profile Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              Profile Information
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsEditing(!isEditing)}
-              >
-                {isEditing ? 'Cancel' : 'Edit'}
-              </Button>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Username</Label>
-              {isEditing ? (
-                <Input
-                  value={formData.username}
-                  onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
-                  placeholder="Enter username"
-                />
-              ) : (
-                <p className="text-sm font-medium">{profile.username}</p>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>First Name</Label>
-                {isEditing ? (
-                  <Input
-                    value={formData.first_name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, first_name: e.target.value }))}
-                    placeholder="First name"
-                  />
-                ) : (
-                  <p className="text-sm">{profile.first_name || 'Not set'}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label>Last Name</Label>
-                {isEditing ? (
-                  <Input
-                    value={formData.last_name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, last_name: e.target.value }))}
-                    placeholder="Last name"
-                  />
-                ) : (
-                  <p className="text-sm">{profile.last_name || 'Not set'}</p>
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Email</Label>
-              <p className="text-sm text-muted-foreground">{profile.email}</p>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Role</Label>
-              <Badge variant={isAdmin ? "default" : "secondary"}>
-                {getRoleDisplay()}
-              </Badge>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Account Type</Label>
-              <p className="text-sm">
-                {profile.account_type === 'individual' ? 'Individual' : 'Organization'}
-              </p>
-            </div>
-
+        <Tabs defaultValue="profile" className="w-full">
+          <TabsList className={`grid w-full ${profile.account_type === 'non_individual' ? 'grid-cols-4' : 'grid-cols-2'}`}>
+            <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsTrigger value="security">Security</TabsTrigger>
             {profile.account_type === 'non_individual' && (
-              <div className="space-y-2">
-                <Label>Organization Name</Label>
-                {isEditing ? (
-                  <Input
-                    value={formData.organization_name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, organization_name: e.target.value }))}
-                    placeholder="Organization name"
-                  />
-                ) : (
-                  <p className="text-sm">{profile.organization_name || 'Not set'}</p>
-                )}
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <Label>User ID (GUID)</Label>
-              <p className="text-xs text-muted-foreground font-mono">{profile.guid}</p>
-            </div>
-
-            {isEditing && (
-              <Button onClick={handleSaveProfile} className="w-full">
-                <Save className="h-4 w-4 mr-2" />
-                Save Changes
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Password Management */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Lock className="h-5 w-5" />
-              Password & Security
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Button
-              variant="outline"
-              onClick={() => setShowPasswordForm(!showPasswordForm)}
-              className="w-full"
-            >
-              {showPasswordForm ? 'Cancel' : 'Change Password'}
-            </Button>
-
-            {showPasswordForm && (
               <>
-                <Separator />
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>New Password</Label>
-                    <Input
-                      type="password"
-                      value={passwordData.newPassword}
-                      onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
-                      placeholder="Enter new password"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Confirm Password</Label>
-                    <Input
-                      type="password"
-                      value={passwordData.confirmPassword}
-                      onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                      placeholder="Confirm new password"
-                    />
-                  </div>
-                  <Button onClick={handlePasswordChange} className="w-full">
-                    Update Password
-                  </Button>
-                </div>
+                <TabsTrigger value="branding">Branding</TabsTrigger>
+                <TabsTrigger value="team">Team</TabsTrigger>
               </>
             )}
-          </CardContent>
-        </Card>
+          </TabsList>
 
-        {/* Additional Security Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Account Security</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-sm">Two-Factor Authentication</span>
-              <Badge variant="outline">Not Configured</Badge>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm">Last Login</span>
-              <span className="text-sm text-muted-foreground">Current session</span>
-            </div>
-            <p className="text-xs text-muted-foreground mt-4">
-              For enhanced security, consider enabling two-factor authentication when available.
-            </p>
-          </CardContent>
-        </Card>
+          <TabsContent value="profile" className="space-y-6">
+            {/* Avatar Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  Profile Picture
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col items-center space-y-4">
+                <div className="relative">
+                  <Avatar className="h-24 w-24">
+                    <AvatarImage src={profile.avatar_url} alt="Profile" />
+                    <AvatarFallback className="text-lg">
+                      {getInitials().toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <Label
+                    htmlFor="avatar-upload"
+                    className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-2 cursor-pointer hover:bg-primary/90"
+                  >
+                    <Camera className="h-4 w-4" />
+                    <Input
+                      id="avatar-upload"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleAvatarUpload}
+                    />
+                  </Label>
+                </div>
+                <p className="text-sm text-muted-foreground text-center">
+                  Click the camera icon to upload a new profile picture
+                  <br />
+                  (Max 5MB, JPG/PNG/WebP)
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Profile Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  Profile Information
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsEditing(!isEditing)}
+                  >
+                    {isEditing ? 'Cancel' : 'Edit'}
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Username</Label>
+                  {isEditing ? (
+                    <Input
+                      value={formData.username}
+                      onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
+                      placeholder="Enter username"
+                    />
+                  ) : (
+                    <p className="text-sm font-medium">{profile.username}</p>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>First Name</Label>
+                    {isEditing ? (
+                      <Input
+                        value={formData.first_name}
+                        onChange={(e) => setFormData(prev => ({ ...prev, first_name: e.target.value }))}
+                        placeholder="First name"
+                      />
+                    ) : (
+                      <p className="text-sm">{profile.first_name || 'Not set'}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Last Name</Label>
+                    {isEditing ? (
+                      <Input
+                        value={formData.last_name}
+                        onChange={(e) => setFormData(prev => ({ ...prev, last_name: e.target.value }))}
+                        placeholder="Last name"
+                      />
+                    ) : (
+                      <p className="text-sm">{profile.last_name || 'Not set'}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Email</Label>
+                  <p className="text-sm text-muted-foreground">{profile.email}</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Role</Label>
+                  <Badge variant={isAdmin ? "default" : "secondary"}>
+                    {getRoleDisplay()}
+                  </Badge>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Account Type</Label>
+                  <p className="text-sm">
+                    {profile.account_type === 'individual' ? 'Individual' : 'Organization'}
+                  </p>
+                </div>
+
+                {profile.account_type === 'non_individual' && (
+                  <div className="space-y-2">
+                    <Label>Organization Name</Label>
+                    {isEditing ? (
+                      <Input
+                        value={formData.organization_name}
+                        onChange={(e) => setFormData(prev => ({ ...prev, organization_name: e.target.value }))}
+                        placeholder="Organization name"
+                      />
+                    ) : (
+                      <p className="text-sm">{profile.organization_name || 'Not set'}</p>
+                    )}
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label>User ID (GUID)</Label>
+                  <p className="text-xs text-muted-foreground font-mono">{profile.guid}</p>
+                </div>
+
+                {isEditing && (
+                  <Button onClick={handleSaveProfile} className="w-full">
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Changes
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="security" className="space-y-6">
+            {/* Password Management */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Lock className="h-5 w-5" />
+                  Password & Security
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowPasswordForm(!showPasswordForm)}
+                  className="w-full"
+                >
+                  {showPasswordForm ? 'Cancel' : 'Change Password'}
+                </Button>
+
+                {showPasswordForm && (
+                  <>
+                    <Separator />
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>New Password</Label>
+                        <Input
+                          type="password"
+                          value={passwordData.newPassword}
+                          onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
+                          placeholder="Enter new password"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Confirm Password</Label>
+                        <Input
+                          type="password"
+                          value={passwordData.confirmPassword}
+                          onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                          placeholder="Confirm new password"
+                        />
+                      </div>
+                      <Button onClick={handlePasswordChange} className="w-full">
+                        Update Password
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Additional Security Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Account Security</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">Two-Factor Authentication</span>
+                  <Badge variant="outline">Not Configured</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">Last Login</span>
+                  <span className="text-sm text-muted-foreground">Current session</span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-4">
+                  For enhanced security, consider enabling two-factor authentication when available.
+                </p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {profile.account_type === 'non_individual' && (
+            <>
+              <TabsContent value="branding" className="space-y-6">
+                <OrganizationBrandingSettings />
+              </TabsContent>
+
+              <TabsContent value="team" className="space-y-6">
+                <OrganizationManagement />
+              </TabsContent>
+            </>
+          )}
+        </Tabs>
       </div>
     </MobileLayout>
   );

@@ -22,6 +22,7 @@ import SecurityDashboard from "./pages/SecurityDashboard";
 import BulkImport from "./pages/BulkImport";
 import Profile from "./pages/Profile";
 import UserGuide from "./pages/UserGuide";
+import MerchantOnboardingWizard from "./components/MerchantOnboardingWizard";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -78,11 +79,16 @@ const App = () => (
               <Profile />
             </ProtectedRoute>
           } />
-          <Route path="/user-guide" element={
-            <ProtectedRoute>
-              <UserGuide />
-            </ProtectedRoute>
-          } />
+           <Route path="/user-guide" element={
+             <ProtectedRoute>
+               <UserGuide />
+             </ProtectedRoute>
+           } />
+           <Route path="/onboarding" element={
+             <ProtectedRoute>
+               <MerchantOnboardingWizard />
+             </ProtectedRoute>
+           } />
             <Route path="/cards/create/:templateId" element={
               <ProtectedRoute>
                 <CreateCard />

@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, FileText, Image, Upload, Edit } from 'lucide-react';
 import { getCardTitle } from '@/utils/cardUtils';
 import CardRelationships from '@/components/CardRelationships';
+import BrandedCardDisplay from '@/components/BrandedCardDisplay';
 
 interface TemplateField {
   id: string;
@@ -237,32 +238,7 @@ const ViewCard = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            <Card className="max-w-2xl mx-auto">
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-xl">{getCardTitle(card)}</CardTitle>
-                    <p className="text-sm text-gray-500 mt-1">Card Type: {card.template.name}</p>
-                    {card.template.description && (
-                      <p className="text-gray-600 mt-1">{card.template.description}</p>
-                    )}
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <Badge variant={card.template.type === 'admin' ? 'default' : 'secondary'}>
-                      {card.template.type === 'admin' ? 'Admin' : 'Custom'}
-                    </Badge>
-                    <Badge variant={card.template.transaction_code === 'S' ? 'default' : 'destructive'}>
-                      {card.template.transaction_code === 'S' ? 'Sharable' : 'Non-Sharable'}
-                    </Badge>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  {sortedFields.map(renderFieldValue)}
-                </div>
-              </CardContent>
-            </Card>
+            <BrandedCardDisplay card={card} />
           </div>
 
           <div>
