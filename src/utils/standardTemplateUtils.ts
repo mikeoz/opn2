@@ -1,6 +1,9 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
+// Standard card templates with predefined fields and layouts
+// Each template now supports AI-generated Opnli logos for consistent branding
+
 export interface StandardCardTemplate {
   id: string;
   name: string;

@@ -1,5 +1,8 @@
 project_id = "dkhrkignepqfidzdyper"
 
+[functions."generate-card-logo"]
+verify_jwt = true
+
 [functions."test-function"]
 verify_jwt = false
 
