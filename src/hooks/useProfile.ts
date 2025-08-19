@@ -12,6 +12,7 @@ interface Profile {
   account_type: 'individual' | 'non_individual';
   organization_name?: string;
   avatar_url?: string;
+  logo_url?: string;
   guid: string;
 }
 
@@ -73,8 +74,33 @@ export const useProfile = () => {
     }
   };
 
+  const validateImageFile = (file: File, maxSizeMB: number = 2): boolean => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/svg+xml'];
+    const maxSizeBytes = maxSizeMB * 1024 * 1024;
+
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload a JPG, PNG, or SVG image.",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    if (file.size > maxSizeBytes) {
+      toast({
+        title: "File too large",
+        description: `Please upload an image smaller than ${maxSizeMB}MB.`,
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    return true;
+  };
+
   const uploadAvatar = async (file: File) => {
-    if (!user) return null;
+    if (!user || !validateImageFile(file)) return null;
 
     try {
       const fileExt = file.name.split('.').pop();
@@ -84,7 +110,7 @@ export const useProfile = () => {
       if (profile?.avatar_url) {
         await supabase.storage
           .from('avatars')
-          .remove([`${user.id}/avatar.jpg`, `${user.id}/avatar.png`, `${user.id}/avatar.webp`, `${user.id}/avatar.jpeg`]);
+          .remove([`${user.id}/avatar.jpg`, `${user.id}/avatar.png`, `${user.id}/avatar.webp`, `${user.id}/avatar.jpeg`, `${user.id}/avatar.svg`]);
       }
 
       const { error: uploadError } = await supabase.storage
@@ -106,6 +132,50 @@ export const useProfile = () => {
       toast({
         title: "Error",
         description: "Failed to upload avatar",
+        variant: "destructive"
+      });
+      return null;
+    }
+  };
+
+  const uploadLogo = async (file: File) => {
+    if (!user || !validateImageFile(file)) return null;
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/logo.${fileExt}`;
+
+      // Remove old logo if exists
+      if (profile?.logo_url) {
+        await supabase.storage
+          .from('avatars')
+          .remove([`${user.id}/logo.jpg`, `${user.id}/logo.png`, `${user.id}/logo.webp`, `${user.id}/logo.jpeg`, `${user.id}/logo.svg`]);
+      }
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      const logo_url = data.publicUrl;
+      await updateProfile({ logo_url });
+
+      toast({
+        title: "Success",
+        description: "Organization logo uploaded successfully"
+      });
+
+      return logo_url;
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload organization logo",
         variant: "destructive"
       });
       return null;
@@ -145,6 +215,7 @@ export const useProfile = () => {
     loading,
     updateProfile,
     uploadAvatar,
+    uploadLogo,
     changePassword,
     refetch: fetchProfile
   };
