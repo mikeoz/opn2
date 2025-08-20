@@ -69,6 +69,11 @@ const CardForm: React.FC<CardFormProps> = ({
 
   const sortedFields = template.fields?.sort((a, b) => a.display_order - b.display_order) || [];
   const isOrganizationCard = profile?.account_type === 'non_individual';
+  
+  // Get relevant family card templates if family context is provided
+  const familyTemplates = familyContext?.familyUnitId 
+    ? getTemplatesForContext(familyContext.familyRole || 'general_family', familyContext.generationLevel?.toString())
+    : [];
 
   const handleSubmit = async (data: Record<string, any>) => {
     setIsSubmitting(true);
@@ -296,6 +301,30 @@ const CardForm: React.FC<CardFormProps> = ({
                     )}
                   />
                 </div>
+                
+                {/* Family Template Suggestions */}
+                {familyTemplates.length > 0 && (
+                  <div className="mt-4 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                    <p className="text-sm font-medium text-primary mb-2">
+                      Recommended Family Templates
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {familyTemplates.slice(0, 3).map((template) => (
+                        <Badge key={template.id} variant="outline" className="text-xs">
+                          {template.template_name}
+                        </Badge>
+                      ))}
+                      {familyTemplates.length > 3 && (
+                        <Badge variant="outline" className="text-xs">
+                          +{familyTemplates.length - 3} more
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      These templates are optimized for your family role and generation.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 

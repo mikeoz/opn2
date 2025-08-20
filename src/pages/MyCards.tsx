@@ -325,6 +325,14 @@ const MyCards = () => {
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-foreground mb-2">My Cards</h1>
           <p className="text-muted-foreground">Manage your personal and professional cards</p>
+          {userCards.some(card => card.family_unit_id) && (
+            <div className="mt-2 flex items-center gap-2">
+              <TreePine className="h-4 w-4 text-primary" />
+              <span className="text-sm text-primary">
+                You have {userCards.filter(card => card.family_unit_id).length} family cards
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Available Templates */}
