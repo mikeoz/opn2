@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -46,6 +46,18 @@ export const useFamilyUnits = () => {
   const [familyUnits, setFamilyUnits] = useState<FamilyUnit[]>([]);
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
+  // Unique channel instance ID to avoid duplicate subscribe() on shared channels
+  const channelInstanceIdRef = useRef<string>('');
+  if (!channelInstanceIdRef.current) {
+    try {
+      channelInstanceIdRef.current =
+        typeof crypto !== 'undefined' && (crypto as any).randomUUID
+          ? (crypto as any).randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    } catch {
+      channelInstanceIdRef.current = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    }
+  }
 
   const fetchFamilyUnits = async () => {
     if (!user) return;
@@ -226,8 +238,8 @@ export const useFamilyUnits = () => {
     fetchFamilyUnits();
 
     // Set up real-time subscription with debugging
-    const channelName = `family-units-${user.id}`;
-    console.log('Setting up real-time subscription:', channelName);
+    const channelName = `family-units-${user.id}-${channelInstanceIdRef.current}`;
+    console.log('Setting up real-time subscription:', channelName, '(per-instance)');
     
     const channel = supabase
       .channel(channelName)
