@@ -580,6 +580,72 @@ export type Database = {
           },
         ]
       }
+      family_unit_connections: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          child_family_unit_id: string
+          connection_direction: string
+          connection_type: string
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          initiated_by: string
+          invitation_token: string | null
+          parent_family_unit_id: string
+          personal_message: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          child_family_unit_id: string
+          connection_direction: string
+          connection_type?: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          initiated_by: string
+          invitation_token?: string | null
+          parent_family_unit_id: string
+          personal_message?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          child_family_unit_id?: string
+          connection_direction?: string
+          connection_type?: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          initiated_by?: string
+          invitation_token?: string | null
+          parent_family_unit_id?: string
+          personal_message?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_unit_connections_child_family_unit_id_fkey"
+            columns: ["child_family_unit_id"]
+            isOneToOne: false
+            referencedRelation: "family_units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "family_unit_connections_parent_family_unit_id_fkey"
+            columns: ["parent_family_unit_id"]
+            isOneToOne: false
+            referencedRelation: "family_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       family_units: {
         Row: {
           created_at: string | null

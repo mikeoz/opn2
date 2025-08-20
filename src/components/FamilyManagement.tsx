@@ -14,6 +14,7 @@ import FamilyMemberManager from './FamilyMemberManager';
 import FamilyTreeVisualization from './FamilyTreeVisualization';
 import FamilySettings from './FamilySettings';
 import { FamilyInvitationsManager } from './FamilyInvitationsManager';
+import { FamilyTreeTab } from './FamilyTreeTab';
 import { Link } from 'react-router-dom';
 
 export const FamilyManagement: React.FC = () => {
@@ -121,6 +122,10 @@ export const FamilyManagement: React.FC = () => {
             <TabsTrigger value="invitations">
               <Users className="mr-2 h-4 w-4" />
               Invitations
+            </TabsTrigger>
+            <TabsTrigger value="tree">
+              <TreePine className="mr-2 h-4 w-4" />
+              Family Tree
             </TabsTrigger>
           </TabsList>
 
@@ -240,6 +245,14 @@ export const FamilyManagement: React.FC = () => {
 
           <TabsContent value="invitations">
             <FamilyInvitationsManager
+              familyUnitId={selectedFamily.id}
+              familyUnitLabel={selectedFamily.family_label}
+              isOwner={selectedFamily.trust_anchor_user_id === user?.id}
+            />
+          </TabsContent>
+
+          <TabsContent value="tree">
+            <FamilyTreeTab
               familyUnitId={selectedFamily.id}
               familyUnitLabel={selectedFamily.family_label}
               isOwner={selectedFamily.trust_anchor_user_id === user?.id}
