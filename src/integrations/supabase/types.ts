@@ -184,6 +184,39 @@ export type Database = {
           },
         ]
       }
+      card_invitation_notifications: {
+        Row: {
+          created_at: string
+          creator_id: string
+          id: string
+          invitation_id: string
+          notification_data: Json | null
+          notification_type: string
+          read_at: string | null
+          recipient_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          id?: string
+          invitation_id: string
+          notification_data?: Json | null
+          notification_type: string
+          read_at?: string | null
+          recipient_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          id?: string
+          invitation_id?: string
+          notification_data?: Json | null
+          notification_type?: string
+          read_at?: string | null
+          recipient_id?: string | null
+        }
+        Relationships: []
+      }
       card_invitations: {
         Row: {
           accepted_at: string | null
@@ -329,9 +362,12 @@ export type Database = {
           category_id: string | null
           created_at: string
           created_by: string | null
+          customization_allowed: boolean | null
           description: string | null
           id: string
           name: string
+          source_template_id: string | null
+          template_watermark: Json | null
           transaction_code: Database["public"]["Enums"]["transaction_code"]
           type: Database["public"]["Enums"]["card_type"]
           updated_at: string
@@ -341,9 +377,12 @@ export type Database = {
           category_id?: string | null
           created_at?: string
           created_by?: string | null
+          customization_allowed?: boolean | null
           description?: string | null
           id?: string
           name: string
+          source_template_id?: string | null
+          template_watermark?: Json | null
           transaction_code?: Database["public"]["Enums"]["transaction_code"]
           type?: Database["public"]["Enums"]["card_type"]
           updated_at?: string
@@ -353,9 +392,12 @@ export type Database = {
           category_id?: string | null
           created_at?: string
           created_by?: string | null
+          customization_allowed?: boolean | null
           description?: string | null
           id?: string
           name?: string
+          source_template_id?: string | null
+          template_watermark?: Json | null
           transaction_code?: Database["public"]["Enums"]["transaction_code"]
           type?: Database["public"]["Enums"]["card_type"]
           updated_at?: string
@@ -366,6 +408,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "card_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "card_templates_source_template_id_fkey"
+            columns: ["source_template_id"]
+            isOneToOne: false
+            referencedRelation: "standard_card_templates"
             referencedColumns: ["id"]
           },
         ]
@@ -649,37 +698,67 @@ export type Database = {
       }
       standard_card_templates: {
         Row: {
+          allow_recipient_modifications: boolean | null
           category: string
           created_at: string
           description: string | null
           id: string
           is_active: boolean
           name: string
+          sharing_permissions: Json | null
           template_data: Json
           updated_at: string
           version: string
         }
         Insert: {
+          allow_recipient_modifications?: boolean | null
           category: string
           created_at?: string
           description?: string | null
           id?: string
           is_active?: boolean
           name: string
+          sharing_permissions?: Json | null
           template_data: Json
           updated_at?: string
           version?: string
         }
         Update: {
+          allow_recipient_modifications?: boolean | null
           category?: string
           created_at?: string
           description?: string | null
           id?: string
           is_active?: boolean
           name?: string
+          sharing_permissions?: Json | null
           template_data?: Json
           updated_at?: string
           version?: string
+        }
+        Relationships: []
+      }
+      template_favorites: {
+        Row: {
+          created_at: string
+          id: string
+          template_id: string
+          template_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          template_id: string
+          template_type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          template_id?: string
+          template_type?: string
+          user_id?: string
         }
         Relationships: []
       }

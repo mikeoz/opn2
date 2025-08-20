@@ -19,6 +19,11 @@ export interface StandardCardTemplate {
   };
   version: string;
   is_active: boolean;
+  allow_recipient_modifications: boolean;
+  sharing_permissions: {
+    can_customize: boolean;
+    can_share: boolean;
+  };
   created_at: string;
   updated_at: string;
 }
@@ -34,7 +39,8 @@ export const fetchStandardTemplates = async (): Promise<StandardCardTemplate[]> 
   if (error) throw error;
   return (data || []).map(template => ({
     ...template,
-    template_data: template.template_data as StandardCardTemplate['template_data']
+    template_data: template.template_data as StandardCardTemplate['template_data'],
+    sharing_permissions: template.sharing_permissions as StandardCardTemplate['sharing_permissions']
   }));
 };
 
@@ -70,7 +76,15 @@ export const createCardFromStandardTemplate = async (
       description: standardTemplate.description,
       type: 'user',
       transaction_code: 'S',
-      created_by: userId
+      created_by: userId,
+      source_template_id: templateId,
+      customization_allowed: standardTemplate.allow_recipient_modifications,
+      template_watermark: {
+        source_id: templateId,
+        source_name: standardTemplate.name,
+        created_from: 'standard_template',
+        original_creator: 'system'
+      }
     })
     .select()
     .single();
@@ -94,4 +108,52 @@ export const createCardFromStandardTemplate = async (
   if (fieldsError) throw fieldsError;
 
   return cardTemplate.id;
+};
+
+// Template favorites management
+export const toggleTemplateFavorite = async (
+  templateId: string,
+  userId: string,
+  templateType: 'standard' | 'user' = 'standard'
+): Promise<boolean> => {
+  const { data: existing } = await supabase
+    .from('template_favorites')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('template_id', templateId)
+    .eq('template_type', templateType)
+    .single();
+
+  if (existing) {
+    // Remove favorite
+    const { error } = await supabase
+      .from('template_favorites')
+      .delete()
+      .eq('id', existing.id);
+    
+    if (error) throw error;
+    return false;
+  } else {
+    // Add favorite
+    const { error } = await supabase
+      .from('template_favorites')
+      .insert({
+        user_id: userId,
+        template_id: templateId,
+        template_type: templateType
+      });
+    
+    if (error) throw error;
+    return true;
+  }
+};
+
+export const getUserFavorites = async (userId: string) => {
+  const { data, error } = await supabase
+    .from('template_favorites')
+    .select('template_id, template_type')
+    .eq('user_id', userId);
+
+  if (error) throw error;
+  return data || [];
 };
