@@ -57,13 +57,13 @@ export const useFamilyUnits = () => {
         .from('family_units')
         .select(`
           *,
-          trust_anchor_profile:profiles!trust_anchor_user_id(
+          trust_anchor_profile:profiles!fk_family_units_trust_anchor(
             first_name,
             last_name,
             birth_name,
             display_preferences
           ),
-          parent_family:family_units!parent_family_unit_id(
+          parent_family:family_units!family_units_parent_family_unit_id_fkey(
             family_label,
             generation_level
           )
@@ -88,9 +88,10 @@ export const useFamilyUnits = () => {
 
       const memberCounts = await Promise.all(memberCountPromises);
 
-      // Combine data
-      const enrichedUnits = unitsData?.map(unit => ({
+      // Combine data and normalize parent_family to a single object
+      const enrichedUnits = (unitsData as any)?.map((unit: any) => ({
         ...unit,
+        parent_family: Array.isArray(unit.parent_family) ? unit.parent_family[0] : unit.parent_family,
         member_count: memberCounts.find(mc => mc.trustAnchorId === unit.trust_anchor_user_id)?.count || 0
       })) || [];
 
