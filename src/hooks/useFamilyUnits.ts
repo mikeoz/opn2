@@ -130,6 +130,13 @@ export const useFamilyUnits = () => {
       
       toast.success('Family unit created successfully');
       
+      // Notify other hook instances to refetch
+      try {
+        window.dispatchEvent(new CustomEvent('family-units:refetch'));
+      } catch (e) {
+        console.warn('Dispatch refetch event failed:', e);
+      }
+      
       // Fallback: if real-time doesn't work, manually add the unit after a short delay
       setTimeout(() => {
         setFamilyUnits(prev => {
@@ -172,6 +179,10 @@ export const useFamilyUnits = () => {
       if (error) throw error;
       
       toast.success('Family unit updated');
+      // Notify listeners to refetch in case realtime misses
+      try {
+        window.dispatchEvent(new CustomEvent('family-units:refetch'));
+      } catch {}
       // No need to manually refetch - real-time will handle it
       return true;
     } catch (error) {
@@ -191,6 +202,9 @@ export const useFamilyUnits = () => {
       if (error) throw error;
       
       toast.success('Family unit deactivated');
+      try {
+        window.dispatchEvent(new CustomEvent('family-units:refetch'));
+      } catch {}
       // No need to manually refetch - real-time will handle it
       return true;
     } catch (error) {
@@ -236,6 +250,18 @@ export const useFamilyUnits = () => {
     if (!user) return;
 
     fetchFamilyUnits();
+
+    // Listen for manual refetch events from other components
+    const onRefetch = () => {
+      console.log('🔄 family-units:refetch event received');
+      fetchFamilyUnits();
+    };
+    try {
+      window.addEventListener('family-units:refetch', onRefetch);
+    } catch (e) {
+      console.warn('Failed to add refetch listener', e);
+    }
+
 
     // Set up real-time subscription with debugging
     const channelName = `family-units-${user.id}-${channelInstanceIdRef.current}`;
@@ -300,6 +326,9 @@ export const useFamilyUnits = () => {
 
     return () => {
       console.log('🧹 Cleaning up realtime subscription:', channelName);
+      try {
+        window.removeEventListener('family-units:refetch', onRefetch);
+      } catch {}
       supabase.removeChannel(channel);
     };
   }, [user?.id]);

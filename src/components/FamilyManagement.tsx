@@ -13,6 +13,7 @@ import { FamilyMembersView } from './FamilyMembersView';
 import FamilyMemberManager from './FamilyMemberManager';
 import FamilyTreeVisualization from './FamilyTreeVisualization';
 import FamilySettings from './FamilySettings';
+import { Link } from 'react-router-dom';
 
 export const FamilyManagement: React.FC = () => {
   const { user } = useAuth();
@@ -221,9 +222,9 @@ export const FamilyManagement: React.FC = () => {
                     <p className="text-sm">This will show cards associated with this family unit.</p>
                     <div className="mt-4">
                       <Button variant="outline" asChild>
-                        <a href="/cards">
+                        <Link to="/cards">
                           View All Cards
-                        </a>
+                        </Link>
                       </Button>
                     </div>
                   </div>
