@@ -317,8 +317,10 @@ export type Database = {
           card_id: string
           created_by: string
           expires_at: string | null
+          family_unit_id: string | null
           id: string
           permissions: Json | null
+          relationship_context: string | null
           relationship_type: string
           shared_at: string
           shared_with_provider_id: string | null
@@ -328,8 +330,10 @@ export type Database = {
           card_id: string
           created_by: string
           expires_at?: string | null
+          family_unit_id?: string | null
           id?: string
           permissions?: Json | null
+          relationship_context?: string | null
           relationship_type: string
           shared_at?: string
           shared_with_provider_id?: string | null
@@ -339,8 +343,10 @@ export type Database = {
           card_id?: string
           created_by?: string
           expires_at?: string | null
+          family_unit_id?: string | null
           id?: string
           permissions?: Json | null
+          relationship_context?: string | null
           relationship_type?: string
           shared_at?: string
           shared_with_provider_id?: string | null
@@ -352,6 +358,13 @@ export type Database = {
             columns: ["card_id"]
             isOneToOne: false
             referencedRelation: "user_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "card_relationships_family_unit_id_fkey"
+            columns: ["family_unit_id"]
+            isOneToOne: false
+            referencedRelation: "family_units"
             referencedColumns: ["id"]
           },
         ]
@@ -465,6 +478,89 @@ export type Database = {
             columns: ["merchant_id"]
             isOneToOne: false
             referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      family_card_templates: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          display_config: Json | null
+          generation_applicable: string[] | null
+          id: string
+          is_active: boolean | null
+          relationship_context: string
+          template_fields: Json
+          template_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          display_config?: Json | null
+          generation_applicable?: string[] | null
+          id?: string
+          is_active?: boolean | null
+          relationship_context: string
+          template_fields: Json
+          template_name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          display_config?: Json | null
+          generation_applicable?: string[] | null
+          id?: string
+          is_active?: boolean | null
+          relationship_context?: string
+          template_fields?: Json
+          template_name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      family_units: {
+        Row: {
+          created_at: string | null
+          family_label: string
+          family_metadata: Json | null
+          generation_level: number
+          id: string
+          is_active: boolean | null
+          parent_family_unit_id: string | null
+          trust_anchor_user_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          family_label: string
+          family_metadata?: Json | null
+          generation_level?: number
+          id?: string
+          is_active?: boolean | null
+          parent_family_unit_id?: string | null
+          trust_anchor_user_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          family_label?: string
+          family_metadata?: Json | null
+          generation_level?: number
+          id?: string
+          is_active?: boolean | null
+          parent_family_unit_id?: string | null
+          trust_anchor_user_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_units_parent_family_unit_id_fkey"
+            columns: ["parent_family_unit_id"]
+            isOneToOne: false
+            referencedRelation: "family_units"
             referencedColumns: ["id"]
           },
         ]
@@ -639,12 +735,15 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           expires_at: string | null
+          family_generation: number | null
           id: string
           individual_user_id: string
+          is_family_unit: boolean | null
           joined_at: string | null
           membership_type: string
           organization_user_id: string
           permissions: Json | null
+          relationship_label: string | null
           status: string
           updated_at: string | null
         }
@@ -652,12 +751,15 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           expires_at?: string | null
+          family_generation?: number | null
           id?: string
           individual_user_id: string
+          is_family_unit?: boolean | null
           joined_at?: string | null
           membership_type?: string
           organization_user_id: string
           permissions?: Json | null
+          relationship_label?: string | null
           status?: string
           updated_at?: string | null
         }
@@ -665,12 +767,15 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           expires_at?: string | null
+          family_generation?: number | null
           id?: string
           individual_user_id?: string
+          is_family_unit?: boolean | null
           joined_at?: string | null
           membership_type?: string
           organization_user_id?: string
           permissions?: Json | null
+          relationship_label?: string | null
           status?: string
           updated_at?: string | null
         }
@@ -702,7 +807,9 @@ export type Database = {
         Row: {
           account_type: Database["public"]["Enums"]["account_type"]
           avatar_url: string | null
+          birth_name: string | null
           created_at: string
+          display_preferences: Json | null
           email: string | null
           first_name: string | null
           guid: string
@@ -716,7 +823,9 @@ export type Database = {
         Insert: {
           account_type: Database["public"]["Enums"]["account_type"]
           avatar_url?: string | null
+          birth_name?: string | null
           created_at?: string
+          display_preferences?: Json | null
           email?: string | null
           first_name?: string | null
           guid: string
@@ -730,7 +839,9 @@ export type Database = {
         Update: {
           account_type?: Database["public"]["Enums"]["account_type"]
           avatar_url?: string | null
+          birth_name?: string | null
           created_at?: string
+          display_preferences?: Json | null
           email?: string | null
           first_name?: string | null
           guid?: string
