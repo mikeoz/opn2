@@ -115,7 +115,7 @@ export const useFamilyUnits = () => {
       if (error) throw error;
       
       toast.success('Family unit created successfully');
-      await fetchFamilyUnits();
+      // No need to manually refetch - real-time will handle it
       return true;
     } catch (error) {
       console.error('Error creating family unit:', error);
@@ -140,7 +140,7 @@ export const useFamilyUnits = () => {
       if (error) throw error;
       
       toast.success('Family unit updated');
-      await fetchFamilyUnits();
+      // No need to manually refetch - real-time will handle it
       return true;
     } catch (error) {
       console.error('Error updating family unit:', error);
@@ -159,7 +159,7 @@ export const useFamilyUnits = () => {
       if (error) throw error;
       
       toast.success('Family unit deactivated');
-      await fetchFamilyUnits();
+      // No need to manually refetch - real-time will handle it
       return true;
     } catch (error) {
       console.error('Error deactivating family unit:', error);
@@ -202,6 +202,53 @@ export const useFamilyUnits = () => {
 
   useEffect(() => {
     fetchFamilyUnits();
+
+    // Set up real-time subscription
+    const channel = supabase
+      .channel('family-units-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'family_units'
+        },
+        (payload) => {
+          console.log('Family units real-time update:', payload);
+          
+          // Handle different types of changes
+          if (payload.eventType === 'INSERT') {
+            const newUnit = payload.new as any;
+            setFamilyUnits(prev => {
+              // Check if already exists to avoid duplicates
+              if (prev.some(unit => unit.id === newUnit.id)) {
+                return prev;
+              }
+              return [...prev, {
+                ...newUnit,
+                trust_anchor_profile: null,
+                parent_family: null,
+                member_count: 0
+              }];
+            });
+          } else if (payload.eventType === 'UPDATE') {
+            const updatedUnit = payload.new as any;
+            setFamilyUnits(prev => prev.map(unit => 
+              unit.id === updatedUnit.id 
+                ? { ...unit, ...updatedUnit }
+                : unit
+            ));
+          } else if (payload.eventType === 'DELETE') {
+            const deletedUnit = payload.old as any;
+            setFamilyUnits(prev => prev.filter(unit => unit.id !== deletedUnit.id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   return {
