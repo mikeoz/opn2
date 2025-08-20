@@ -203,9 +203,10 @@ export const useFamilyUnits = () => {
   useEffect(() => {
     fetchFamilyUnits();
 
-    // Set up real-time subscription
+    // Set up real-time subscription with unique channel name
+    const channelName = `family-units-${user?.id || 'anonymous'}-${Date.now()}`;
     const channel = supabase
-      .channel('family-units-changes')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -247,9 +248,10 @@ export const useFamilyUnits = () => {
       .subscribe();
 
     return () => {
+      console.log('Cleaning up realtime subscription');
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user?.id]); // Only depend on user ID, not the entire user object
 
   return {
     familyUnits,
