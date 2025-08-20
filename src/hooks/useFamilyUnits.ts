@@ -56,17 +56,7 @@ export const useFamilyUnits = () => {
       const { data: unitsData, error: unitsError } = await supabase
         .from('family_units')
         .select(`
-          *,
-          trust_anchor_profile:profiles!fk_family_units_trust_anchor(
-            first_name,
-            last_name,
-            birth_name,
-            display_preferences
-          ),
-          parent_family:family_units!family_units_parent_family_unit_id_fkey(
-            family_label,
-            generation_level
-          )
+          *
         `)
         .eq('is_active', true)
         .order('generation_level', { ascending: true });
