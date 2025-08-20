@@ -1,20 +1,26 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Users, Crown, ChevronRight } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { MoreHorizontal, Edit, Trash, Users, Crown, ChevronRight } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { FamilyUnit } from '@/hooks/useFamilyUnits';
 
 interface FamilyUnitCardProps {
   familyUnit: FamilyUnit;
   onSelect: () => void;
   isSelected: boolean;
+  onEdit?: (familyUnit: FamilyUnit) => void;
+  onDelete?: (familyUnit: FamilyUnit) => void;
 }
 
 export const FamilyUnitCard: React.FC<FamilyUnitCardProps> = ({
   familyUnit,
   onSelect,
-  isSelected
+  isSelected,
+  onEdit,
+  onDelete
 }) => {
   const getDisplayName = () => {
     if (!familyUnit.trust_anchor_profile) {
@@ -41,7 +47,53 @@ export const FamilyUnitCard: React.FC<FamilyUnitCardProps> = ({
             <Crown className="h-4 w-4 text-amber-500" />
             {familyUnit.family_label}
           </CardTitle>
-          <Badge variant="secondary">Gen {familyUnit.generation_level}</Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary">Gen {familyUnit.generation_level}</Badge>
+            {(onEdit || onDelete) && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {onEdit && (
+                    <DropdownMenuItem onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit(familyUnit);
+                    }}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </DropdownMenuItem>
+                  )}
+                  {onDelete && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                          <Trash className="h-4 w-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Family Unit</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete "{familyUnit.family_label}"? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => onDelete(familyUnit)}>
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
         </div>
       </CardHeader>
       

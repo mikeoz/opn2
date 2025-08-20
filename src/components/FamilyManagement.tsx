@@ -5,9 +5,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Users, Plus, Settings, TreePine, ArrowLeft, Crown } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useFamilyUnits } from '@/hooks/useFamilyUnits';
+import { useFamilyUnits, FamilyUnit } from '@/hooks/useFamilyUnits';
 import { FamilyUnitCard } from './FamilyUnitCard';
 import { CreateFamilyUnitDialog } from './CreateFamilyUnitDialog';
+import { EditFamilyUnitDialog } from './EditFamilyUnitDialog';
 import { FamilyMembersView } from './FamilyMembersView';
 import FamilyMemberManager from './FamilyMemberManager';
 import FamilyTreeVisualization from './FamilyTreeVisualization';
@@ -15,8 +16,10 @@ import FamilySettings from './FamilySettings';
 
 export const FamilyManagement: React.FC = () => {
   const { user } = useAuth();
-  const { familyUnits, loading } = useFamilyUnits();
+  const { familyUnits, loading, updateFamilyUnit, deactivateFamilyUnit } = useFamilyUnits();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editingFamilyUnit, setEditingFamilyUnit] = useState<FamilyUnit | null>(null);
   const [selectedFamilyUnit, setSelectedFamilyUnit] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -38,6 +41,15 @@ export const FamilyManagement: React.FC = () => {
   const isOwnerOfSelectedFamily = selectedFamily 
     ? selectedFamily.trust_anchor_user_id === user?.id
     : false;
+
+  const handleEditFamilyUnit = (familyUnit: FamilyUnit) => {
+    setEditingFamilyUnit(familyUnit);
+    setShowEditDialog(true);
+  };
+
+  const handleDeleteFamilyUnit = async (familyUnit: FamilyUnit) => {
+    await deactivateFamilyUnit(familyUnit.id);
+  };
 
   if (loading) {
     return (
@@ -288,6 +300,8 @@ export const FamilyManagement: React.FC = () => {
                           familyUnit={unit}
                           onSelect={() => setSelectedFamilyUnit(unit.id)}
                           isSelected={selectedFamilyUnit === unit.id}
+                          onEdit={unit.trust_anchor_user_id === user?.id ? handleEditFamilyUnit : undefined}
+                          onDelete={unit.trust_anchor_user_id === user?.id ? handleDeleteFamilyUnit : undefined}
                         />
                       ))}
                     </div>
@@ -308,6 +322,13 @@ export const FamilyManagement: React.FC = () => {
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
         existingFamilyUnits={familyUnits}
+      />
+
+      <EditFamilyUnitDialog
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        familyUnit={editingFamilyUnit}
+        onUpdate={updateFamilyUnit}
       />
     </div>
   );

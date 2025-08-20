@@ -78,10 +78,11 @@ export const useFamilyUnits = () => {
 
       const memberCounts = await Promise.all(memberCountPromises);
 
-      // Combine data and normalize parent_family to a single object
+      // Combine data and normalize to expected format
       const enrichedUnits = (unitsData as any)?.map((unit: any) => ({
         ...unit,
-        parent_family: Array.isArray(unit.parent_family) ? unit.parent_family[0] : unit.parent_family,
+        trust_anchor_profile: null, // We'll fetch profile separately if needed
+        parent_family: null, // We'll fetch parent separately if needed  
         member_count: memberCounts.find(mc => mc.trustAnchorId === unit.trust_anchor_user_id)?.count || 0
       })) || [];
 
