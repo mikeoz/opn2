@@ -103,19 +103,39 @@ export const useFamilyUnits = () => {
     if (!user) return false;
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('family_units')
         .insert({
           family_label: familyLabel,
           trust_anchor_user_id: user.id,
           parent_family_unit_id: parentFamilyUnitId,
           family_metadata: metadata
-        });
+        })
+        .select('*')
+        .single();
 
       if (error) throw error;
       
       toast.success('Family unit created successfully');
-      // No need to manually refetch - real-time will handle it
+      
+      // Fallback: if real-time doesn't work, manually add the unit after a short delay
+      setTimeout(() => {
+        setFamilyUnits(prev => {
+          // Check if already exists (real-time might have worked)
+          if (prev.some(unit => unit.id === data.id)) {
+            console.log('Unit already added by real-time, skipping fallback');
+            return prev;
+          }
+          console.log('Real-time failed, adding unit via fallback');
+          return [...prev, {
+            ...data,
+            trust_anchor_profile: null,
+            parent_family: null,
+            member_count: 0
+          }];
+        });
+      }, 1000);
+      
       return true;
     } catch (error) {
       console.error('Error creating family unit:', error);
@@ -201,10 +221,14 @@ export const useFamilyUnits = () => {
   };
 
   useEffect(() => {
+    if (!user) return;
+
     fetchFamilyUnits();
 
-    // Set up real-time subscription with unique channel name
-    const channelName = `family-units-${user?.id || 'anonymous'}-${Date.now()}`;
+    // Set up real-time subscription with debugging
+    const channelName = `family-units-${user.id}`;
+    console.log('Setting up real-time subscription:', channelName);
+    
     const channel = supabase
       .channel(channelName)
       .on(
@@ -215,25 +239,36 @@ export const useFamilyUnits = () => {
           table: 'family_units'
         },
         (payload) => {
-          console.log('Family units real-time update:', payload);
+          console.log('🔥 Family units real-time update received:', payload);
+          console.log('Event type:', payload.eventType);
+          console.log('New data:', payload.new);
+          console.log('Old data:', payload.old);
           
           // Handle different types of changes
           if (payload.eventType === 'INSERT') {
             const newUnit = payload.new as any;
+            console.log('Processing INSERT for unit:', newUnit.id);
+            
             setFamilyUnits(prev => {
+              console.log('Current family units:', prev.length);
               // Check if already exists to avoid duplicates
               if (prev.some(unit => unit.id === newUnit.id)) {
+                console.log('Unit already exists, skipping');
                 return prev;
               }
-              return [...prev, {
+              const updatedUnits = [...prev, {
                 ...newUnit,
                 trust_anchor_profile: null,
                 parent_family: null,
                 member_count: 0
               }];
+              console.log('Added new unit, total units:', updatedUnits.length);
+              return updatedUnits;
             });
           } else if (payload.eventType === 'UPDATE') {
             const updatedUnit = payload.new as any;
+            console.log('Processing UPDATE for unit:', updatedUnit.id);
+            
             setFamilyUnits(prev => prev.map(unit => 
               unit.id === updatedUnit.id 
                 ? { ...unit, ...updatedUnit }
@@ -241,17 +276,21 @@ export const useFamilyUnits = () => {
             ));
           } else if (payload.eventType === 'DELETE') {
             const deletedUnit = payload.old as any;
+            console.log('Processing DELETE for unit:', deletedUnit.id);
+            
             setFamilyUnits(prev => prev.filter(unit => unit.id !== deletedUnit.id));
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Subscription status:', status);
+      });
 
     return () => {
-      console.log('Cleaning up realtime subscription');
+      console.log('🧹 Cleaning up realtime subscription:', channelName);
       supabase.removeChannel(channel);
     };
-  }, [user?.id]); // Only depend on user ID, not the entire user object
+  }, [user?.id]);
 
   return {
     familyUnits,
