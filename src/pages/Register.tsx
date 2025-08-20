@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,7 +8,10 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/components/ui/use-toast';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { UserPlus, Mail } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const Register = () => {
   const [userType, setUserType] = useState('individual');
@@ -20,10 +23,72 @@ const Register = () => {
     organizationName: ''
   });
   const [loading, setLoading] = useState(false);
+  const [invitationData, setInvitationData] = useState<any>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { user, handlePostRegistrationSetup } = useAuth();
   const { toast } = useToast();
+
+  // Check for invitation token in URL parameters
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const invitationToken = searchParams.get('invitation');
+    
+    if (invitationToken) {
+      // Fetch invitation details
+      const fetchInvitation = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('family_invitations')
+            .select(`
+              *,
+              family_units!inner(family_label),
+              profiles!invited_by(first_name, last_name)
+            `)
+            .eq('invitation_token', invitationToken)
+            .eq('status', 'pending')
+            .single();
+
+          if (error || !data) {
+            toast({
+              title: "Invalid Invitation",
+              description: "This invitation link is invalid or has expired.",
+              variant: "destructive",
+            });
+            return;
+          }
+
+          // Check if invitation is expired
+          if (new Date(data.expires_at) < new Date()) {
+            toast({
+              title: "Expired Invitation",
+              description: "This invitation has expired. Please request a new one.",
+              variant: "destructive",
+            });
+            return;
+          }
+
+          setInvitationData(data);
+          setFormData(prev => ({
+            ...prev,
+            email: data.invitee_email,
+            firstName: data.invitee_name?.split(' ')[0] || '',
+            lastName: data.invitee_name?.split(' ').slice(1).join(' ') || '',
+          }));
+          setUserType('individual'); // Force individual type for family invitations
+        } catch (error) {
+          console.error('Error fetching invitation:', error);
+          toast({
+            title: "Error",
+            description: "Failed to load invitation details.",
+            variant: "destructive",
+          });
+        }
+      };
+
+      fetchInvitation();
+    }
+  }, [location.search, toast]);
 
   // Only redirect authenticated users to dashboard, but allow navigation between auth pages
   React.useEffect(() => {
@@ -37,68 +102,96 @@ const Register = () => {
     setLoading(true);
 
     try {
-      const userMetadata: any = {
-        account_type: userType,
-        first_name: formData.firstName,
-        last_name: formData.lastName,
-      };
-
-      // Add organization name for non-individual accounts
-      if (userType === 'non_individual') {
-        userMetadata.organization_name = formData.organizationName;
-      }
-
-      console.log('Attempting registration with metadata:', userMetadata);
-
+      const redirectUrl = `${window.location.origin}/`;
+      
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
-          data: userMetadata
+          emailRedirectTo: redirectUrl,
+          data: {
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            account_type: userType,
+            organization_name: userType === 'non_individual' ? formData.organizationName : null,
+          }
         }
       });
 
-      console.log('Registration response:', { data, error });
-
       if (error) {
-        console.error('Registration error details:', error);
-        
-        // Handle the specific "user already exists" error
-        if (error.message === 'User already registered' || error.code === 'user_already_exists') {
+        if (error.message.includes('User already registered')) {
           toast({
-            title: "Account already exists",
-            description: "An account with this email already exists. Please try logging in instead, or contact support if you need help accessing your account.",
+            title: "Account exists",
+            description: "An account with this email already exists. Please sign in instead.",
             variant: "destructive",
           });
+          navigate('/login');
           return;
         }
-        
         throw error;
       }
 
       if (data.user) {
-        console.log('User created successfully:', data.user.id);
-        
-        // Handle post-registration setup
+        // Handle invitation acceptance if present
+        if (invitationData) {
+          try {
+            // Accept the invitation and join the family unit
+            await supabase
+              .from('family_invitations')
+              .update({ 
+                status: 'accepted', 
+                accepted_at: new Date().toISOString() 
+              })
+              .eq('invitation_token', invitationData.invitation_token);
+
+            // Create organization membership for the family unit
+            await supabase
+              .from('organization_memberships')
+              .insert({
+                individual_user_id: data.user.id,
+                organization_user_id: invitationData.family_unit_id,
+                relationship_label: invitationData.relationship_role,
+                permissions: { family_member: true },
+                is_family_unit: true,
+                membership_type: 'member',
+                status: 'active',
+                created_by: invitationData.invited_by
+              });
+
+            toast({
+              title: "Welcome to the family!",
+              description: `You've successfully joined the ${invitationData.family_units.family_label} family unit.`,
+            });
+          } catch (inviteError) {
+            console.error('Error accepting invitation:', inviteError);
+            toast({
+              title: "Account created",
+              description: "Your account was created but there was an issue joining the family unit. Please contact the inviter.",
+              variant: "destructive",
+            });
+          }
+        }
+
         await handlePostRegistrationSetup(data.user, userType);
         
         toast({
-          title: "Account created successfully!",
-          description: userType === 'individual' 
-            ? `Welcome ${formData.firstName}! Please check your email to confirm your account.`
-            : `Welcome ${formData.organizationName}! Your organization account has been created successfully.`,
+          title: "Registration successful!",
+          description: invitationData 
+            ? "Please check your email to verify your account and complete the process."
+            : "Please check your email to verify your account.",
         });
-
-        // Navigate to dashboard after successful registration
-        setTimeout(() => {
+        
+        // Redirect to family management if invitation, otherwise dashboard
+        if (invitationData) {
+          navigate('/family-management');
+        } else {
           navigate('/dashboard');
-        }, 2000);
+        }
       }
     } catch (error: any) {
-      console.error('Registration error:', error);
       toast({
         title: "Registration failed",
-        description: error.message || "Failed to create account. Please try again.",
+        description: error.message || "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -109,27 +202,52 @@ const Register = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Join Opnli</CardTitle>
-          <p className="text-gray-600">Create your community profile</p>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <UserPlus className="h-5 w-5" />
+            {invitationData ? 'Join Family & Create Account' : 'Join Opnli'}
+          </CardTitle>
+          <CardDescription>
+            {invitationData ? (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4" />
+                  <span>You've been invited to join the <strong>{invitationData.family_units?.family_label}</strong> family</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary">{invitationData.relationship_role}</Badge>
+                  <span className="text-sm">by {invitationData.profiles?.first_name} {invitationData.profiles?.last_name}</span>
+                </div>
+                {invitationData.personal_message && (
+                  <div className="mt-2 p-2 bg-muted rounded text-sm">
+                    <em>"{invitationData.personal_message}"</em>
+                  </div>
+                )}
+              </div>
+            ) : (
+              'Create your community profile'
+            )}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label>Account Type</Label>
-              <RadioGroup value={userType} onValueChange={setUserType} className="mt-2">
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="individual" id="individual" />
-                  <Label htmlFor="individual">Individual</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="non_individual" id="non-individual" />
-                  <Label htmlFor="non-individual">Organization</Label>
-                </div>
-              </RadioGroup>
-            </div>
+            {!invitationData && (
+              <div>
+                <Label>Account Type</Label>
+                <RadioGroup value={userType} onValueChange={setUserType} className="mt-2">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="individual" id="individual" />
+                    <Label htmlFor="individual">Individual</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="non_individual" id="non-individual" />
+                    <Label htmlFor="non-individual">Organization</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            )}
 
-            {userType === 'non_individual' && (
+            {userType === 'non_individual' && !invitationData && (
               <div>
                 <Label htmlFor="organizationName">Organization Name</Label>
                 <Input
@@ -178,7 +296,7 @@ const Register = () => {
                 value={formData.email}
                 onChange={(e) => setFormData({...formData, email: e.target.value})}
                 required
-                disabled={loading}
+                disabled={loading || !!invitationData} // Disable if from invitation
               />
             </div>
 
@@ -196,7 +314,7 @@ const Register = () => {
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Creating Account...' : 'Create Account'}
+              {loading ? 'Creating Account...' : (invitationData ? 'Accept Invitation & Create Account' : 'Create Account')}
             </Button>
           </form>
           

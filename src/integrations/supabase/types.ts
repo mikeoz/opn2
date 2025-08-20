@@ -521,6 +521,65 @@ export type Database = {
         }
         Relationships: []
       }
+      family_invitations: {
+        Row: {
+          accepted_at: string | null
+          created_at: string | null
+          expires_at: string | null
+          family_unit_id: string
+          id: string
+          invitation_token: string | null
+          invited_by: string
+          invitee_email: string
+          invitee_name: string | null
+          personal_message: string | null
+          relationship_role: string
+          sent_at: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          family_unit_id: string
+          id?: string
+          invitation_token?: string | null
+          invited_by: string
+          invitee_email: string
+          invitee_name?: string | null
+          personal_message?: string | null
+          relationship_role: string
+          sent_at?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          family_unit_id?: string
+          id?: string
+          invitation_token?: string | null
+          invited_by?: string
+          invitee_email?: string
+          invitee_name?: string | null
+          personal_message?: string | null
+          relationship_role?: string
+          sent_at?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_invitations_family_unit_id_fkey"
+            columns: ["family_unit_id"]
+            isOneToOne: false
+            referencedRelation: "family_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       family_units: {
         Row: {
           created_at: string | null
