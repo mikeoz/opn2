@@ -23,7 +23,8 @@ import BulkImport from "./pages/BulkImport";
 import Profile from "./pages/Profile";
 import UserGuide from "./pages/UserGuide";
 import MerchantOnboardingWizard from "./components/MerchantOnboardingWizard";
-import DemoDataGeneratorPage from "./pages/DemoDataGenerator";
+import DemoDataGenerator from './pages/DemoDataGenerator';
+import CustomerInvitations from './pages/CustomerInvitations';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -77,7 +78,12 @@ const App = () => (
            } />
            <Route path="/admin/demo-data" element={
              <ProtectedRoute>
-               <DemoDataGeneratorPage />
+               <DemoDataGenerator />
+             </ProtectedRoute>
+           } />
+           <Route path="/invitations" element={
+             <ProtectedRoute>
+               <CustomerInvitations />
              </ProtectedRoute>
            } />
           <Route path="/profile" element={
