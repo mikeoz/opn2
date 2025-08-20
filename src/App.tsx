@@ -25,6 +25,7 @@ import UserGuide from "./pages/UserGuide";
 import MerchantOnboardingWizard from "./components/MerchantOnboardingWizard";
 import DemoDataGenerator from './pages/DemoDataGenerator';
 import CustomerInvitations from './pages/CustomerInvitations';
+import FamilyManagement from './pages/FamilyManagement';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -84,6 +85,11 @@ const App = () => (
            <Route path="/invitations" element={
              <ProtectedRoute>
                <CustomerInvitations />
+             </ProtectedRoute>
+           } />
+           <Route path="/family-management" element={
+             <ProtectedRoute>
+               <FamilyManagement />
              </ProtectedRoute>
            } />
           <Route path="/profile" element={

@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Settings, Clock, Users, QrCode, Store, BarChart3, FileText, Upload, Activity } from 'lucide-react';
+import { Settings, Clock, Users, QrCode, Store, BarChart3, FileText, Upload, Activity, TreePine } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -51,6 +51,12 @@ const Dashboard = () => {
           <div className="pt-6 border-t border-border">
             <h2 className="text-lg font-semibold text-muted-foreground mb-4">Help & Resources</h2>
             <div className="space-y-2">
+              <Button asChild variant="outline" className="w-full">
+                <Link to="/family-management">
+                  <TreePine className="h-4 w-4 mr-2" />
+                  Family Management
+                </Link>
+              </Button>
               <Button asChild variant="outline" className="w-full">
                 <Link to="/user-guide">
                   <FileText className="h-4 w-4 mr-2" />
@@ -230,6 +236,12 @@ const Dashboard = () => {
         <div className="pt-6 border-t border-border">
           <h2 className="text-lg font-semibold text-muted-foreground mb-4">Help & Resources</h2>
           <div className="space-y-2">
+            <Button asChild variant="outline" className="w-full">
+              <Link to="/family-management">
+                <TreePine className="h-4 w-4 mr-2" />
+                Family Management
+              </Link>
+            </Button>
             <Button asChild variant="outline" className="w-full">
               <Link to="/user-guide">
                 <FileText className="h-4 w-4 mr-2" />
