@@ -6,10 +6,13 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Share2, Users, Building, Calendar } from 'lucide-react';
+import { useFamilyUnits } from '@/hooks/useFamilyUnits';
+import { Share2, Users, Building, Calendar, TreePine, UserCheck, Trash2 } from 'lucide-react';
 import { CardRelationship, AccessPermissionType, PERMISSION_LABELS } from '@/utils/permissionUtils';
 import { useSharingTemplates } from '@/hooks/useSharingTemplates';
 
@@ -336,12 +339,15 @@ interface ShareCardDialogProps {
 
 const ShareCardDialog: React.FC<ShareCardDialogProps> = ({ 
   providers, 
+  familyUnits,
   onShareWithProvider, 
   onShareWithUser, 
+  onShareWithFamily,
   isSharing 
 }) => {
-  const [shareType, setShareType] = useState<'provider' | 'user'>('user');
+  const [shareType, setShareType] = useState<'provider' | 'user' | 'family'>('user');
   const [selectedProvider, setSelectedProvider] = useState<string>('');
+  const [selectedFamily, setSelectedFamily] = useState<string>('');
   const [userEmail, setUserEmail] = useState<string>('');
   const [selectedPermissions, setSelectedPermissions] = useState<AccessPermissionType[]>(['view_basic']);
   const [open, setOpen] = useState(false);
@@ -353,12 +359,15 @@ const ShareCardDialog: React.FC<ShareCardDialogProps> = ({
       await onShareWithProvider(selectedProvider, selectedPermissions);
     } else if (shareType === 'user' && userEmail) {
       await onShareWithUser(userEmail, selectedPermissions);
+    } else if (shareType === 'family' && selectedFamily) {
+      await onShareWithFamily(selectedFamily, selectedPermissions);
     } else {
       return;
     }
     
     setOpen(false);
     setSelectedProvider('');
+    setSelectedFamily('');
     setUserEmail('');
     setSelectedPermissions(['view_basic']);
   };
@@ -388,50 +397,84 @@ const ShareCardDialog: React.FC<ShareCardDialogProps> = ({
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Share Card with Provider</DialogTitle>
+          <DialogTitle>Share Card</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div>
             <label className="text-sm font-medium">Share with</label>
-            <Select value={shareType} onValueChange={(value) => setShareType(value as 'provider' | 'user')}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="user">Individual User</SelectItem>
-                <SelectItem value="provider">Service Provider</SelectItem>
-              </SelectContent>
-            </Select>
+            <Tabs value={shareType} onValueChange={(value) => setShareType(value as 'provider' | 'user' | 'family')}>
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="user">Individual User</TabsTrigger>
+                <TabsTrigger value="provider">Service Provider</TabsTrigger>
+                <TabsTrigger value="family">Family Unit</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="user" className="mt-4">
+                <div>
+                  <label className="text-sm font-medium">User Email</label>
+                  <Input
+                    type="email"
+                    value={userEmail}
+                    onChange={(e) => setUserEmail(e.target.value)}
+                    placeholder="Enter user's email address"
+                    className="mt-1"
+                  />
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="provider" className="mt-4">
+                <div>
+                  <label className="text-sm font-medium">Select Provider</label>
+                  <Select value={selectedProvider} onValueChange={setSelectedProvider}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Choose a provider" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {providers.map((provider) => (
+                        <SelectItem key={provider.id} value={provider.id}>
+                          {provider.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="family" className="mt-4">
+                <div>
+                  <label className="text-sm font-medium">Select Family Unit</label>
+                  <Select value={selectedFamily} onValueChange={setSelectedFamily}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Choose a family unit" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {familyUnits.map((family) => (
+                        <SelectItem key={family.id} value={family.id}>
+                          <div className="flex items-center gap-2">
+                            <TreePine className="h-4 w-4" />
+                            {family.family_label} (Gen {family.generation_level})
+                            {family.member_count && (
+                              <Badge variant="secondary" className="text-xs ml-2">
+                                {family.member_count} members
+                              </Badge>
+                            )}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selectedFamily && (
+                    <div className="p-3 bg-muted/50 rounded-lg mt-2">
+                      <p className="text-sm text-muted-foreground">
+                        <TreePine className="h-4 w-4 inline mr-1" />
+                        This will share the card with all active members of the selected family unit.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
-
-          {shareType === 'user' ? (
-            <div>
-              <label className="text-sm font-medium">User Email</label>
-              <input
-                type="email"
-                value={userEmail}
-                onChange={(e) => setUserEmail(e.target.value)}
-                placeholder="Enter user's email address"
-                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          ) : (
-            <div>
-              <label className="text-sm font-medium">Select Provider</label>
-              <Select value={selectedProvider} onValueChange={setSelectedProvider}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Choose a provider" />
-                </SelectTrigger>
-                <SelectContent>
-                  {providers.map((provider) => (
-                    <SelectItem key={provider.id} value={provider.id}>
-                      {provider.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
           
           <div>
             <label className="text-sm font-medium">Quick Templates</label>
@@ -473,11 +516,12 @@ const ShareCardDialog: React.FC<ShareCardDialogProps> = ({
             disabled={
               (shareType === 'provider' && !selectedProvider) || 
               (shareType === 'user' && !userEmail) || 
+              (shareType === 'family' && !selectedFamily) ||
               isSharing
             }
             className="w-full"
           >
-            {isSharing ? 'Adding...' : `Add ${shareType === 'user' ? 'Member' : 'Share with Provider'}`}
+            {isSharing ? 'Sharing...' : `Share with ${shareType === 'family' ? 'Family' : shareType === 'provider' ? 'Provider' : 'User'}`}
           </Button>
         </div>
       </DialogContent>
