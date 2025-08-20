@@ -563,6 +563,20 @@ export type Database = {
             referencedRelation: "family_units"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_family_units_parent"
+            columns: ["parent_family_unit_id"]
+            isOneToOne: false
+            referencedRelation: "family_units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_family_units_trust_anchor"
+            columns: ["trust_anchor_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       merchant_customers: {
