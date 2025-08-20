@@ -5,12 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Upload, FileText, Image, Building2 } from 'lucide-react';
+import { Upload, FileText, Image, Building2, Users } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useProfile } from '@/hooks/useProfile';
+import { useFamilyUnits } from '@/hooks/useFamilyUnits';
+import { useFamilyCardTemplates } from '@/hooks/useFamilyCardTemplates';
 
 interface TemplateField {
   id: string;
@@ -34,18 +37,35 @@ interface CardFormProps {
   onSubmit: (data: Record<string, any>) => Promise<void>;
   initialValues?: Record<string, string>;
   isEditing?: boolean;
+  familyContext?: {
+    familyUnitId?: string;
+    familyRole?: string;
+    generationLevel?: number;
+  };
 }
 
 const CardForm: React.FC<CardFormProps> = ({ 
   template, 
   onSubmit, 
   initialValues = {}, 
-  isEditing = false 
+  isEditing = false,
+  familyContext 
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { profile } = useProfile();
-  const form = useForm();
+  const { familyUnits } = useFamilyUnits();
+  const { getTemplatesForContext } = useFamilyCardTemplates();
+  const form = useForm({
+    defaultValues: {
+      familyUnitId: familyContext?.familyUnitId || '',
+      familyRole: familyContext?.familyRole || '',
+      generationLevel: familyContext?.generationLevel || 1,
+      ...Object.fromEntries(
+        Object.entries(initialValues).map(([key, value]) => [`field_${key}`, value])
+      )
+    }
+  });
 
   const sortedFields = template.fields?.sort((a, b) => a.display_order - b.display_order) || [];
   const isOrganizationCard = profile?.account_type === 'non_individual';
@@ -53,7 +73,17 @@ const CardForm: React.FC<CardFormProps> = ({
   const handleSubmit = async (data: Record<string, any>) => {
     setIsSubmitting(true);
     try {
-      await onSubmit(data);
+      // Include family context in the form data
+      const formDataWithFamily = {
+        ...data,
+        familyContext: {
+          familyUnitId: data.familyUnitId || null,
+          familyRole: data.familyRole || null,
+          generationLevel: data.generationLevel || 1
+        }
+      };
+      
+      await onSubmit(formDataWithFamily);
       toast({
         title: `Card ${isEditing ? 'updated' : 'created'} successfully!`,
         description: `Your ${template.name} card has been ${isEditing ? 'updated' : 'created'}.`,
@@ -71,7 +101,7 @@ const CardForm: React.FC<CardFormProps> = ({
   };
 
   const renderField = (field: TemplateField) => {
-    const fieldKey = `field_${field.id}`;
+    const fieldKey = `field_${field.id}` as any;
     
     return (
       <FormField
@@ -80,8 +110,7 @@ const CardForm: React.FC<CardFormProps> = ({
         name={fieldKey}
         rules={{
           required: field.is_required ? `${field.field_name} is required` : false
-        }}
-        defaultValue={initialValues[field.id] || ''}
+        }}  
         render={({ field: formField }) => (
           <FormItem>
             <FormLabel className="flex items-center gap-2">
@@ -182,6 +211,95 @@ const CardForm: React.FC<CardFormProps> = ({
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            
+            {/* Family Context Section */}
+            {familyUnits.length > 0 && (
+              <div className="space-y-4 p-4 border border-border rounded-lg bg-muted/20">
+                <div className="flex items-center gap-2 mb-3">
+                  <Users className="h-4 w-4 text-primary" />
+                  <h3 className="font-medium text-sm">Family Context (Optional)</h3>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="familyUnitId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Family Unit</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select family unit" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="">No family unit</SelectItem>
+                            {familyUnits.map((unit) => (
+                              <SelectItem key={unit.id} value={unit.id}>
+                                {unit.family_label} (Gen {unit.generation_level})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="familyRole"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Role in Family</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select role" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="">No specific role</SelectItem>
+                            <SelectItem value="parent">Parent</SelectItem>
+                            <SelectItem value="child">Child</SelectItem>
+                            <SelectItem value="spouse">Spouse</SelectItem>
+                            <SelectItem value="sibling">Sibling</SelectItem>
+                            <SelectItem value="grandparent">Grandparent</SelectItem>
+                            <SelectItem value="grandchild">Grandchild</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="generationLevel"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Generation Level</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min="1"
+                            max="10"
+                            placeholder="1"
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Card Fields */}
             {sortedFields.map(renderField)}
             
             <div className="flex gap-3 pt-4">

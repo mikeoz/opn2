@@ -1077,6 +1077,9 @@ export type Database = {
         Row: {
           card_code: string
           created_at: string
+          family_role: string | null
+          family_unit_id: string | null
+          generation_level: number | null
           id: string
           template_id: string
           updated_at: string
@@ -1085,6 +1088,9 @@ export type Database = {
         Insert: {
           card_code: string
           created_at?: string
+          family_role?: string | null
+          family_unit_id?: string | null
+          generation_level?: number | null
           id?: string
           template_id: string
           updated_at?: string
@@ -1093,12 +1099,22 @@ export type Database = {
         Update: {
           card_code?: string
           created_at?: string
+          family_role?: string | null
+          family_unit_id?: string | null
+          generation_level?: number | null
           id?: string
           template_id?: string
           updated_at?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "user_cards_family_unit_id_fkey"
+            columns: ["family_unit_id"]
+            isOneToOne: false
+            referencedRelation: "family_units"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "user_cards_template_id_fkey"
             columns: ["template_id"]

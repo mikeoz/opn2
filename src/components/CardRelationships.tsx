@@ -20,6 +20,7 @@ interface CardRelationshipsProps {
 const CardRelationships: React.FC<CardRelationshipsProps> = ({ cardId }) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { familyUnits, fetchFamilyMembers } = useFamilyUnits();
   const [relationships, setRelationships] = useState<CardRelationship[]>([]);
   const [providers, setProviders] = useState<Array<{ id: string; name: string }>>([]);
   const [loading, setLoading] = useState(true);
@@ -77,6 +78,70 @@ const CardRelationships: React.FC<CardRelationshipsProps> = ({ cardId }) => {
     }
   };
 
+  const handleShareWithFamilyUnit = async (familyUnitId: string, permissions: AccessPermissionType[]) => {
+    if (!user) return;
+
+    setIsSharing(true);
+    try {
+      // Get all family members from the family unit
+      const familyMembers = await fetchFamilyMembers(familyUnitId);
+      const familyUnit = familyUnits.find(fu => fu.id === familyUnitId);
+      
+      if (familyMembers.length === 0) {
+        toast({
+          title: "No family members found",
+          description: "This family unit has no active members to share with.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Create relationships for each family member
+      const relationshipsToCreate = familyMembers
+        .filter(member => member.individual_user_id !== user.id) // Don't share with yourself
+        .map(member => ({
+          card_id: cardId,
+          shared_with_user_id: member.individual_user_id,
+          relationship_type: 'shared',
+          permissions: { card: permissions },
+          created_by: user.id,
+          family_unit_id: familyUnitId,
+          relationship_context: `family_${member.relationship_label || 'member'}`
+        }));
+
+      if (relationshipsToCreate.length === 0) {
+        toast({
+          title: "No valid family members",
+          description: "No family members available to share with (excluding yourself).",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { error } = await supabase
+        .from('card_relationships')
+        .insert(relationshipsToCreate);
+
+      if (error) throw error;
+
+      toast({
+        title: `Card shared with ${familyUnit?.family_label || 'family'}`,
+        description: `Successfully shared with ${relationshipsToCreate.length} family member(s).`,
+      });
+
+      fetchRelationships();
+    } catch (error) {
+      console.error('Error sharing with family:', error);
+      toast({
+        title: "Error sharing card",
+        description: "Failed to share card with family members. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
   const handleShareWithProvider = async (providerId: string, permissions: AccessPermissionType[]) => {
     if (!user) return;
 
@@ -88,23 +153,23 @@ const CardRelationships: React.FC<CardRelationshipsProps> = ({ cardId }) => {
           card_id: cardId,
           shared_with_provider_id: providerId,
           relationship_type: 'shared',
-          permissions: { default: permissions },
+          permissions: { card: permissions },
           created_by: user.id
         });
 
       if (error) throw error;
 
       toast({
-        title: "Card shared successfully!",
-        description: "The card has been shared with the selected provider.",
+        title: "Card shared with provider",
+        description: "Successfully shared card with the selected provider.",
       });
 
       fetchRelationships();
     } catch (error) {
-      console.error('Error sharing card:', error);
+      console.error('Error sharing with provider:', error);
       toast({
         title: "Error sharing card",
-        description: "Failed to share the card. Please try again.",
+        description: "Failed to share card with provider. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -201,12 +266,14 @@ const CardRelationships: React.FC<CardRelationshipsProps> = ({ cardId }) => {
             Card Relationships
           </CardTitle>
           <div className="flex gap-2">
-            <ShareCardDialog 
-              providers={providers}
-              onShareWithProvider={handleShareWithProvider}
-              onShareWithUser={handleShareWithUser}
-              isSharing={isSharing}
-            />
+        <ShareCardDialog
+          providers={providers}
+          familyUnits={familyUnits}
+          onShareWithProvider={handleShareWithProvider}
+          onShareWithUser={handleShareWithUser}
+          onShareWithFamily={handleShareWithFamilyUnit}
+          isSharing={isSharing}
+        />
           </div>
         </div>
       </CardHeader>
@@ -260,8 +327,10 @@ const CardRelationships: React.FC<CardRelationshipsProps> = ({ cardId }) => {
 
 interface ShareCardDialogProps {
   providers: Array<{ id: string; name: string }>;
+  familyUnits: Array<{ id: string; family_label: string; generation_level: number; member_count?: number }>;
   onShareWithProvider: (providerId: string, permissions: AccessPermissionType[]) => Promise<void>;
   onShareWithUser: (userEmail: string, permissions: AccessPermissionType[]) => Promise<void>;
+  onShareWithFamily: (familyUnitId: string, permissions: AccessPermissionType[]) => Promise<void>;
   isSharing: boolean;
 }
 

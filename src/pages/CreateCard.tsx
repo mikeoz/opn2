@@ -166,12 +166,17 @@ const CreateCard = () => {
 
     try {
       const cardCode = await generateCardCode();
+      const familyContext = formData.familyContext;
+      
       const { data: userCard, error: cardError } = await supabase
         .from('user_cards')
         .insert({
           user_id: user.id,
           template_id: template.id,
-          card_code: cardCode
+          card_code: cardCode,
+          family_unit_id: familyContext?.familyUnitId || null,
+          family_role: familyContext?.familyRole || null,
+          generation_level: familyContext?.generationLevel || 1
         })
         .select()
         .single();
