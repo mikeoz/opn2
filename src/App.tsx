@@ -23,6 +23,7 @@ import BulkImport from "./pages/BulkImport";
 import Profile from "./pages/Profile";
 import UserGuide from "./pages/UserGuide";
 import MerchantOnboardingWizard from "./components/MerchantOnboardingWizard";
+import DemoDataGeneratorPage from "./pages/DemoDataGenerator";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -69,11 +70,16 @@ const App = () => (
               <SecurityDashboard />
             </ProtectedRoute>
           } />
-          <Route path="/admin/bulk-import" element={
-            <ProtectedRoute>
-              <BulkImport />
-            </ProtectedRoute>
-          } />
+           <Route path="/admin/bulk-import" element={
+             <ProtectedRoute>
+               <BulkImport />
+             </ProtectedRoute>
+           } />
+           <Route path="/admin/demo-data" element={
+             <ProtectedRoute>
+               <DemoDataGeneratorPage />
+             </ProtectedRoute>
+           } />
           <Route path="/profile" element={
             <ProtectedRoute>
               <Profile />

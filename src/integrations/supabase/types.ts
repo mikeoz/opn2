@@ -419,6 +419,168 @@ export type Database = {
           },
         ]
       }
+      demo_generation_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          created_by: string
+          error_details: Json | null
+          export_file_path: string | null
+          generated_count: number | null
+          generation_params: Json
+          id: string
+          job_type: string
+          merchant_id: string
+          status: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          created_by: string
+          error_details?: Json | null
+          export_file_path?: string | null
+          generated_count?: number | null
+          generation_params?: Json
+          id?: string
+          job_type: string
+          merchant_id: string
+          status?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          error_details?: Json | null
+          export_file_path?: string | null
+          generated_count?: number | null
+          generation_params?: Json
+          id?: string
+          job_type?: string
+          merchant_id?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demo_generation_jobs_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchant_customers: {
+        Row: {
+          address: Json | null
+          created_at: string
+          customer_email: string | null
+          customer_name: string
+          customer_status: string | null
+          data_completeness_score: number | null
+          demographics: Json | null
+          id: string
+          interaction_history: Json | null
+          last_interaction_at: string | null
+          merchant_id: string
+          phone_number: string | null
+          preferences: Json | null
+          total_interactions: number | null
+          updated_at: string
+        }
+        Insert: {
+          address?: Json | null
+          created_at?: string
+          customer_email?: string | null
+          customer_name: string
+          customer_status?: string | null
+          data_completeness_score?: number | null
+          demographics?: Json | null
+          id?: string
+          interaction_history?: Json | null
+          last_interaction_at?: string | null
+          merchant_id: string
+          phone_number?: string | null
+          preferences?: Json | null
+          total_interactions?: number | null
+          updated_at?: string
+        }
+        Update: {
+          address?: Json | null
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string
+          customer_status?: string | null
+          data_completeness_score?: number | null
+          demographics?: Json | null
+          id?: string
+          interaction_history?: Json | null
+          last_interaction_at?: string | null
+          merchant_id?: string
+          phone_number?: string | null
+          preferences?: Json | null
+          total_interactions?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_customers_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchant_inventory: {
+        Row: {
+          availability_status: string | null
+          created_at: string
+          description: string | null
+          id: string
+          interaction_data: Json | null
+          item_category: string
+          item_name: string
+          merchant_id: string
+          price_range: string | null
+          seasonal_info: Json | null
+          updated_at: string
+        }
+        Insert: {
+          availability_status?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          interaction_data?: Json | null
+          item_category: string
+          item_name: string
+          merchant_id: string
+          price_range?: string | null
+          seasonal_info?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          availability_status?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          interaction_data?: Json | null
+          item_category?: string
+          item_name?: string
+          merchant_id?: string
+          price_range?: string | null
+          seasonal_info?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_inventory_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       merchant_qr_codes: {
         Row: {
           created_at: string

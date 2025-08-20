@@ -202,23 +202,21 @@ const Dashboard = () => {
                 recentCustomers.map((customer) => (
                   <div key={customer.id} className="flex items-center justify-between py-2 border-b last:border-b-0">
                     <div>
-                      <p className="font-medium">
-                        {customer.profile?.first_name && customer.profile?.last_name
-                          ? `${customer.profile.first_name} ${customer.profile.last_name}`
-                          : customer.profile?.email || 'Unknown Customer'}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {customer.last_interaction 
-                          ? `Last active: ${formatTimeAgo(customer.last_interaction)}`
-                          : 'No recent activity'}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <Badge variant="outline" className="text-xs">
-                        {customer.relationship_type}
-                      </Badge>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {customer.interaction_count || 0} interactions
+                       <p className="font-medium">
+                         {customer.customer_name || 'Unknown Customer'}
+                       </p>
+                       <p className="text-xs text-muted-foreground">
+                         {customer.last_interaction_at 
+                           ? `Last active: ${formatTimeAgo(customer.last_interaction_at)}`
+                           : 'No recent activity'}
+                       </p>
+                     </div>
+                     <div className="text-right">
+                       <Badge variant="outline" className="text-xs">
+                         {customer.customer_status}
+                       </Badge>
+                       <p className="text-xs text-muted-foreground mt-1">
+                         {customer.total_interactions || 0} interactions
                       </p>
                     </div>
                   </div>

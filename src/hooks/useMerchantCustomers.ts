@@ -1,106 +1,219 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 
-export interface CustomerData {
+export interface MerchantCustomer {
   id: string;
-  user_id: string;
-  relationship_type: string;
-  status: string;
+  merchant_id: string;
+  customer_name: string;
+  customer_email?: string | null;
+  phone_number?: string | null;
+  address: any;
+  demographics: any;
+  preferences: any;
+  interaction_history: any[];
+  total_interactions: number;
+  last_interaction_at?: string | null;
+  customer_status: string;
+  data_completeness_score: number;
   created_at: string;
-  profile?: {
-    first_name?: string;
-    last_name?: string;
-    email?: string;
-  };
-  last_interaction?: string;
-  interaction_count?: number;
+  updated_at: string;
 }
 
-export const useMerchantCustomers = () => {
-  const [customers, setCustomers] = useState<CustomerData[]>([]);
+export const useMerchantCustomers = (merchantId?: string) => {
+  const [customers, setCustomers] = useState<MerchantCustomer[]>([]);
   const [loading, setLoading] = useState(false);
-  const { user } = useAuth();
+  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
-  const fetchCustomers = async () => {
-    if (!user) return;
-    
+  const fetchCustomers = async (merchantId: string) => {
+    if (!merchantId) return;
+
     setLoading(true);
+    setError(null);
+
     try {
-      // First get the user's provider/merchant ID
-      const { data: provider, error: providerError } = await supabase
-        .from('providers')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (providerError || !provider) {
-        setCustomers([]);
-        return;
-      }
-
-      // Get customer relationships for this merchant
-      const { data: relationships, error } = await supabase
-        .from('user_provider_relationships')
-        .select(`
-          id,
-          user_id,
-          relationship_type,
-          status,
-          created_at
-        `)
-        .eq('provider_id', provider.id)
-        .eq('status', 'active')
+      const { data, error } = await supabase
+        .from('merchant_customers')
+        .select('*')
+        .eq('merchant_id', merchantId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-
-      if (!relationships || relationships.length === 0) {
-        setCustomers([]);
-        return;
-      }
-
-      // Get profile information for each customer
-      const userIds = relationships.map(rel => rel.user_id);
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, first_name, last_name, email')
-        .in('id', userIds);
-
-      // Get interaction counts and last interaction for each customer
-      const { data: interactions } = await supabase
-        .from('relationship_interactions')
-        .select('relationship_id, created_at')
-        .in('relationship_id', relationships.map(rel => rel.id))
-        .order('created_at', { ascending: false });
-
-      // Combine the data
-      const customerData: CustomerData[] = relationships.map(rel => {
-        const profile = profiles?.find(p => p.id === rel.user_id);
-        const customerInteractions = interactions?.filter(int => int.relationship_id === rel.id) || [];
-        const lastInteraction = customerInteractions.length > 0 ? customerInteractions[0].created_at : null;
-
-        return {
-          id: rel.id,
-          user_id: rel.user_id,
-          relationship_type: rel.relationship_type,
-          status: rel.status,
-          created_at: rel.created_at,
-          profile,
-          last_interaction: lastInteraction,
-          interaction_count: customerInteractions.length
-        };
+      
+      // Cast data to our interface to handle Json types
+      const customers = (data || []).map(customer => ({
+        ...customer,
+        interaction_history: Array.isArray(customer.interaction_history) 
+          ? customer.interaction_history 
+          : [],
+        address: customer.address || {},
+        demographics: customer.demographics || {},
+        preferences: customer.preferences || {},
+        customer_status: customer.customer_status || 'prospect',
+        total_interactions: customer.total_interactions || 0,
+        data_completeness_score: customer.data_completeness_score || 0
+      })) as MerchantCustomer[];
+      
+      setCustomers(customers);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch customers';
+      setError(errorMessage);
+      toast({
+        title: 'Error',
+        description: errorMessage,
+        variant: 'destructive'
       });
-
-      setCustomers(customerData);
-    } catch (error) {
-      console.error('Error fetching customers:', error);
-      toast.error('Failed to load customer data');
-      setCustomers([]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const createCustomer = async (customerData: Omit<MerchantCustomer, 'id' | 'created_at' | 'updated_at'>) => {
+    try {
+      const { data, error } = await supabase
+        .from('merchant_customers')
+        .insert([customerData])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const newCustomer = {
+        ...data,
+        interaction_history: Array.isArray(data.interaction_history) 
+          ? data.interaction_history 
+          : [],
+        address: data.address || {},
+        demographics: data.demographics || {},
+        preferences: data.preferences || {},
+        customer_status: data.customer_status || 'prospect',
+        total_interactions: data.total_interactions || 0,
+        data_completeness_score: data.data_completeness_score || 0
+      } as MerchantCustomer;
+
+      setCustomers(prev => [newCustomer, ...prev]);
+      toast({
+        title: 'Success',
+        description: 'Customer created successfully'
+      });
+
+      return newCustomer;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create customer';
+      toast({
+        title: 'Error',
+        description: errorMessage,
+        variant: 'destructive'
+      });
+      throw err;
+    }
+  };
+
+  const updateCustomer = async (id: string, updates: Partial<MerchantCustomer>) => {
+    try {
+      const { data, error } = await supabase
+        .from('merchant_customers')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const updatedCustomer = {
+        ...data,
+        interaction_history: Array.isArray(data.interaction_history) 
+          ? data.interaction_history 
+          : [],
+        address: data.address || {},
+        demographics: data.demographics || {},
+        preferences: data.preferences || {},
+        customer_status: data.customer_status || 'prospect',
+        total_interactions: data.total_interactions || 0,
+        data_completeness_score: data.data_completeness_score || 0
+      } as MerchantCustomer;
+
+      setCustomers(prev => prev.map(customer => 
+        customer.id === id ? updatedCustomer : customer
+      ));
+
+      toast({
+        title: 'Success',
+        description: 'Customer updated successfully'
+      });
+
+      return updatedCustomer;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update customer';
+      toast({
+        title: 'Error',
+        description: errorMessage,
+        variant: 'destructive'
+      });
+      throw err;
+    }
+  };
+
+  const deleteCustomer = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('merchant_customers')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setCustomers(prev => prev.filter(customer => customer.id !== id));
+      toast({
+        title: 'Success',
+        description: 'Customer deleted successfully'
+      });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete customer';
+      toast({
+        title: 'Error',
+        description: errorMessage,
+        variant: 'destructive'
+      });
+      throw err;
+    }
+  };
+
+  const getCustomersByStatus = (status: string) => {
+    return customers.filter(customer => customer.customer_status === status);
+  };
+
+  const getCustomersWithEmail = () => {
+    return customers.filter(customer => customer.customer_email);
+  };
+
+  const getCustomersWithoutEmail = () => {
+    return customers.filter(customer => !customer.customer_email);
+  };
+
+  const getCustomerStats = () => {
+    const total = customers.length;
+    const withEmail = getCustomersWithEmail().length;
+    const withoutEmail = getCustomersWithoutEmail().length;
+    const byStatus = {
+      prospect: getCustomersByStatus('prospect').length,
+      active: getCustomersByStatus('active').length,
+      inactive: getCustomersByStatus('inactive').length,
+      vip: getCustomersByStatus('vip').length
+    };
+
+    const avgCompleteness = customers.length > 0 
+      ? customers.reduce((sum, c) => sum + c.data_completeness_score, 0) / customers.length
+      : 0;
+
+    return {
+      total,
+      withEmail,
+      withoutEmail,
+      byStatus,
+      avgCompleteness: Math.round(avgCompleteness)
+    };
   };
 
   const formatTimeAgo = (timestamp: string): string => {
@@ -120,13 +233,24 @@ export const useMerchantCustomers = () => {
   };
 
   useEffect(() => {
-    fetchCustomers();
-  }, [user]);
+    if (merchantId) {
+      fetchCustomers(merchantId);
+    }
+  }, [merchantId]);
 
   return {
     customers,
     loading,
-    refetch: fetchCustomers,
+    error,
+    fetchCustomers,
+    createCustomer,
+    updateCustomer,
+    deleteCustomer,
+    getCustomersByStatus,
+    getCustomersWithEmail,
+    getCustomersWithoutEmail,
+    getCustomerStats,
+    refetch: () => merchantId && fetchCustomers(merchantId),
     totalCustomers: customers.length,
     recentCustomers: customers.slice(0, 5),
     formatTimeAgo
