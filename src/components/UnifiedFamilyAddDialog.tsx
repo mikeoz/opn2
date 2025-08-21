@@ -93,7 +93,7 @@ export const UnifiedFamilyAddDialog: React.FC<UnifiedFamilyAddDialogProps> = ({
   const handleInvitationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!invitationData.inviteeEmail || !invitationData.relationshipRole) return;
-    if (existingInvitation) return;
+    if (existingInvitation?.status === 'pending') return;
 
     setSending(true);
     const success = await sendInvitation(invitationData);
@@ -202,8 +202,11 @@ export const UnifiedFamilyAddDialog: React.FC<UnifiedFamilyAddDialogProps> = ({
                     <Alert className="mt-2">
                       <AlertTriangle className="h-4 w-4" />
                       <AlertDescription>
-                        An invitation is already pending for this email address. 
-                        Please wait for them to respond or cancel the existing invitation.
+                        {existingInvitation.status === 'pending' ? (
+                          <>An invitation is already pending for this email address. Please wait for them to respond or cancel the existing invitation.</>
+                        ) : (
+                          <>A previous invitation exists ({existingInvitation.status}). Sending a new one will reactivate it.</>
+                        )}
                       </AlertDescription>
                     </Alert>
                   )}
@@ -256,7 +259,7 @@ export const UnifiedFamilyAddDialog: React.FC<UnifiedFamilyAddDialogProps> = ({
                 </Button>
                 <Button
                   type="submit"
-                  disabled={sending || !invitationData.inviteeEmail || !invitationData.relationshipRole || !!existingInvitation}
+                  disabled={sending || !invitationData.inviteeEmail || !invitationData.relationshipRole || existingInvitation?.status === 'pending'}
                 >
                   <Send className="h-4 w-4 mr-2" />
                   {sending ? 'Sending...' : 'Send Invitation'}

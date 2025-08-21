@@ -1,0 +1,1 @@
+DELETE FROM family_invitations WHERE status = 'cancelled' AND family_unit_id = '75b994f4-130f-4d9e-9aef-6cc3fcdb549f'
