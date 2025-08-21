@@ -644,6 +644,20 @@ export type Database = {
             referencedRelation: "family_units"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_family_connections_approved_by"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_family_connections_initiated_by"
+            columns: ["initiated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       family_units: {
