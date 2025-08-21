@@ -121,7 +121,7 @@ export const useFamilyInvitations = (familyUnitId?: string) => {
       }
 
       // Step 2: Send email using public function with token
-      const { error: emailError } = await supabase.functions.invoke('email-family-invitation', {
+      const { data: emailResponse, error: emailError } = await supabase.functions.invoke('email-family-invitation', {
         body: { 
           invitationToken: invitation.invitation_token,
           origin: window.location.origin 
@@ -134,7 +134,20 @@ export const useFamilyInvitations = (familyUnitId?: string) => {
         toast.warning('Invitation created but email failed to send. You can resend it later.');
       } else {
         console.log('Family invitation email sent successfully');
-        toast.success('Family invitation sent successfully!');
+        
+        // Handle development vs production mode
+        if (emailResponse?.developmentMode) {
+          toast.success('✅ Invitation created! (Development mode - no real email sent)', {
+            description: 'Check console logs for email details. Use the invitation link to test signup flow.',
+          });
+          
+          // Log invitation URL for easy access in development
+          if (emailResponse.invitationUrl) {
+            console.log('🔗 Invitation URL for testing:', emailResponse.invitationUrl);
+          }
+        } else {
+          toast.success('Family invitation sent successfully!');
+        }
       }
 
       // Refresh invitations list
@@ -181,7 +194,7 @@ export const useFamilyInvitations = (familyUnitId?: string) => {
       }
 
       // Resend email using the existing token
-      const { error: emailError } = await supabase.functions.invoke('email-family-invitation', {
+      const { data: emailResponse, error: emailError } = await supabase.functions.invoke('email-family-invitation', {
         body: { 
           invitationToken: invitation.invitation_token,
           origin: window.location.origin 
@@ -193,7 +206,19 @@ export const useFamilyInvitations = (familyUnitId?: string) => {
         throw new Error('Failed to resend invitation email');
       }
 
-      toast.success('Invitation resent successfully!');
+      // Handle development vs production mode
+      if (emailResponse?.developmentMode) {
+        toast.success('✅ Invitation resent! (Development mode)', {
+          description: 'Check console logs for email details.',
+        });
+        
+        // Log invitation URL for easy access in development
+        if (emailResponse.invitationUrl) {
+          console.log('🔗 Invitation URL for testing:', emailResponse.invitationUrl);
+        }
+      } else {
+        toast.success('Invitation resent successfully!');
+      }
       
       // Update the sent_at timestamp
       await supabase
