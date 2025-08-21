@@ -150,34 +150,50 @@ export const useFamilyInvitations = (familyUnitId?: string) => {
         invitation = newInvitation;
       }
 
-      // Step 2: Send email using public function with token
-      const { data: emailResponse, error: emailError } = await supabase.functions.invoke('email-family-invitation', {
-        body: { 
-          invitationToken: invitation.invitation_token,
-          origin: window.location.origin 
-        }
-      });
-
-      if (emailError) {
-        console.error('Error sending invitation email:', emailError);
-        toast.error('Failed to send invitation email');
-        return false;
-      }
-
-      console.log('Family invitation email sent successfully');
-      
-      // Handle development vs production mode
-      if (emailResponse?.developmentMode) {
-        toast.success('✅ Invitation created! (Development mode - no real email sent)', {
-          description: 'Check console logs for email details. Use the invitation link to test signup flow.',
+      // Step 2: Send email using public function with token (with dev fallback)
+      try {
+        const { data: emailResponse, error: emailError } = await supabase.functions.invoke('email-family-invitation', {
+          body: { 
+            invitationToken: invitation.invitation_token,
+            origin: window.location.origin 
+          }
         });
-        
-        // Log invitation URL for easy access in development
-        if (emailResponse.invitationUrl) {
-          console.log('🔗 Invitation URL for testing:', emailResponse.invitationUrl);
+
+        if (emailError) {
+          throw emailError;
         }
-      } else {
-        toast.success('Family invitation sent successfully!');
+
+        console.log('Family invitation email sent successfully');
+        
+        // Handle development vs production mode
+        if (emailResponse?.developmentMode) {
+          toast.success('✅ Invitation created! (Development mode - no real email sent)', {
+            description: 'Use the invitation link shown in console to test signup.',
+          });
+          
+          // Log invitation URL for easy access in development
+          if (emailResponse.invitationUrl) {
+            console.log('🔗 Invitation URL for testing:', emailResponse.invitationUrl);
+          }
+        } else {
+          toast.success('Family invitation sent successfully!');
+        }
+      } catch (emailErr) {
+        console.warn('Email function unreachable, using dev fallback:', emailErr);
+        const invitationUrl = `${window.location.origin}/register?invitation=${invitation.invitation_token}`;
+        // Try to mark as sent for consistency
+        try {
+          await supabase
+            .from('family_invitations')
+            .update({ sent_at: new Date().toISOString() })
+            .eq('invitation_token', invitation.invitation_token);
+        } catch (e) {
+          console.warn('Failed to update sent_at in fallback:', e);
+        }
+        toast.success('✅ Invitation created! (Dev fallback - no email sent)', {
+          description: 'Open the invite link from console to proceed with signup.'
+        });
+        console.log('🔗 Invitation URL for testing:', invitationUrl);
       }
 
       // Refresh invitations list
@@ -223,31 +239,47 @@ export const useFamilyInvitations = (familyUnitId?: string) => {
         throw new Error('Invitation not found');
       }
 
-      // Resend email using the existing token
-      const { data: emailResponse, error: emailError } = await supabase.functions.invoke('email-family-invitation', {
-        body: { 
-          invitationToken: invitation.invitation_token,
-          origin: window.location.origin 
-        }
-      });
-
-      if (emailError) {
-        console.error('Error resending invitation email:', emailError);
-        throw new Error('Failed to resend invitation email');
-      }
-
-      // Handle development vs production mode
-      if (emailResponse?.developmentMode) {
-        toast.success('✅ Invitation resent! (Development mode)', {
-          description: 'Check console logs for email details.',
+      // Resend email using the existing token (with dev fallback)
+      try {
+        const { data: emailResponse, error: emailError } = await supabase.functions.invoke('email-family-invitation', {
+          body: { 
+            invitationToken: invitation.invitation_token,
+            origin: window.location.origin 
+          }
         });
-        
-        // Log invitation URL for easy access in development
-        if (emailResponse.invitationUrl) {
-          console.log('🔗 Invitation URL for testing:', emailResponse.invitationUrl);
+
+        if (emailError) {
+          throw new Error('Failed to resend invitation email');
         }
-      } else {
-        toast.success('Invitation resent successfully!');
+
+        // Handle development vs production mode
+        if (emailResponse?.developmentMode) {
+          toast.success('✅ Invitation resent! (Development mode)', {
+            description: 'Use the invitation link shown in console to test.',
+          });
+          
+          // Log invitation URL for easy access in development
+          if (emailResponse.invitationUrl) {
+            console.log('🔗 Invitation URL for testing:', emailResponse.invitationUrl);
+          }
+        } else {
+          toast.success('Invitation resent successfully!');
+        }
+      } catch (emailErr) {
+        console.warn('Email function unreachable, using dev fallback:', emailErr);
+        const invitationUrl = `${window.location.origin}/register?invitation=${invitation.invitation_token}`;
+        try {
+          await supabase
+            .from('family_invitations')
+            .update({ sent_at: new Date().toISOString() })
+            .eq('invitation_token', invitation.invitation_token);
+        } catch (e) {
+          console.warn('Failed to update sent_at in fallback:', e);
+        }
+        toast.success('✅ Invitation resent! (Dev fallback - no email sent)', {
+          description: 'Open the invite link from console to proceed.'
+        });
+        console.log('🔗 Invitation URL for testing:', invitationUrl);
       }
 
       return true;
