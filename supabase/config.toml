@@ -4,7 +4,7 @@ project_id = "dkhrkignepqfidzdyper"
 verify_jwt = true
 
 [functions."send-family-invitation"]
-verify_jwt = true
+verify_jwt = false
 
 [functions."test-function"]
 verify_jwt = false
