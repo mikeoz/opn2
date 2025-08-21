@@ -112,9 +112,42 @@ export const useFamilyInvitations = (familyUnitId?: string) => {
       
       return true;
     } catch (error: any) {
-      console.error('Error sending family invitation:', error);
-      toast.error(error.message || 'Failed to send invitation');
-      return false;
+      console.error('Error sending family invitation via supabase.functions.invoke:', error);
+
+      // Fallback: direct fetch to Edge Function with full URL (handles rare CORS/gateway issues)
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const accessToken = sessionData?.session?.access_token;
+
+        const response = await fetch(
+          'https://dkhrkignepqfidzdyper.supabase.co/functions/v1/send-family-invitation',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              // Bearer token for user auth inside the function
+              ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+              // Public anon key for gateway
+              apikey:
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRraHJraWduZXBxZmlkemR5cGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwNjQyMzEsImV4cCI6MjA2NDY0MDIzMX0.uAEA1hu87uLL4o833ikc7NKz9XLAL7XIKflpSFbBIPk',
+            },
+            body: JSON.stringify(invitationData),
+          }
+        );
+
+        const json = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(json?.error || `HTTP ${response.status}`);
+        }
+
+        toast.success('Family invitation sent successfully!');
+        setTimeout(() => fetchInvitations(), 1000);
+        return true;
+      } catch (fallbackError: any) {
+        console.error('Fallback fetch to edge function failed:', fallbackError);
+        toast.error(fallbackError.message || 'Failed to send invitation');
+        return false;
+      }
     }
   };
 
