@@ -48,6 +48,8 @@ export const useFamilyUnits = () => {
   const { user } = useAuth();
   // Unique channel instance ID to avoid duplicate subscribe() on shared channels
   const channelInstanceIdRef = useRef<string>('');
+  const channelRef = useRef<any>(null);
+  
   if (!channelInstanceIdRef.current) {
     try {
       channelInstanceIdRef.current =
@@ -262,6 +264,12 @@ export const useFamilyUnits = () => {
       console.warn('Failed to add refetch listener', e);
     }
 
+    // Clean up any existing channel first
+    if (channelRef.current) {
+      console.log('🧹 Cleaning up existing channel before creating new one');
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
 
     // Set up real-time subscription with debugging
     const channelName = `family-units-${user.id}-${channelInstanceIdRef.current}`;
@@ -324,12 +332,18 @@ export const useFamilyUnits = () => {
         console.log('Subscription status:', status);
       });
 
+    // Store the channel reference
+    channelRef.current = channel;
+
     return () => {
       console.log('🧹 Cleaning up realtime subscription:', channelName);
       try {
         window.removeEventListener('family-units:refetch', onRefetch);
       } catch {}
-      supabase.removeChannel(channel);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
   }, [user?.id]);
 

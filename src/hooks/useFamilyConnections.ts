@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -52,6 +52,19 @@ export const useFamilyConnections = (familyUnitId?: string) => {
   const [loading, setLoading] = useState(false);
   const [familyTreeData, setFamilyTreeData] = useState<FamilyTreeData | null>(null);
   const { user } = useAuth();
+  const channelRef = useRef<any>(null);
+  const instanceIdRef = useRef<string>('');
+  
+  if (!instanceIdRef.current) {
+    try {
+      instanceIdRef.current =
+        typeof crypto !== 'undefined' && (crypto as any).randomUUID
+          ? (crypto as any).randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    } catch {
+      instanceIdRef.current = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    }
+  }
 
   const fetchConnections = async () => {
     if (!user || !familyUnitId) return;
@@ -223,7 +236,16 @@ export const useFamilyConnections = (familyUnitId?: string) => {
 
     fetchConnections();
 
-    const channelName = `family-connections-${familyUnitId}`;
+    // Clean up any existing channel first
+    if (channelRef.current) {
+      console.log('🧹 Cleaning up existing family connections channel');
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+
+    const channelName = `family-connections-${familyUnitId}-${instanceIdRef.current}`;
+    console.log('Setting up family connections subscription:', channelName);
+    
     const channel = supabase
       .channel(channelName)
       .on(
@@ -240,8 +262,15 @@ export const useFamilyConnections = (familyUnitId?: string) => {
       )
       .subscribe();
 
+    // Store the channel reference
+    channelRef.current = channel;
+
     return () => {
-      supabase.removeChannel(channel);
+      console.log('🧹 Cleaning up family connections subscription:', channelName);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
   }, [familyUnitId, user?.id]);
 
