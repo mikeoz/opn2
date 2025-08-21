@@ -207,33 +207,27 @@ const Register = () => {
     if (!invitationData) return;
 
     try {
-      // Accept the invitation and join the family unit
-      await supabase
-        .from('family_invitations')
-        .update({ 
-          status: 'accepted', 
-          accepted_at: new Date().toISOString() 
-        })
-        .eq('invitation_token', invitationData.invitation_token);
+      // Call the edge function to accept the invitation with proper permissions
+      const { data, error } = await supabase.functions.invoke('accept-family-invitation', {
+        body: {
+          invitationToken: invitationData.invitation_token
+        }
+      });
 
-      // Create organization membership for the family unit
-      await supabase
-        .from('organization_memberships')
-        .insert({
-          individual_user_id: user.id,
-          organization_user_id: invitationData.family_unit_id,
-          relationship_label: invitationData.relationship_role,
-          permissions: { family_member: true },
-          is_family_unit: true,
-          membership_type: 'member',
-          status: 'active',
-          created_by: invitationData.invited_by
-        });
-    } catch (inviteError) {
+      if (error) {
+        throw error;
+      }
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      console.log('Invitation accepted successfully:', data);
+    } catch (inviteError: any) {
       console.error('Error accepting invitation:', inviteError);
       toast({
         title: "Invitation Error",
-        description: "There was an issue joining the family unit. Please contact the inviter.",
+        description: inviteError.message || "There was an issue joining the family unit. Please contact the inviter.",
         variant: "destructive",
       });
     }
