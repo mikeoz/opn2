@@ -40,11 +40,7 @@ const Register = () => {
         try {
           const { data, error } = await supabase
             .from('family_invitations')
-            .select(`
-              *,
-              family_units!inner(family_label),
-              profiles!invited_by(first_name, last_name)
-            `)
+            .select('*')
             .eq('invitation_token', invitationToken)
             .eq('status', 'pending')
             .single();
@@ -160,7 +156,7 @@ const Register = () => {
 
             toast({
               title: "Welcome to the family!",
-              description: `You've successfully joined the ${invitationData.family_units.family_label} family unit.`,
+              description: "You've successfully joined the family unit.",
             });
           } catch (inviteError) {
             console.error('Error accepting invitation:', inviteError);
@@ -212,11 +208,10 @@ const Register = () => {
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Mail className="h-4 w-4" />
-                  <span>You've been invited to join the <strong>{invitationData.family_units?.family_label}</strong> family</span>
+                  <span>You've been invited to join a family unit</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary">{invitationData.relationship_role}</Badge>
-                  <span className="text-sm">by {invitationData.profiles?.first_name} {invitationData.profiles?.last_name}</span>
                 </div>
                 {invitationData.personal_message && (
                   <div className="mt-2 p-2 bg-muted rounded text-sm">
