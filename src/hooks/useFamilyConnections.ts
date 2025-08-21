@@ -133,10 +133,82 @@ export const useFamilyConnections = (familyUnitId?: string) => {
     }
   };
 
+  const checkExistingConnection = async (
+    family1Id: string, 
+    family2Id: string
+  ): Promise<{ existing: any | null, bidirectional: any | null }> => {
+    try {
+      // Check for existing connections between these two families
+      const { data: existingData, error: existingError } = await supabase
+        .from('family_unit_connections')
+        .select('*')
+        .or(`and(parent_family_unit_id.eq.${family1Id},child_family_unit_id.eq.${family2Id}),and(parent_family_unit_id.eq.${family2Id},child_family_unit_id.eq.${family1Id})`)
+        .in('status', ['pending', 'approved']);
+
+      if (existingError) throw existingError;
+
+      // Separate existing from bidirectional
+      const existing = existingData?.find(conn => 
+        (conn.parent_family_unit_id === family1Id && conn.child_family_unit_id === family2Id) ||
+        (conn.parent_family_unit_id === family2Id && conn.child_family_unit_id === family1Id)
+      );
+
+      const bidirectional = existingData?.find(conn => 
+        (conn.parent_family_unit_id === family2Id && conn.child_family_unit_id === family1Id && 
+         conn.status === 'pending')
+      );
+
+      return { existing: existing || null, bidirectional: bidirectional || null };
+    } catch (error) {
+      console.error('Error checking existing connections:', error);
+      return { existing: null, bidirectional: null };
+    }
+  };
+
   const sendConnection = async (connectionData: CreateConnectionData): Promise<boolean> => {
     if (!user) {
       toast.error('You must be logged in to create connections');
       return false;
+    }
+
+    // Determine the target family IDs based on connection direction
+    const currentFamilyId = familyUnitId!;
+    const targetFamilyId = connectionData.targetFamilyUnitId;
+
+    // Check for existing connections and bidirectional matches
+    const { existing, bidirectional } = await checkExistingConnection(currentFamilyId, targetFamilyId);
+
+    if (existing && existing.status === 'approved') {
+      toast.error('These families are already connected.');
+      return false;
+    }
+
+    if (existing && existing.status === 'pending') {
+      toast.error('A connection request is already pending between these families.');
+      return false;
+    }
+
+    // If there's a bidirectional match, auto-approve both
+    if (bidirectional) {
+      try {
+        const { error } = await supabase
+          .from('family_unit_connections')
+          .update({ 
+            status: 'approved',
+            approved_by: user.id,
+            approved_at: new Date().toISOString()
+          })
+          .eq('id', bidirectional.id);
+
+        if (error) throw error;
+
+        toast.success('Connection automatically approved! Both families were trying to connect.');
+        setTimeout(() => fetchConnections(), 1000);
+        return true;
+      } catch (error) {
+        console.error('Error auto-approving bidirectional connection:', error);
+        // Fall through to normal connection creation
+      }
     }
 
     try {
@@ -282,6 +354,7 @@ export const useFamilyConnections = (familyUnitId?: string) => {
     respondToConnection,
     cancelConnection,
     searchFamilyUnits,
+    checkExistingConnection,
     refetch: fetchConnections,
   };
 };

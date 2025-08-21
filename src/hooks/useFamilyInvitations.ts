@@ -67,9 +67,34 @@ export const useFamilyInvitations = (familyUnitId?: string) => {
     }
   };
 
+  const checkExistingInvitation = async (inviteeEmail: string, familyUnitId: string): Promise<FamilyInvitation | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('family_invitations')
+        .select('*')
+        .eq('family_unit_id', familyUnitId)
+        .eq('invitee_email', inviteeEmail)
+        .eq('status', 'pending')
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows returned
+      return data as FamilyInvitation || null;
+    } catch (error) {
+      console.error('Error checking existing invitation:', error);
+      return null;
+    }
+  };
+
   const sendInvitation = async (invitationData: CreateInvitationData): Promise<boolean> => {
     if (!user) {
       toast.error('You must be logged in to send invitations');
+      return false;
+    }
+
+    // Check for existing pending invitation
+    const existingInvitation = await checkExistingInvitation(invitationData.inviteeEmail, invitationData.familyUnitId);
+    if (existingInvitation) {
+      toast.error(`An invitation is already pending for ${invitationData.inviteeEmail}. Please wait for them to respond or cancel the existing invitation.`);
       return false;
     }
 
@@ -201,6 +226,7 @@ export const useFamilyInvitations = (familyUnitId?: string) => {
     sendInvitation,
     cancelInvitation,
     resendInvitation,
+    checkExistingInvitation,
     refetch: fetchInvitations,
   };
 };

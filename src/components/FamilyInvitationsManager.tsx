@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useFamilyInvitations, FamilyInvitation } from '@/hooks/useFamilyInvitations';
 import { FamilyInvitationDialog } from './FamilyInvitationDialog';
+import { UnifiedFamilyAddDialog } from './UnifiedFamilyAddDialog';
 
 interface FamilyInvitationsManagerProps {
   familyUnitId: string;
@@ -169,10 +170,12 @@ export const FamilyInvitationsManager: React.FC<FamilyInvitationsManagerProps> =
             </div>
             
             {isOwner && (
-              <Button onClick={() => setShowInviteDialog(true)}>
-                <Mail className="h-4 w-4 mr-2" />
-                Send Invitation
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={() => setShowInviteDialog(true)} variant="default">
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Add Family Members
+                </Button>
+              </div>
             )}
           </div>
         </CardHeader>
@@ -183,7 +186,7 @@ export const FamilyInvitationsManager: React.FC<FamilyInvitationsManagerProps> =
               <UserPlus className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>No invitations sent yet</p>
               {isOwner && (
-                <p className="text-sm">Click "Send Invitation" to invite family members</p>
+                <p className="text-sm">Click "Add Family Members" to invite individuals or connect with other families</p>
               )}
             </div>
           ) : (
@@ -271,7 +274,7 @@ export const FamilyInvitationsManager: React.FC<FamilyInvitationsManagerProps> =
         </CardContent>
       </Card>
 
-      <FamilyInvitationDialog
+      <UnifiedFamilyAddDialog
         open={showInviteDialog}
         onOpenChange={setShowInviteDialog}
         familyUnitId={familyUnitId}
