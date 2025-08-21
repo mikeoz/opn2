@@ -6,6 +6,9 @@ verify_jwt = true
 [functions."send-family-invitation"]
 verify_jwt = false
 
+[functions."email-family-invitation"]
+verify_jwt = false
+
 [functions."send-family-connection"]
 verify_jwt = true
 

@@ -99,55 +99,52 @@ export const useFamilyInvitations = (familyUnitId?: string) => {
     }
 
     try {
-      const { data, error } = await supabase.functions.invoke('send-family-invitation', {
-        body: invitationData,
+      console.log('Creating family invitation:', invitationData);
+      
+      // Step 1: Insert invitation record directly (RLS handles authorization)
+      const { data: invitation, error: insertError } = await supabase
+        .from('family_invitations')
+        .insert({
+          family_unit_id: invitationData.familyUnitId,
+          invited_by: user.id,
+          invitee_email: invitationData.inviteeEmail,
+          invitee_name: invitationData.inviteeName,
+          relationship_role: invitationData.relationshipRole,
+          personal_message: invitationData.personalMessage,
+        })
+        .select('invitation_token')
+        .single();
+
+      if (insertError) {
+        console.error('Error creating invitation:', insertError);
+        throw new Error(`Failed to create invitation: ${insertError.message}`);
+      }
+
+      // Step 2: Send email using public function with token
+      const { error: emailError } = await supabase.functions.invoke('email-family-invitation', {
+        body: { 
+          invitationToken: invitation.invitation_token,
+          origin: window.location.origin 
+        }
       });
 
-      if (error) throw error;
+      if (emailError) {
+        console.error('Error sending invitation email:', emailError);
+        // Don't fail completely - invitation was created successfully
+        toast.warning('Invitation created but email failed to send. You can resend it later.');
+      } else {
+        console.log('Family invitation email sent successfully');
+        toast.success('Family invitation sent successfully!');
+      }
 
-      toast.success('Family invitation sent successfully!');
-      
       // Refresh invitations list
       setTimeout(() => fetchInvitations(), 1000);
-      
       return true;
+      
     } catch (error: any) {
-      console.error('Error sending family invitation via supabase.functions.invoke:', error);
-
-      // Fallback: direct fetch to Edge Function with full URL (handles rare CORS/gateway issues)
-      try {
-        const { data: sessionData } = await supabase.auth.getSession();
-        const accessToken = sessionData?.session?.access_token;
-
-        const response = await fetch(
-          'https://dkhrkignepqfidzdyper.supabase.co/functions/v1/send-family-invitation',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              // Bearer token for user auth inside the function
-              ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-              // Public anon key for gateway
-              apikey:
-                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRraHJraWduZXBxZmlkemR5cGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwNjQyMzEsImV4cCI6MjA2NDY0MDIzMX0.uAEA1hu87uLL4o833ikc7NKz9XLAL7XIKflpSFbBIPk',
-            },
-            body: JSON.stringify(invitationData),
-          }
-        );
-
-        const json = await response.json().catch(() => ({}));
-        if (!response.ok) {
-          throw new Error(json?.error || `HTTP ${response.status}`);
-        }
-
-        toast.success('Family invitation sent successfully!');
-        setTimeout(() => fetchInvitations(), 1000);
-        return true;
-      } catch (fallbackError: any) {
-        console.error('Fallback fetch to edge function failed:', fallbackError);
-        toast.error(fallbackError.message || 'Failed to send invitation');
-        return false;
-      }
+      console.error('Error in sendInvitation:', error);
+      toast.error(error.message || 'Failed to send invitation');
+      return false;
     }
   };
 
@@ -183,24 +180,28 @@ export const useFamilyInvitations = (familyUnitId?: string) => {
         throw new Error('Invitation not found');
       }
 
-      // Send the invitation again using the same data
-      const success = await sendInvitation({
-        familyUnitId: invitation.family_unit_id,
-        inviteeEmail: invitation.invitee_email,
-        inviteeName: invitation.invitee_name || undefined,
-        relationshipRole: invitation.relationship_role,
-        personalMessage: invitation.personal_message || undefined,
+      // Resend email using the existing token
+      const { error: emailError } = await supabase.functions.invoke('email-family-invitation', {
+        body: { 
+          invitationToken: invitation.invitation_token,
+          origin: window.location.origin 
+        }
       });
 
-      if (success) {
-        // Update the sent_at timestamp for the existing invitation
-        await supabase
-          .from('family_invitations')
-          .update({ sent_at: new Date().toISOString() })
-          .eq('id', invitationId);
+      if (emailError) {
+        console.error('Error resending invitation email:', emailError);
+        throw new Error('Failed to resend invitation email');
       }
 
-      return success;
+      toast.success('Invitation resent successfully!');
+      
+      // Update the sent_at timestamp
+      await supabase
+        .from('family_invitations')
+        .update({ sent_at: new Date().toISOString() })
+        .eq('id', invitationId);
+
+      return true;
     } catch (error: any) {
       console.error('Error resending invitation:', error);
       toast.error(error.message || 'Failed to resend invitation');
