@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.10";
 import { Resend } from "npm:resend@2.0.0";
 // Function deployed - retry after 401 fix
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+// Resend client will be initialized within the request handler after validating secrets
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -110,7 +110,14 @@ serve(async (req: Request): Promise<Response> => {
     // Construct invitation URL
     const invitationUrl = `${req.headers.get('origin') || 'https://app.example.com'}/register?invitation=${invitation.invitation_token}`;
 
-    // Send invitation email
+    // Initialize Resend and send invitation email
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendApiKey) {
+      console.error('Missing RESEND_API_KEY secret');
+      throw new Error('Email service is not configured');
+    }
+    const resend = new Resend(resendApiKey);
+
     const emailResponse = await resend.emails.send({
       from: "Family Connect <noreply@resend.dev>",
       to: [inviteeEmail],
