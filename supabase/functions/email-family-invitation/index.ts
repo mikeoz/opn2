@@ -63,8 +63,8 @@ serve(async (req: Request): Promise<Response> => {
       throw new Error("Invitation has expired");
     }
 
-    // Check if already sent recently (within 5 minutes to prevent spam)
-    if (invitation.sent_at) {
+    // Check if already sent recently (within 5 minutes to prevent spam) - skip in development mode
+    if (!DEVELOPMENT_MODE && invitation.sent_at) {
       const sentAt = new Date(invitation.sent_at);
       const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
       if (sentAt > fiveMinutesAgo) {
@@ -126,16 +126,10 @@ serve(async (req: Request): Promise<Response> => {
       console.log('Invitation URL:', invitationUrl);
       console.log('Content preview:', emailContent.substring(0, 200) + '...');
       
-      // Store mock email data for review
+      // Always update sent_at in development mode
       await supabase
         .from('family_invitations')
-        .update({ 
-          sent_at: new Date().toISOString(),
-          // Store email content in personal_message for development review
-          personal_message: invitation.personal_message ? 
-            `${invitation.personal_message}\n\n[DEV] Invitation URL: ${invitationUrl}` : 
-            `[DEV] Invitation URL: ${invitationUrl}`
-        })
+        .update({ sent_at: new Date().toISOString() })
         .eq('invitation_token', invitationToken);
 
       console.log('✅ Development mode: Email "sent" successfully');

@@ -74,10 +74,11 @@ export const useFamilyInvitations = (familyUnitId?: string) => {
         .select('*')
         .eq('family_unit_id', familyUnitId)
         .eq('invitee_email', inviteeEmail)
-        .eq('status', 'pending')
-        .single();
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows returned
+      if (error) throw error;
       return data as FamilyInvitation || null;
     } catch (error) {
       console.error('Error checking existing invitation:', error);
@@ -91,33 +92,62 @@ export const useFamilyInvitations = (familyUnitId?: string) => {
       return false;
     }
 
-    // Check for existing pending invitation
-    const existingInvitation = await checkExistingInvitation(invitationData.inviteeEmail, invitationData.familyUnitId);
-    if (existingInvitation) {
-      toast.error(`An invitation is already pending for ${invitationData.inviteeEmail}. Please wait for them to respond or cancel the existing invitation.`);
-      return false;
-    }
-
     try {
-      console.log('Creating family invitation:', invitationData);
+      // Check for existing invitation
+      const existingInvitation = await checkExistingInvitation(invitationData.inviteeEmail, invitationData.familyUnitId);
       
-      // Step 1: Insert invitation record directly (RLS handles authorization)
-      const { data: invitation, error: insertError } = await supabase
-        .from('family_invitations')
-        .insert({
-          family_unit_id: invitationData.familyUnitId,
-          invited_by: user.id,
-          invitee_email: invitationData.inviteeEmail,
-          invitee_name: invitationData.inviteeName,
-          relationship_role: invitationData.relationshipRole,
-          personal_message: invitationData.personalMessage,
-        })
-        .select('invitation_token')
-        .single();
+      let invitation: { invitation_token: string };
+      
+      if (existingInvitation) {
+        if (existingInvitation.status === 'pending') {
+          toast.error(`An invitation is already pending for ${invitationData.inviteeEmail}. Use "Resend" or "Cancel" to manage it.`);
+          return false;
+        }
+        
+        // Reactivate cancelled/expired invitation
+        console.log('Reactivating existing invitation:', existingInvitation.id);
+        const { data: updatedInvitation, error: updateError } = await supabase
+          .from('family_invitations')
+          .update({
+            status: 'pending',
+            relationship_role: invitationData.relationshipRole,
+            personal_message: invitationData.personalMessage,
+            expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
+            sent_at: null,
+            accepted_at: null
+          })
+          .eq('id', existingInvitation.id)
+          .select('invitation_token')
+          .single();
+        
+        if (updateError) {
+          console.error('Error updating invitation:', updateError);
+          throw new Error(`Failed to update invitation: ${updateError.message}`);
+        }
+        
+        invitation = updatedInvitation;
+      } else {
+        // Create new invitation
+        console.log('Creating family invitation:', invitationData);
+        const { data: newInvitation, error: insertError } = await supabase
+          .from('family_invitations')
+          .insert({
+            family_unit_id: invitationData.familyUnitId,
+            invited_by: user.id,
+            invitee_email: invitationData.inviteeEmail,
+            invitee_name: invitationData.inviteeName,
+            relationship_role: invitationData.relationshipRole,
+            personal_message: invitationData.personalMessage,
+          })
+          .select('invitation_token')
+          .single();
 
-      if (insertError) {
-        console.error('Error creating invitation:', insertError);
-        throw new Error(`Failed to create invitation: ${insertError.message}`);
+        if (insertError) {
+          console.error('Error creating invitation:', insertError);
+          throw new Error(`Failed to create invitation: ${insertError.message}`);
+        }
+        
+        invitation = newInvitation;
       }
 
       // Step 2: Send email using public function with token
@@ -130,30 +160,30 @@ export const useFamilyInvitations = (familyUnitId?: string) => {
 
       if (emailError) {
         console.error('Error sending invitation email:', emailError);
-        // Don't fail completely - invitation was created successfully
-        toast.warning('Invitation created but email failed to send. You can resend it later.');
-      } else {
-        console.log('Family invitation email sent successfully');
+        toast.error('Failed to send invitation email');
+        return false;
+      }
+
+      console.log('Family invitation email sent successfully');
+      
+      // Handle development vs production mode
+      if (emailResponse?.developmentMode) {
+        toast.success('✅ Invitation created! (Development mode - no real email sent)', {
+          description: 'Check console logs for email details. Use the invitation link to test signup flow.',
+        });
         
-        // Handle development vs production mode
-        if (emailResponse?.developmentMode) {
-          toast.success('✅ Invitation created! (Development mode - no real email sent)', {
-            description: 'Check console logs for email details. Use the invitation link to test signup flow.',
-          });
-          
-          // Log invitation URL for easy access in development
-          if (emailResponse.invitationUrl) {
-            console.log('🔗 Invitation URL for testing:', emailResponse.invitationUrl);
-          }
-        } else {
-          toast.success('Family invitation sent successfully!');
+        // Log invitation URL for easy access in development
+        if (emailResponse.invitationUrl) {
+          console.log('🔗 Invitation URL for testing:', emailResponse.invitationUrl);
         }
+      } else {
+        toast.success('Family invitation sent successfully!');
       }
 
       // Refresh invitations list
       setTimeout(() => fetchInvitations(), 1000);
       return true;
-      
+        
     } catch (error: any) {
       console.error('Error in sendInvitation:', error);
       toast.error(error.message || 'Failed to send invitation');
@@ -219,12 +249,6 @@ export const useFamilyInvitations = (familyUnitId?: string) => {
       } else {
         toast.success('Invitation resent successfully!');
       }
-      
-      // Update the sent_at timestamp
-      await supabase
-        .from('family_invitations')
-        .update({ sent_at: new Date().toISOString() })
-        .eq('id', invitationId);
 
       return true;
     } catch (error: any) {
