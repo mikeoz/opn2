@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -32,6 +32,19 @@ export const useFamilyInvitations = (familyUnitId?: string) => {
   const [invitations, setInvitations] = useState<FamilyInvitation[]>([]);
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
+  const channelRef = useRef<any>(null);
+  const instanceIdRef = useRef<string>('');
+
+  if (!instanceIdRef.current) {
+    try {
+      instanceIdRef.current =
+        typeof crypto !== 'undefined' && (crypto as any).randomUUID
+          ? (crypto as any).randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    } catch {
+      instanceIdRef.current = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    }
+  }
 
   const fetchInvitations = async () => {
     if (!user || !familyUnitId) return;
@@ -143,7 +156,16 @@ export const useFamilyInvitations = (familyUnitId?: string) => {
 
     fetchInvitations();
 
-    const channelName = `family-invitations-${familyUnitId}`;
+    // Clean up any existing channel first
+    if (channelRef.current) {
+      console.log('🧹 Cleaning up existing family invitations channel');
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+
+    const channelName = `family-invitations-${familyUnitId}-${instanceIdRef.current}`;
+    console.log('Setting up family invitations subscription:', channelName);
+
     const channel = supabase
       .channel(channelName)
       .on(
@@ -161,8 +183,15 @@ export const useFamilyInvitations = (familyUnitId?: string) => {
       )
       .subscribe();
 
+    // Store reference
+    channelRef.current = channel;
+
     return () => {
-      supabase.removeChannel(channel);
+      console.log('🧹 Cleaning up family invitations subscription:', channelName);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
   }, [familyUnitId, user?.id]);
 
