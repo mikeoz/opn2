@@ -22,8 +22,13 @@ const Register = () => {
     password: '',
     organizationName: ''
   });
+  const [signInData, setSignInData] = useState({
+    email: '',
+    password: ''
+  });
   const [loading, setLoading] = useState(false);
   const [invitationData, setInvitationData] = useState<any>(null);
+  const [showSignIn, setShowSignIn] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { user, handlePostRegistrationSetup } = useAuth();
@@ -128,46 +133,7 @@ const Register = () => {
       }
 
       if (data.user) {
-        // Handle invitation acceptance if present
-        if (invitationData) {
-          try {
-            // Accept the invitation and join the family unit
-            await supabase
-              .from('family_invitations')
-              .update({ 
-                status: 'accepted', 
-                accepted_at: new Date().toISOString() 
-              })
-              .eq('invitation_token', invitationData.invitation_token);
-
-            // Create organization membership for the family unit
-            await supabase
-              .from('organization_memberships')
-              .insert({
-                individual_user_id: data.user.id,
-                organization_user_id: invitationData.family_unit_id,
-                relationship_label: invitationData.relationship_role,
-                permissions: { family_member: true },
-                is_family_unit: true,
-                membership_type: 'member',
-                status: 'active',
-                created_by: invitationData.invited_by
-              });
-
-            toast({
-              title: "Welcome to the family!",
-              description: "You've successfully joined the family unit.",
-            });
-          } catch (inviteError) {
-            console.error('Error accepting invitation:', inviteError);
-            toast({
-              title: "Account created",
-              description: "Your account was created but there was an issue joining the family unit. Please contact the inviter.",
-              variant: "destructive",
-            });
-          }
-        }
-
+        await handleInvitationAcceptance(data.user);
         await handlePostRegistrationSetup(data.user, userType);
         
         toast({
@@ -195,13 +161,91 @@ const Register = () => {
     }
   };
 
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: signInData.email,
+        password: signInData.password,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data.user) {
+        await handleInvitationAcceptance(data.user);
+        
+        toast({
+          title: "Welcome back!",
+          description: invitationData 
+            ? "You've successfully joined the family unit."
+            : "You've been signed in successfully.",
+        });
+        
+        // Redirect to family management if invitation, otherwise dashboard
+        if (invitationData) {
+          navigate('/family-management');
+        } else {
+          navigate('/dashboard');
+        }
+      }
+    } catch (error: any) {
+      toast({
+        title: "Sign in failed",
+        description: error.message || "Invalid email or password.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInvitationAcceptance = async (user: any) => {
+    if (!invitationData) return;
+
+    try {
+      // Accept the invitation and join the family unit
+      await supabase
+        .from('family_invitations')
+        .update({ 
+          status: 'accepted', 
+          accepted_at: new Date().toISOString() 
+        })
+        .eq('invitation_token', invitationData.invitation_token);
+
+      // Create organization membership for the family unit
+      await supabase
+        .from('organization_memberships')
+        .insert({
+          individual_user_id: user.id,
+          organization_user_id: invitationData.family_unit_id,
+          relationship_label: invitationData.relationship_role,
+          permissions: { family_member: true },
+          is_family_unit: true,
+          membership_type: 'member',
+          status: 'active',
+          created_by: invitationData.invited_by
+        });
+    } catch (inviteError) {
+      console.error('Error accepting invitation:', inviteError);
+      toast({
+        title: "Invitation Error",
+        description: "There was an issue joining the family unit. Please contact the inviter.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <UserPlus className="h-5 w-5" />
-            {invitationData ? 'Join Family & Create Account' : 'Join Opnli'}
+            {invitationData ? 'Accept Family Invitation' : 'Join Opnli'}
           </CardTitle>
           <CardDescription>
             {invitationData ? (
@@ -225,93 +269,160 @@ const Register = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {!invitationData && (
-              <div>
-                <Label>Account Type</Label>
-                <RadioGroup value={userType} onValueChange={setUserType} className="mt-2">
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="individual" id="individual" />
-                    <Label htmlFor="individual">Individual</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="non_individual" id="non-individual" />
-                    <Label htmlFor="non-individual">Organization</Label>
-                  </div>
-                </RadioGroup>
+          {invitationData && (
+            <div className="mb-6 space-y-4">
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground mb-4">
+                  Do you already have an account or need to create a new one?
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button 
+                    variant={showSignIn ? "default" : "outline"} 
+                    onClick={() => {
+                      setShowSignIn(true);
+                      setSignInData(prev => ({ ...prev, email: invitationData.invitee_email }));
+                    }}
+                    className="h-auto py-3 px-4"
+                  >
+                    <div className="text-center">
+                      <div className="font-medium">Sign In</div>
+                      <div className="text-xs opacity-75">I have an account</div>
+                    </div>
+                  </Button>
+                  <Button 
+                    variant={!showSignIn ? "default" : "outline"} 
+                    onClick={() => setShowSignIn(false)}
+                    className="h-auto py-3 px-4"
+                  >
+                    <div className="text-center">
+                      <div className="font-medium">Create Account</div>
+                      <div className="text-xs opacity-75">I'm new here</div>
+                    </div>
+                  </Button>
+                </div>
               </div>
-            )}
+            </div>
+          )}
 
-            {userType === 'non_individual' && !invitationData && (
+          {invitationData && showSignIn ? (
+            <form onSubmit={handleSignIn} className="space-y-4">
               <div>
-                <Label htmlFor="organizationName">Organization Name</Label>
+                <Label htmlFor="signInEmail">Email</Label>
                 <Input
-                  id="organizationName"
-                  value={formData.organizationName}
-                  onChange={(e) => setFormData({...formData, organizationName: e.target.value})}
+                  id="signInEmail"
+                  type="email"
+                  value={signInData.email}
+                  onChange={(e) => setSignInData({...signInData, email: e.target.value})}
                   required
                   disabled={loading}
                 />
               </div>
-            )}
 
-            <div>
-              <Label htmlFor="firstName">
-                {userType === 'individual' ? 'First Name' : 'Representative First Name'}
-              </Label>
-              <Input
-                id="firstName"
-                value={formData.firstName}
-                onChange={(e) => setFormData({...formData, firstName: e.target.value})}
-                required
-                disabled={loading}
-              />
-            </div>
+              <div>
+                <Label htmlFor="signInPassword">Password</Label>
+                <Input
+                  id="signInPassword"
+                  type="password"
+                  value={signInData.password}
+                  onChange={(e) => setSignInData({...signInData, password: e.target.value})}
+                  required
+                  disabled={loading}
+                />
+              </div>
 
-            <div>
-              <Label htmlFor="lastName">
-                {userType === 'individual' ? 'Last Name' : 'Representative Last Name'}
-              </Label>
-              <Input
-                id="lastName"
-                value={formData.lastName}
-                onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-                required
-                disabled={loading}
-              />
-            </div>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? 'Signing In...' : 'Accept Invitation & Sign In'}
+              </Button>
+            </form>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {!invitationData && (
+                <div>
+                  <Label>Account Type</Label>
+                  <RadioGroup value={userType} onValueChange={setUserType} className="mt-2">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="individual" id="individual" />
+                      <Label htmlFor="individual">Individual</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="non_individual" id="non-individual" />
+                      <Label htmlFor="non-individual">Organization</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+              )}
 
-            <div>
-              <Label htmlFor="email">
-                {userType === 'individual' ? 'Email' : 'Representative Email'}
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
-                required
-                disabled={loading || !!invitationData} // Disable if from invitation
-              />
-            </div>
+              {userType === 'non_individual' && !invitationData && (
+                <div>
+                  <Label htmlFor="organizationName">Organization Name</Label>
+                  <Input
+                    id="organizationName"
+                    value={formData.organizationName}
+                    onChange={(e) => setFormData({...formData, organizationName: e.target.value})}
+                    required
+                    disabled={loading}
+                  />
+                </div>
+              )}
 
-            <div>
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({...formData, password: e.target.value})}
-                required
-                disabled={loading}
-                minLength={6}
-              />
-            </div>
+              <div>
+                <Label htmlFor="firstName">
+                  {userType === 'individual' ? 'First Name' : 'Representative First Name'}
+                </Label>
+                <Input
+                  id="firstName"
+                  value={formData.firstName}
+                  onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                  required
+                  disabled={loading}
+                />
+              </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Creating Account...' : (invitationData ? 'Accept Invitation & Create Account' : 'Create Account')}
-            </Button>
-          </form>
+              <div>
+                <Label htmlFor="lastName">
+                  {userType === 'individual' ? 'Last Name' : 'Representative Last Name'}
+                </Label>
+                <Input
+                  id="lastName"
+                  value={formData.lastName}
+                  onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                  required
+                  disabled={loading}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="email">
+                  {userType === 'individual' ? 'Email' : 'Representative Email'}
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  required
+                  disabled={loading || !!invitationData} // Disable if from invitation
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({...formData, password: e.target.value})}
+                  required
+                  disabled={loading}
+                  minLength={6}
+                />
+              </div>
+
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? 'Creating Account...' : (invitationData ? 'Accept Invitation & Create Account' : 'Create Account')}
+              </Button>
+            </form>
+          )}
           
           <div className="mt-6 text-center">
             <Button variant="link" onClick={() => navigate('/login')}>
