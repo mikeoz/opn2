@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.10";
 import { Resend } from "npm:resend@2.0.0";
-  // Function deployed
+// Function deployed - retry after 401 fix
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
@@ -32,18 +32,24 @@ serve(async (req: Request): Promise<Response> => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get the authorization header
+    // Get the authorization header (optional since verify_jwt = false)
     const authHeader = req.headers.get("authorization");
-    if (!authHeader) {
-      throw new Error("No authorization header");
+    let user = null;
+    
+    if (authHeader) {
+      try {
+        const token = authHeader.replace("Bearer ", "");
+        const { data: userData, error: authError } = await supabase.auth.getUser(token);
+        if (!authError && userData) {
+          user = userData.user;
+        }
+      } catch (error) {
+        console.log('Auth header provided but invalid, continuing without user context');
+      }
     }
 
-    // Set the auth for the request
-    const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
-    if (authError || !user) {
-      throw new Error("Unauthorized");
+    if (!user) {
+      throw new Error("User authentication required to send family invitations");
     }
 
     const {
