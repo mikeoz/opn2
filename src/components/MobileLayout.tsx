@@ -1,12 +1,12 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Home, LogOut, Users, CreditCard, Plus, Share2, Eye, User, Settings, Upload } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Home, LogOut, Users, CreditCard, Plus, Share2, Eye, User, Settings, HelpCircle } from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useUserRole } from '@/hooks/useUserRole';
-// import { useProfile } from '@/hooks/useProfile';
+import { PWAInstallPrompt } from './PWAInstallPrompt';
+import { OnboardingTutorial } from './OnboardingTutorial';
+import { ContextualHelp } from './ContextualHelp';
 
 interface MobileLayoutProps {
   children: React.ReactNode;
@@ -14,9 +14,16 @@ interface MobileLayoutProps {
 
 const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
   const { user, signOut } = useAuth();
-  const { isAdmin } = useUserRole();
-  // const { profile } = useProfile();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  
+  useEffect(() => {
+    const hasSeenOnboarding = localStorage.getItem('onboarding-dismissed');
+    if (!hasSeenOnboarding) {
+      setTimeout(() => setShowOnboarding(true), 2000);
+    }
+  }, []);
 
   const handleSignOut = async () => {
     await signOut();
@@ -24,119 +31,128 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-background flex flex-col">
-      {/* Top Bar - Fixed at top */}
-      <header className="h-16 bg-primary text-primary-foreground px-4 py-2 flex items-center justify-between flex-shrink-0 z-10">
-        <div className="flex-1">
-          <h1 className="text-lg font-bold">Opnli Community Directory</h1>
-          <p className="text-sm opacity-90">{user?.email}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-primary-foreground hover:bg-primary/20"
-            asChild
-          >
-            <Link to="/dashboard">
-              <Home className="h-5 w-5" />
-            </Link>
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-primary-foreground hover:bg-primary/20"
-            asChild
-            title="Settings"
-          >
-            <Link to="/settings">
-              <Settings className="h-5 w-5" />
-            </Link>
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-primary-foreground hover:bg-primary/20"
-            asChild
-          >
-            <Link to="/profile">
-              <User className="h-5 w-5" />
-            </Link>
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-primary-foreground hover:bg-primary/20"
-            onClick={handleSignOut}
-          >
-            <LogOut className="h-5 w-5" />
-          </Button>
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Fixed Header */}
+      <header className="fixed top-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-sm border-b">
+        <div className="flex items-center justify-between p-4">
+          <div className="flex-1">
+            <h1 className="text-xl font-bold text-foreground">Opn.li</h1>
+            <p className="text-xs text-muted-foreground truncate">
+              {user?.email}
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/dashboard')}
+              className="h-touch-target w-touch-target p-0 touch-manipulation"
+            >
+              <Home className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowOnboarding(true)}
+              className="h-touch-target w-touch-target p-0 touch-manipulation"
+            >
+              <HelpCircle className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/settings')}
+              className="h-touch-target w-touch-target p-0 touch-manipulation"
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleSignOut}
+              className="h-touch-target w-touch-target p-0 touch-manipulation"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </header>
 
-      {/* Body - Scrollable content area */}
-      <main className="flex-1 overflow-y-auto overflow-x-hidden">
+      {/* Main Content */}
+      <main className="flex-1 pt-16 pb-20 overflow-y-auto">
         {children}
       </main>
 
-      {/* Bottom Bar - Fixed at bottom */}
-      <nav className="h-16 bg-card border-t border-border flex items-center justify-around px-2 flex-shrink-0 z-10">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="flex-col h-full gap-1 text-xs"
-          asChild
-        >
-          <Link to="/directory">
+      {/* Fixed Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-sm border-t">
+        <div className="flex items-center justify-around p-2">
+          <Link
+            to="/directory"
+            className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors min-h-touch-target touch-manipulation ${
+              location.pathname === '/directory'
+                ? 'text-primary bg-primary/10'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
             <Users className="h-5 w-5" />
-            Directory
+            <span className="text-xs">Directory</span>
           </Link>
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="flex-col h-full gap-1 text-xs"
-          asChild
-        >
-          <Link to="/cards">
+
+          <Link
+            to="/my-cards"
+            className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors min-h-touch-target touch-manipulation ${
+              location.pathname === '/my-cards'
+                ? 'text-primary bg-primary/10'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
             <CreditCard className="h-5 w-5" />
-            My Cards
+            <span className="text-xs">My Cards</span>
           </Link>
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="flex-col h-full gap-1 text-xs bg-accent text-accent-foreground hover:bg-accent/80"
-          asChild
-        >
-          <Link to="/cards">
+
+          <Link
+            to="/create-card"
+            className="flex flex-col items-center gap-1 p-2 rounded-lg bg-benefit text-benefit-foreground min-h-touch-target touch-manipulation animate-pulse-glow"
+          >
             <Plus className="h-5 w-5" />
-            Add
+            <span className="text-xs">Add</span>
           </Link>
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="flex-col h-full gap-1 text-xs"
-          asChild
-        >
-          <Link to="/cards">
+
+          <Link
+            to="/family-management"
+            className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors min-h-touch-target touch-manipulation ${
+              location.pathname === '/family-management'
+                ? 'text-primary bg-primary/10'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
             <Share2 className="h-5 w-5" />
-            Share
+            <span className="text-xs">Family</span>
           </Link>
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="flex-col h-full gap-1 text-xs"
-          asChild
-        >
-          <Link to="/cards">
+
+          <Link
+            to="/merchant-hub"
+            className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors min-h-touch-target touch-manipulation ${
+              location.pathname === '/merchant-hub'
+                ? 'text-primary bg-primary/10'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
             <Eye className="h-5 w-5" />
-            Views
+            <span className="text-xs">Loyal</span>
           </Link>
-        </Button>
+        </div>
       </nav>
+
+      {/* Enhanced Features */}
+      <PWAInstallPrompt />
+      <OnboardingTutorial
+        isVisible={showOnboarding}
+        onClose={() => setShowOnboarding(false)}
+        currentRoute={location.pathname}
+      />
+      <ContextualHelp currentRoute={location.pathname} />
     </div>
   );
 };
