@@ -8,6 +8,7 @@ export interface QRCodeData {
   display_name: string;
   description: string | null;
   qr_type: string;
+  qr_code_data: string;
   scan_count: number;
   is_active: boolean;
   created_at: string;
@@ -44,6 +45,7 @@ export const useMerchantQRCodes = () => {
           display_name,
           description,
           qr_type,
+          qr_code_data,
           scan_count,
           is_active,
           created_at,

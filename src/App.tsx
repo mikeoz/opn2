@@ -29,6 +29,7 @@ import CardCatalog from "./pages/CardCatalog";
 import CardRepository from "./pages/CardRepository";
 import Settings from "./pages/Settings";
 import FamilyManagement from './pages/FamilyManagement';
+import MerchantHub from './pages/MerchantHub';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -90,11 +91,16 @@ const App = () => (
                <CustomerInvitations />
              </ProtectedRoute>
            } />
-            <Route path="/family-management" element={
-              <ProtectedRoute>
-                <FamilyManagement />
-              </ProtectedRoute>
-            } />
+             <Route path="/family-management" element={
+               <ProtectedRoute>
+                 <FamilyManagement />
+               </ProtectedRoute>
+             } />
+             <Route path="/merchant-hub" element={
+               <ProtectedRoute>
+                 <MerchantHub />
+               </ProtectedRoute>
+             } />
             <Route path="/card-catalog" element={
               <ProtectedRoute>
                 <CardCatalog />
