@@ -218,6 +218,15 @@ export const useFamilyUnits = () => {
 
   const fetchFamilyMembers = async (familyUnitId: string): Promise<FamilyMember[]> => {
     try {
+      // First get the trust anchor user for this family unit
+      const { data: familyUnit, error: familyError } = await supabase
+        .from('family_units')
+        .select('trust_anchor_user_id')
+        .eq('id', familyUnitId)
+        .single();
+
+      if (familyError) throw familyError;
+
       const { data, error } = await supabase
         .from('organization_memberships')
         .select(`
@@ -234,7 +243,7 @@ export const useFamilyUnits = () => {
             email
           )
         `)
-        .eq('organization_user_id', familyUnitId)
+        .eq('organization_user_id', familyUnit.trust_anchor_user_id)
         .eq('is_family_unit', true)
         .eq('status', 'active')
         .order('family_generation', { ascending: true });
