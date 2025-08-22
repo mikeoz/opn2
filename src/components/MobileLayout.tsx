@@ -42,32 +42,17 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
               <Home className="h-5 w-5" />
             </Link>
           </Button>
-          {isAdmin && (
-            <>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-primary-foreground hover:bg-primary/20"
-                asChild
-                title="Admin Cards"
-              >
-                <Link to="/admin/cards">
-                  <Settings className="h-5 w-5" />
-                </Link>
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-primary-foreground hover:bg-primary/20"
-                asChild
-                title="Bulk Import"
-              >
-                <Link to="/admin/bulk-import">
-                  <Upload className="h-5 w-5" />
-                </Link>
-              </Button>
-            </>
-          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-primary-foreground hover:bg-primary/20"
+            asChild
+            title="Settings"
+          >
+            <Link to="/settings">
+              <Settings className="h-5 w-5" />
+            </Link>
+          </Button>
           <Button
             variant="ghost"
             size="icon"

@@ -25,6 +25,9 @@ import UserGuide from "./pages/UserGuide";
 import MerchantOnboardingWizard from "./components/MerchantOnboardingWizard";
 import DemoDataGenerator from './pages/DemoDataGenerator';
 import CustomerInvitations from './pages/CustomerInvitations';
+import CardCatalog from "./pages/CardCatalog";
+import CardRepository from "./pages/CardRepository";
+import Settings from "./pages/Settings";
 import FamilyManagement from './pages/FamilyManagement';
 
 const queryClient = new QueryClient({
@@ -87,11 +90,26 @@ const App = () => (
                <CustomerInvitations />
              </ProtectedRoute>
            } />
-           <Route path="/family-management" element={
-             <ProtectedRoute>
-               <FamilyManagement />
-             </ProtectedRoute>
-           } />
+            <Route path="/family-management" element={
+              <ProtectedRoute>
+                <FamilyManagement />
+              </ProtectedRoute>
+            } />
+            <Route path="/card-catalog" element={
+              <ProtectedRoute>
+                <CardCatalog />
+              </ProtectedRoute>
+            } />
+            <Route path="/card-repository" element={
+              <ProtectedRoute>
+                <CardRepository />
+              </ProtectedRoute>
+            } />
+            <Route path="/settings" element={
+              <ProtectedRoute>
+                <Settings />
+              </ProtectedRoute>
+            } />
           <Route path="/profile" element={
             <ProtectedRoute>
               <Profile />
