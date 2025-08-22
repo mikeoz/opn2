@@ -65,10 +65,10 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				benefit: {
-					DEFAULT: 'hsl(217 91% 60%)',
-					foreground: 'hsl(0 0% 100%)',
-					light: 'hsl(217 91% 60% / 0.1)',
-					glow: 'hsl(217 91% 60% / 0.4)'
+					DEFAULT: 'hsl(var(--benefit))',
+					foreground: 'hsl(var(--benefit-foreground))',
+					light: 'hsl(var(--benefit) / 0.1)',
+					glow: 'hsl(var(--benefit) / 0.4)'
 				}
 			},
 			borderRadius: {

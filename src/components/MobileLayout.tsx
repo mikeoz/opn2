@@ -1,9 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Home, LogOut, Users, CreditCard, Plus, Share2, Eye, User, Settings, HelpCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Home, LogOut, Users, CreditCard, Plus, Share2, Eye, User, Settings, HelpCircle, WifiOff, CloudOff, Download } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePWA } from '@/hooks/usePWA';
+import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { PWAInstallPrompt } from './PWAInstallPrompt';
 import { OnboardingTutorial } from './OnboardingTutorial';
 import { ContextualHelp } from './ContextualHelp';
@@ -17,6 +20,8 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const { isInstallable, promptInstall } = usePWA();
+  const { isOnline, pendingActions, isSyncing } = useOfflineSync();
   
   useEffect(() => {
     const hasSeenOnboarding = localStorage.getItem('onboarding-dismissed');
@@ -32,17 +37,47 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      {/* Connection Status Bar */}
+      {!isOnline && (
+        <div className="bg-destructive text-destructive-foreground px-4 py-2 text-xs flex items-center justify-center gap-2 z-50">
+          <WifiOff className="h-3 w-3" />
+          Offline mode • {pendingActions > 0 ? `${pendingActions} changes pending` : 'Changes will sync when connected'}
+        </div>
+      )}
+
+      {isSyncing && (
+        <div className="bg-benefit text-benefit-foreground px-4 py-2 text-xs flex items-center justify-center gap-2 z-50">
+          <CloudOff className="h-3 w-3 animate-pulse" />
+          Syncing offline changes...
+        </div>
+      )}
+
       {/* Fixed Header */}
       <header className="fixed top-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-sm border-b">
         <div className="flex items-center justify-between p-4">
           <div className="flex-1">
-            <h1 className="text-xl font-bold text-foreground">Opn.li</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold text-foreground">Opn.li</h1>
+              {!isOnline && <Badge variant="secondary" className="text-xs bg-destructive/10 text-destructive">Offline</Badge>}
+            </div>
             <p className="text-xs text-muted-foreground truncate">
               {user?.email}
             </p>
           </div>
           
           <div className="flex items-center gap-2">
+            {/* PWA Install Button */}
+            {isInstallable && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={promptInstall}
+                className="h-touch-target w-touch-target p-0 touch-manipulation"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+            )}
+            
             <Button
               variant="ghost"
               size="sm"
@@ -91,7 +126,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
             to="/directory"
             className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors min-h-touch-target touch-manipulation ${
               location.pathname === '/directory'
-                ? 'text-primary bg-primary/10'
+                ? 'text-benefit bg-benefit/10'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
@@ -103,7 +138,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
             to="/my-cards"
             className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors min-h-touch-target touch-manipulation ${
               location.pathname === '/my-cards'
-                ? 'text-primary bg-primary/10'
+                ? 'text-benefit bg-benefit/10'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
@@ -123,7 +158,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
             to="/family-management"
             className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors min-h-touch-target touch-manipulation ${
               location.pathname === '/family-management'
-                ? 'text-primary bg-primary/10'
+                ? 'text-benefit bg-benefit/10'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
@@ -135,7 +170,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
             to="/merchant-hub"
             className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors min-h-touch-target touch-manipulation ${
               location.pathname === '/merchant-hub'
-                ? 'text-primary bg-primary/10'
+                ? 'text-benefit bg-benefit/10'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >

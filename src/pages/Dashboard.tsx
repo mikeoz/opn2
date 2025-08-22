@@ -96,22 +96,22 @@ const Dashboard = () => {
       <div className="p-4 space-y-6">
         {/* Merchant Overview */}
         {merchantProfile && (
-          <Card>
+          <Card className="bg-gradient-to-br from-background to-muted/30 border-benefit/20">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-benefit">
                 <Store className="h-5 w-5" />
                 {merchantProfile.user_profile?.organization_name || merchantProfile.name}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Customers</p>
-                  <p className="text-2xl font-bold">{totalCustomers}</p>
+                <div className="p-3 rounded-lg bg-benefit/5 border border-benefit/20">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Total Customers</p>
+                  <p className="text-2xl font-bold text-benefit">{totalCustomers}</p>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Total QR Scans</p>
-                  <p className="text-2xl font-bold">{totalScans}</p>
+                <div className="p-3 rounded-lg bg-accent/5 border border-accent/20">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Total QR Scans</p>
+                  <p className="text-2xl font-bold text-accent">{totalScans}</p>
                 </div>
               </div>
             </CardContent>

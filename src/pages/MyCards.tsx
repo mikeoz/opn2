@@ -259,50 +259,50 @@ const MyCards = () => {
   const renderCard = (card: UserCard) => (
     <div
       key={card.id}
-      className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors"
+      className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-all touch-manipulation min-h-touch-target active:scale-98"
     >
-      <div className="flex-1">
-        <div className="flex items-center gap-2">
-          <h3 className="font-medium">{getCardTitle(card)}</h3>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-1">
+          <h3 className="font-medium truncate">{getCardTitle(card)}</h3>
           {card.family_role && (
-            <Badge variant="outline" className="text-xs">
+            <Badge variant="outline" className="text-xs shrink-0">
               {card.family_role}
             </Badge>
           )}
         </div>
-        <p className="text-sm text-muted-foreground">{card.template.name}</p>
-        <div className="flex items-center gap-2 mt-1">
+        <p className="text-sm text-muted-foreground truncate">{card.template.name}</p>
+        <div className="flex items-center gap-2 mt-2">
           <p className="text-xs text-muted-foreground">
             Code: {card.card_code}
           </p>
           {card.family_unit_id && (
-            <Badge variant="secondary" className="text-xs">
+            <Badge variant="secondary" className="text-xs bg-benefit/10 text-benefit border-benefit/20">
               <TreePine className="h-3 w-3 mr-1" />
               Family Card
             </Badge>
           )}
         </div>
       </div>
-      <div className="flex gap-2 ml-4">
-        <Button size="sm" variant="ghost" asChild>
+      <div className="flex gap-1 ml-4 shrink-0">
+        <Button size="sm" variant="ghost" asChild className="h-10 w-10 p-0 touch-manipulation">
           <Link to={`/cards/view/${card.id}`}>
             <Eye className="h-4 w-4" />
           </Link>
         </Button>
-        <Button size="sm" variant="ghost" asChild>
+        <Button size="sm" variant="ghost" asChild className="h-10 w-10 p-0 touch-manipulation">
           <Link to={`/cards/edit/${card.id}`}>
             <Edit className="h-4 w-4" />
           </Link>
         </Button>
         <Dialog>
           <DialogTrigger asChild>
-            <Button size="sm" variant="ghost">
+            <Button size="sm" variant="ghost" className="h-10 w-10 p-0 touch-manipulation">
               <Share2 className="h-4 w-4" />
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Share Card: {getCardTitle(card)}</DialogTitle>
+              <DialogTitle className="text-sm">Share Card: {getCardTitle(card)}</DialogTitle>
             </DialogHeader>
             <CardRelationships cardId={card.id} />
           </DialogContent>
@@ -311,7 +311,7 @@ const MyCards = () => {
           size="sm"
           variant="ghost"
           onClick={() => handleDeleteCard(card.id)}
-          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+          className="h-10 w-10 p-0 touch-manipulation text-destructive hover:text-destructive hover:bg-destructive/10"
         >
           <Trash2 className="h-4 w-4" />
         </Button>
