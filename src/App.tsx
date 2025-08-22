@@ -71,16 +71,11 @@ const App = () => (
                 <SecurityDashboard />
               </ProtectedRoute>
             } />
-          <Route path="/admin/cards" element={
-            <ProtectedRoute>
-              <AdminCards />
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/security" element={
-            <ProtectedRoute>
-              <SecurityDashboard />
-            </ProtectedRoute>
-          } />
+            <Route path="/admin/cards" element={
+              <ProtectedRoute>
+                <AdminCards />
+              </ProtectedRoute>
+            } />
            <Route path="/admin/bulk-import" element={
              <ProtectedRoute>
                <BulkImport />

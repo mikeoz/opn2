@@ -1,11 +1,11 @@
 /**
- * Performance & Scalability Optimization Hooks
+ * Performance & Scalability Optimization Hooks - Fixed Version
  * 
  * DEMO MODE: Client-side caching and optimization
  * ALPHA TESTING: Full server-side optimization with CDN and database tuning
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface CacheEntry<T> {
@@ -22,12 +22,25 @@ interface PerformanceMetrics {
   timestamp: number;
 }
 
+interface TreeNode {
+  id: string;
+  family: any;
+  level: number;
+  children: TreeNode[];
+  parent?: TreeNode;
+  metadata: {
+    memberCount: number;
+    isActive: boolean;
+    depth: number;
+  };
+}
+
 class PerformanceCache {
   private cache = new Map<string, CacheEntry<any>>();
   private isDemoMode = true;
   private metrics: PerformanceMetrics[] = [];
 
-  set<T>(key: string, data: T, ttl: number = 300000): void { // 5 minutes default
+  set<T>(key: string, data: T, ttl: number = 300000): void {
     this.cache.set(key, {
       data,
       timestamp: Date.now(),
@@ -35,7 +48,6 @@ class PerformanceCache {
       key
     });
 
-    // Demo Mode: Limit cache size
     if (this.isDemoMode && this.cache.size > 100) {
       const oldestKey = Array.from(this.cache.keys())[0];
       this.cache.delete(oldestKey);
@@ -51,7 +63,7 @@ class PerformanceCache {
       return null;
     }
 
-    return entry.data;
+    return entry.data as T;
   }
 
   invalidate(pattern: string): void {
@@ -80,7 +92,6 @@ class PerformanceCache {
 
   recordMetric(metric: PerformanceMetrics): void {
     this.metrics.push(metric);
-    // Keep only last 100 metrics in demo mode
     if (this.isDemoMode && this.metrics.length > 100) {
       this.metrics = this.metrics.slice(-100);
     }
@@ -93,16 +104,28 @@ const performanceCache = new PerformanceCache();
  * Hook for optimized family tree queries
  */
 export const useFamilyTreeOptimization = (familyUnits: any[] = []) => {
-  const [optimizedTree, setOptimizedTree] = useState<any[]>([]);
+  const [optimizedTree, setOptimizedTree] = useState<TreeNode[]>([]);
   const [isBuilding, setIsBuilding] = useState(false);
+
+  const sortNodeChildren = useCallback((node: TreeNode): TreeNode => {
+    if (node.children && node.children.length > 0) {
+      node.children = node.children
+        .sort((a: TreeNode, b: TreeNode) => {
+          if (a.level !== b.level) return a.level - b.level;
+          return (b.metadata?.memberCount || 0) - (a.metadata?.memberCount || 0);
+        })
+        .map((child: TreeNode) => sortNodeChildren(child));
+    }
+    return node;
+  }, []);
 
   const buildOptimizedTree = useCallback(async () => {
     const cacheKey = `family-tree-${JSON.stringify(familyUnits.map(f => f.id)).slice(0, 50)}`;
     const startTime = Date.now();
     
     // Check cache first
-    const cached = performanceCache.get<any[]>(cacheKey);
-    if (cached) {
+    const cached = performanceCache.get<TreeNode[]>(cacheKey);
+    if (cached && Array.isArray(cached)) {
       setOptimizedTree(cached);
       performanceCache.recordMetric({
         queryTime: Date.now() - startTime,
@@ -116,18 +139,16 @@ export const useFamilyTreeOptimization = (familyUnits: any[] = []) => {
     setIsBuilding(true);
     
     try {
-      // Demo Mode: Client-side tree optimization
-      const nodeMap = new Map();
-      const rootNodes: any[] = [];
+      const nodeMap = new Map<string, TreeNode>();
+      const rootNodes: TreeNode[] = [];
 
       // Build optimized node structure
       familyUnits.forEach(family => {
-        const node = {
+        const node: TreeNode = {
           id: family.id,
           family,
           level: family.generation_level || 1,
-          children: [] as any[],
-          parent: null as any,
+          children: [],
           metadata: {
             memberCount: family.member_count || 0,
             isActive: family.is_active !== false,
@@ -140,14 +161,14 @@ export const useFamilyTreeOptimization = (familyUnits: any[] = []) => {
       // Build relationships and calculate depths
       familyUnits.forEach(family => {
         const node = nodeMap.get(family.id);
-        if (family.parent_family_unit_id) {
+        if (node && family.parent_family_unit_id) {
           const parent = nodeMap.get(family.parent_family_unit_id);
           if (parent) {
             parent.children.push(node);
             node.parent = parent;
             node.metadata.depth = parent.metadata.depth + 1;
           }
-        } else {
+        } else if (node) {
           rootNodes.push(node);
         }
       });
@@ -169,24 +190,11 @@ export const useFamilyTreeOptimization = (familyUnits: any[] = []) => {
 
     } catch (error) {
       console.error('Family tree optimization failed:', error);
-      setOptimizedTree(familyUnits);
+      setOptimizedTree([]);
     } finally {
       setIsBuilding(false);
     }
-  }, [familyUnits]);
-
-  const sortNodeChildren = useCallback((node: any): any => {
-    if (node?.children && node.children.length > 0) {
-      node.children = node.children
-        .sort((a: any, b: any) => {
-          // Sort by level first, then by member count
-          if (a.level !== b.level) return a.level - b.level;
-          return (b.metadata?.memberCount || 0) - (a.metadata?.memberCount || 0);
-        })
-        .map((child: any) => sortNodeChildren(child));
-    }
-    return node;
-  }, []);
+  }, [familyUnits, sortNodeChildren]);
 
   useEffect(() => {
     if (familyUnits.length > 0) {
@@ -216,7 +224,7 @@ export const useCardCatalogCache = () => {
     const cacheKey = `cards-${JSON.stringify(query)}`;
     const startTime = Date.now();
 
-    const cached = performanceCache.get(cacheKey);
+    const cached = performanceCache.get<any[]>(cacheKey);
     if (cached) {
       performanceCache.recordMetric({
         queryTime: Date.now() - startTime,
@@ -236,7 +244,7 @@ export const useCardCatalogCache = () => {
     if (error) throw error;
 
     // Cache the result
-    performanceCache.set(cacheKey, data, 300000); // 5 minutes
+    performanceCache.set(cacheKey, data || [], 300000); // 5 minutes
     performanceCache.recordMetric({
       queryTime: Date.now() - startTime,
       cacheHit: false,
@@ -244,15 +252,11 @@ export const useCardCatalogCache = () => {
       timestamp: Date.now()
     });
 
-    return data;
+    return data || [];
   }, []);
 
   const invalidateCardCache = useCallback((cardId?: string) => {
-    if (cardId) {
-      performanceCache.invalidate(`cards-`);
-    } else {
-      performanceCache.invalidate('cards-');
-    }
+    performanceCache.invalidate('cards-');
     setCacheStats(performanceCache.getStats());
   }, []);
 
@@ -270,7 +274,6 @@ export const useCardCatalogCache = () => {
     invalidateCardCache,
     cacheStats,
     prefetchCards: async (queries: any[]) => {
-      // Demo Mode: Pre-fetch common queries
       await Promise.all(queries.map(query => getCachedCards(query)));
     }
   };
@@ -311,7 +314,6 @@ export const useImageOptimization = () => {
       const img = new Image();
 
       img.onload = () => {
-        // Calculate new dimensions
         let { width, height } = img;
         if (width > maxWidth || height > maxHeight) {
           const ratio = Math.min(maxWidth / width, maxHeight / height);
@@ -322,7 +324,6 @@ export const useImageOptimization = () => {
         canvas.width = width;
         canvas.height = height;
 
-        // Draw and compress
         ctx?.drawImage(img, 0, 0, width, height);
         
         canvas.toBlob((blob) => {
@@ -339,7 +340,6 @@ export const useImageOptimization = () => {
               compressionRatio: (file.size - blob.size) / file.size
             };
 
-            // Update stats
             setOptimizationStats(prev => ({
               ...prev,
               totalImages: prev.totalImages + 1,
@@ -364,8 +364,6 @@ export const useImageOptimization = () => {
     height?: number;
     quality?: number;
   } = {}) => {
-    // Demo Mode: Return original URL with params for demonstration
-    // Alpha Testing: Would integrate with CDN/image service
     const params = new URLSearchParams();
     if (options.width) params.set('w', options.width.toString());
     if (options.height) params.set('h', options.height.toString());

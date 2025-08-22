@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Settings, Clock, Users, QrCode, Store, BarChart3, FileText, Upload, Activity, TreePine } from 'lucide-react';
+import { Settings, Clock, Users, QrCode, Store, BarChart3, FileText, Upload, Activity, TreePine, Shield } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -242,12 +242,18 @@ const Dashboard = () => {
                 Family Management
               </Link>
             </Button>
-            <Button asChild variant="outline" className="w-full">
-              <Link to="/user-guide">
-                <FileText className="h-4 w-4 mr-2" />
-                User Guide
-              </Link>
-            </Button>
+              <Button asChild variant="outline" className="w-full">
+                <Link to="/user-guide">
+                  <FileText className="h-4 w-4 mr-2" />
+                  User Guide
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full">
+                <Link to="/security">
+                  <Shield className="h-4 w-4 mr-2" />
+                  Security & Privacy
+                </Link>
+              </Button>
           </div>
         </div>
 
