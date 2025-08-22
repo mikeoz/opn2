@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -36,7 +37,7 @@ const CONTEXTUAL_TIPS: Record<string, HelpTip[]> = {
       title: 'Start Building Your Network',
       description: 'Create your first card to begin connecting with your community.',
       benefit: 'People with complete profiles receive 3x more meaningful connections.',
-      route: '/create-card',
+      route: '/card-catalog',
       icon: CreditCard,
       priority: 'high',
       demoNote: 'Demo Mode shows sample engagement metrics.'
@@ -57,7 +58,7 @@ const CONTEXTUAL_TIPS: Record<string, HelpTip[]> = {
       title: 'Make Your Cards Discoverable',
       description: 'Ensure your cards have rich descriptions to attract the right connections.',
       benefit: 'Well-described cards get 5x more views from relevant community members.',
-      route: '/create-card',
+      route: '/card-catalog',
       icon: Star,
       priority: 'high'
     }
@@ -104,6 +105,7 @@ interface ContextualHelpProps {
 }
 
 export const ContextualHelp: React.FC<ContextualHelpProps> = ({ currentRoute }) => {
+  const navigate = useNavigate();
   const [dismissedTips, setDismissedTips] = useState<Set<string>>(new Set());
   const [currentTipIndex, setCurrentTipIndex] = useState(0);
 
@@ -201,7 +203,7 @@ export const ContextualHelp: React.FC<ContextualHelpProps> = ({ currentRoute }) 
               <div className="flex items-center justify-between pt-1">
                 <Button
                   size="sm"
-                  onClick={() => window.location.href = currentTip.route}
+                  onClick={() => navigate(currentTip.route)}
                   className="h-7 text-xs bg-benefit hover:bg-benefit/90"
                 >
                   Take Action
