@@ -19,6 +19,7 @@ import FamilySettings from './FamilySettings';
 import { FamilyInvitationsManager } from './FamilyInvitationsManager';
 import { FamilyTreeTab } from './FamilyTreeTab';
 import { Link } from 'react-router-dom';
+import DiagnosticsPanel from '@/components/dev/DiagnosticsPanel';
 
 export const FamilyManagement: React.FC = () => {
   const { user } = useAuth();
