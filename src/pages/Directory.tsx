@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Search, Info } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import MobileLayout from '@/components/MobileLayout';
 
 const Directory = () => {
@@ -44,19 +44,17 @@ const Directory = () => {
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-2">
             <h1 className="text-2xl font-bold text-foreground">Community Directory</h1>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <Info className="h-4 w-4 text-muted-foreground" />
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-xs">
-                  <p className="text-xs">
-                    <strong>Demo Mode:</strong> Sample community members shown. 
-                    In Alpha Testing, you'll see real neighbors and local connections.
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <Info className="h-4 w-4 text-muted-foreground" />
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-xs">
+                <p className="text-xs">
+                  <strong>Demo Mode:</strong> Sample community members shown. 
+                  In Alpha Testing, you'll see real neighbors and local connections.
+                </p>
+              </TooltipContent>
+            </Tooltip>
           </div>
           <p className="text-muted-foreground">Discover and connect with community members</p>
         </div>

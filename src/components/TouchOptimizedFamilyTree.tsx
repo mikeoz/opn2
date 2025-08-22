@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { FamilyUnit } from '@/hooks/useFamilyUnits';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface TouchOptimizedFamilyTreeProps {
   familyUnits: FamilyUnit[];
@@ -236,20 +236,18 @@ export const TouchOptimizedFamilyTree: React.FC<TouchOptimizedFamilyTreeProps> =
             <CardTitle className="text-base flex items-center gap-2">
               <TreePine className="h-4 w-4" />
               Family Tree
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <Info className="h-4 w-4 text-muted-foreground" />
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" className="max-w-xs">
-                    <p className="text-xs">
-                      <strong>Touch Optimized:</strong> Tap to select, pinch to zoom, 
-                      drag to pan. In Demo Mode, family data is simulated. 
-                      Alpha Testing will sync with real family connections.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <Info className="h-4 w-4 text-muted-foreground" />
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-xs">
+                  <p className="text-xs">
+                    <strong>Touch Optimized:</strong> Tap to select, pinch to zoom, 
+                    drag to pan. In Demo Mode, family data is simulated. 
+                    Alpha Testing will sync with real family connections.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
             </CardTitle>
             
             <div className="flex items-center gap-1">

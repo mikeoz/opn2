@@ -21,7 +21,7 @@ import {
   Settings,
   X
 } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { encryptionService } from '@/utils/encryption';
 import { permissionsEngine } from '@/utils/permissionsEngine';
 import { gdprService } from '@/utils/gdprCompliance';
@@ -103,19 +103,17 @@ export const SecurityDashboard: React.FC = () => {
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-2">
             <h1 className="text-2xl font-bold text-foreground">Security & Privacy</h1>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <Info className="h-4 w-4 text-muted-foreground" />
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-xs">
-                  <p className="text-xs">
-                    <strong>Demo Mode:</strong> Security features shown for demonstration. 
-                    Full enterprise-grade security in Alpha Testing.
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <Info className="h-4 w-4 text-muted-foreground" />
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-xs">
+                <p className="text-xs">
+                  <strong>Demo Mode:</strong> Security features shown for demonstration. 
+                  Full enterprise-grade security in Alpha Testing.
+                </p>
+              </TooltipContent>
+            </Tooltip>
           </div>
           <p className="text-muted-foreground">Manage your data security, privacy, and compliance settings</p>
         </div>

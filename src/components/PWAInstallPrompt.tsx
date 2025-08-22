@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Download, X, Smartphone, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface BeforeInstallPromptEvent extends Event {
   platforms: string[];
@@ -107,20 +107,18 @@ export const PWAInstallPrompt: React.FC = () => {
             <div className="flex-1 space-y-2">
               <div className="flex items-center gap-2">
                 <h3 className="font-semibold text-sm">Install Opn.li App</h3>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <Info className="h-4 w-4 text-muted-foreground" />
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="max-w-xs">
-                      <p className="text-xs">
-                        <strong>Demo Mode:</strong> App installation works fully. 
-                        In Alpha Testing, you'll get push notifications and 
-                        enhanced offline sync capabilities.
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Info className="h-4 w-4 text-muted-foreground" />
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs">
+                    <p className="text-xs">
+                      <strong>Demo Mode:</strong> App installation works fully. 
+                      In Alpha Testing, you'll get push notifications and 
+                      enhanced offline sync capabilities.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
               </div>
               
               <p className="text-xs text-muted-foreground">

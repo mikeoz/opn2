@@ -17,7 +17,7 @@ import {
   Star,
   ArrowRight
 } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface HelpTip {
   id: string;
@@ -184,18 +184,16 @@ export const ContextualHelp: React.FC<ContextualHelpProps> = ({ currentRoute }) 
 
               {currentTip.demoNote && (
                 <div className="flex items-start gap-1">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Info className="h-3 w-3 text-muted-foreground flex-shrink-0 mt-0.5" />
-                      </TooltipTrigger>
-                      <TooltipContent side="left" className="max-w-xs">
-                        <p className="text-xs">
-                          <strong>Demo Mode:</strong> {currentTip.demoNote}
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Info className="h-3 w-3 text-muted-foreground flex-shrink-0 mt-0.5" />
+                    </TooltipTrigger>
+                    <TooltipContent side="left" className="max-w-xs">
+                      <p className="text-xs">
+                        <strong>Demo Mode:</strong> {currentTip.demoNote}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
                   <p className="text-xs text-muted-foreground">Demo Mode Active</p>
                 </div>
               )}
