@@ -147,7 +147,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
           </Link>
 
           <Link
-            to="/create-card"
+            to="/card-catalog"
             className="flex flex-col items-center gap-1 p-2 rounded-lg bg-benefit text-benefit-foreground min-h-touch-target touch-manipulation animate-pulse-glow"
           >
             <Plus className="h-5 w-5" />

@@ -153,7 +153,7 @@ const CardCatalog = () => {
           </div>
 
           <div className="mt-3 flex gap-2">
-            <Button size="sm" variant="outline" className="flex-1">
+            <Button size="sm" variant="outline" className="flex-1" onClick={() => setSelectedTemplate(template)}>
               <Eye className="h-3 w-3 mr-1" />
               Preview
             </Button>
