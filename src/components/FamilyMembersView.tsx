@@ -21,29 +21,51 @@ export const FamilyMembersView: React.FC<FamilyMembersViewProps> = ({
   const { fetchFamilyMembers } = useFamilyUnits();
 
   useEffect(() => {
+    let isMounted = true;
     const loadAllMembers = async () => {
+      console.log('[AllMembers] Loading members for', familyUnits.length, 'family units');
       setLoading(true);
+      const timeout = setTimeout(() => {
+        if (isMounted) {
+          console.warn('[AllMembers] Load timed out - showing partial/no results');
+          setLoading(false);
+        }
+      }, 10000);
       try {
         const memberPromises = familyUnits.map(async (unit) => {
-          const members = await fetchFamilyMembers(unit.id);
-          return members.map(member => ({ ...member, familyUnit: unit }));
+          try {
+            const members = await fetchFamilyMembers(unit.id);
+            console.log('[AllMembers] Loaded', members.length, 'members for unit', unit.id);
+            return members.map(member => ({ ...member, familyUnit: unit }));
+          } catch (e) {
+            console.error('[AllMembers] Error loading unit members', unit.id, e);
+            return [] as (FamilyMember & { familyUnit: FamilyUnit })[];
+          }
         });
 
         const memberArrays = await Promise.all(memberPromises);
         const flatMembers = memberArrays.flat();
         
+        if (!isMounted) return;
         setAllMembers(flatMembers);
         setFilteredMembers(flatMembers);
+        console.log('[AllMembers] Total members loaded:', flatMembers.length);
       } catch (error) {
         console.error('Error loading all members:', error);
       } finally {
-        setLoading(false);
+        clearTimeout(timeout);
+        if (isMounted) setLoading(false);
       }
     };
 
     if (familyUnits.length > 0) {
       loadAllMembers();
+    } else {
+      setAllMembers([]);
+      setFilteredMembers([]);
     }
+
+    return () => { isMounted = false; };
   }, [familyUnits, fetchFamilyMembers]);
 
   useEffect(() => {
