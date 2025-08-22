@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -335,9 +334,65 @@ const MyCards = () => {
           )}
         </div>
 
-        {/* Available Templates */}
+        {/* User Cards List - Now shown first */}
+        <Card className="mb-6">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" />
+                Your Cards ({userCards.length})
+              </CardTitle>
+              {userCards.some(card => card.family_unit_id) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setGroupByFamily(!groupByFamily)}
+                  className="flex items-center gap-2"
+                >
+                  <TreePine className="h-4 w-4" />
+                  {groupByFamily ? 'Show All' : 'Group by Family'}
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="text-lg">Loading your cards...</div>
+              </div>
+            ) : userCards.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>You haven't created any cards yet.</p>
+                <p className="text-sm">Use the templates below to get started!</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {Object.entries(groupedCards).map(([groupName, cards], index) => (
+                  <div key={groupName}>
+                    {groupByFamily && (
+                      <>
+                        <div className="flex items-center gap-2 mb-3">
+                          <TreePine className="h-4 w-4 text-muted-foreground" />
+                          <h3 className="font-medium text-muted-foreground">{groupName}</h3>
+                          <Badge variant="secondary">{cards.length}</Badge>
+                        </div>
+                        {index > 0 && <Separator className="mb-4" />}
+                      </>
+                    )}
+                    <div className="space-y-3">
+                      {cards.map(renderCard)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Available Templates - Now shown second */}
         {availableTemplates.length > 0 && (
-          <Card className="mb-6">
+          <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Plus className="h-5 w-5 text-accent" />
@@ -377,62 +432,6 @@ const MyCards = () => {
             </CardContent>
           </Card>
         )}
-
-        {/* User Cards List */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-primary" />
-                Your Cards ({userCards.length})
-              </CardTitle>
-              {userCards.some(card => card.family_unit_id) && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setGroupByFamily(!groupByFamily)}
-                  className="flex items-center gap-2"
-                >
-                  <TreePine className="h-4 w-4" />
-                  {groupByFamily ? 'Show All' : 'Group by Family'}
-                </Button>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="text-center py-8">
-                <div className="text-lg">Loading your cards...</div>
-              </div>
-            ) : userCards.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>You haven't created any cards yet.</p>
-                <p className="text-sm">Use the templates above to get started!</p>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {Object.entries(groupedCards).map(([groupName, cards], index) => (
-                  <div key={groupName}>
-                    {groupByFamily && (
-                      <>
-                        <div className="flex items-center gap-2 mb-3">
-                          <TreePine className="h-4 w-4 text-muted-foreground" />
-                          <h3 className="font-medium text-muted-foreground">{groupName}</h3>
-                          <Badge variant="secondary">{cards.length}</Badge>
-                        </div>
-                        {index > 0 && <Separator className="mb-4" />}
-                      </>
-                    )}
-                    <div className="space-y-3">
-                      {cards.map(renderCard)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </div>
     </MobileLayout>
   );
