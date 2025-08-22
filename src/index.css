@@ -91,12 +91,12 @@
 
   html, body {
     height: 100%;
-    overflow: hidden;
+    overflow: auto; /* allow page scroll */
   }
 
   #root {
     height: 100%;
-    overflow: hidden;
+    overflow: auto;
   }
 
   body {

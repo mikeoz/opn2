@@ -36,7 +36,7 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-screen bg-background flex flex-col">
       {/* Connection Status Bar */}
       {!isOnline && (
         <div className="bg-destructive text-destructive-foreground px-4 py-2 text-xs flex items-center justify-center gap-2 z-50">
