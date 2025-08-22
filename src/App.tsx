@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ErrorBoundary from "@/components/dev/ErrorBoundary";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -44,7 +45,8 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <Toaster />
     <Sonner />
-    <ErrorBoundary>
+    <TooltipProvider delayDuration={300}>
+      <ErrorBoundary>
       <AuthProvider>
       <BrowserRouter>
           <Routes>
@@ -164,6 +166,7 @@ const App = () => (
       </BrowserRouter>
     </AuthProvider>
     </ErrorBoundary>
+    </TooltipProvider>
   </QueryClientProvider>
 );
 
