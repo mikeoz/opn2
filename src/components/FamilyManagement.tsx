@@ -23,7 +23,7 @@ import DiagnosticsPanel from '@/components/dev/DiagnosticsPanel';
 
 export const FamilyManagement: React.FC = () => {
   const { user } = useAuth();
-  const { familyUnits, loading, updateFamilyUnit, deactivateFamilyUnit } = useFamilyUnits();
+  const { familyUnits, loading, channelStatus, updateFamilyUnit, deactivateFamilyUnit } = useFamilyUnits();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showSetupWizard, setShowSetupWizard] = useState(false);
@@ -432,6 +432,14 @@ export const FamilyManagement: React.FC = () => {
         open={showSetupWizard}
         onOpenChange={setShowSetupWizard}
         existingFamilyUnits={familyUnits}
+      />
+      
+      <DiagnosticsPanel
+        userEmail={user?.email}
+        familyUnitsCount={familyUnits.length}
+        activeTab={activeTab}
+        selectedFamilyUnitId={selectedFamilyUnit}
+        channelStatus={channelStatus}
       />
     </div>
   );
