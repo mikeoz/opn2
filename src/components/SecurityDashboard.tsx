@@ -18,7 +18,8 @@ import {
   Unlock,
   FileText,
   Users,
-  Settings
+  Settings,
+  X
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { encryptionService } from '@/utils/encryption';

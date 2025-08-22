@@ -101,7 +101,7 @@ export const useFamilyTreeOptimization = (familyUnits: any[] = []) => {
     const startTime = Date.now();
     
     // Check cache first
-    const cached = performanceCache.get(cacheKey);
+    const cached = performanceCache.get<any[]>(cacheKey);
     if (cached) {
       setOptimizedTree(cached);
       performanceCache.recordMetric({
@@ -126,8 +126,8 @@ export const useFamilyTreeOptimization = (familyUnits: any[] = []) => {
           id: family.id,
           family,
           level: family.generation_level || 1,
-          children: [],
-          parent: null,
+          children: [] as any[],
+          parent: null as any,
           metadata: {
             memberCount: family.member_count || 0,
             isActive: family.is_active !== false,
@@ -155,7 +155,7 @@ export const useFamilyTreeOptimization = (familyUnits: any[] = []) => {
       // Sort for optimal rendering
       const sortedTree = rootNodes
         .sort((a, b) => a.level - b.level)
-        .map(node => this.sortNodeChildren(node));
+        .map(node => sortNodeChildren(node));
 
       setOptimizedTree(sortedTree);
       performanceCache.set(cacheKey, sortedTree, 600000); // 10 minutes
@@ -175,18 +175,18 @@ export const useFamilyTreeOptimization = (familyUnits: any[] = []) => {
     }
   }, [familyUnits]);
 
-  const sortNodeChildren = (node: any): any => {
-    if (node.children.length > 0) {
+  const sortNodeChildren = useCallback((node: any): any => {
+    if (node?.children && node.children.length > 0) {
       node.children = node.children
         .sort((a: any, b: any) => {
           // Sort by level first, then by member count
           if (a.level !== b.level) return a.level - b.level;
-          return (b.metadata.memberCount || 0) - (a.metadata.memberCount || 0);
+          return (b.metadata?.memberCount || 0) - (a.metadata?.memberCount || 0);
         })
-        .map((child: any) => this.sortNodeChildren(child));
+        .map((child: any) => sortNodeChildren(child));
     }
     return node;
-  };
+  }, []);
 
   useEffect(() => {
     if (familyUnits.length > 0) {

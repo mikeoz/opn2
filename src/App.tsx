@@ -18,7 +18,7 @@ import ViewCard from "./pages/ViewCard";
 import EditCard from "./pages/EditCard";
 import NotFound from "./pages/NotFound";
 import StandardTemplateLibrary from "./components/StandardTemplateLibrary";
-import SecurityDashboard from "./pages/SecurityDashboard";
+import { SecurityDashboard } from "./components/SecurityDashboard";
 import BulkImport from "./pages/BulkImport";
 import Profile from "./pages/Profile";
 import UserGuide from "./pages/UserGuide";
@@ -56,7 +56,7 @@ const App = () => (
                 <Dashboard />
               </ProtectedRoute>
             } />
-            <Route path="/cards" element={
+            <Route path="/my-cards" element={
               <ProtectedRoute>
                 <MyCards />
               </ProtectedRoute>
@@ -64,6 +64,11 @@ const App = () => (
             <Route path="/directory" element={
               <ProtectedRoute>
                 <Directory />
+              </ProtectedRoute>
+            } />
+            <Route path="/security" element={
+              <ProtectedRoute>
+                <SecurityDashboard />
               </ProtectedRoute>
             } />
           <Route path="/admin/cards" element={
