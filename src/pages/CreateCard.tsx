@@ -46,7 +46,7 @@ const CreateCard = () => {
         description: "No template specified for card creation.",
         variant: "destructive",
       });
-      navigate('/card-catalog');
+      navigate('/cards');
       return;
     }
 
@@ -149,7 +149,7 @@ const CreateCard = () => {
         description: "Failed to load the card template. Please try again.",
         variant: "destructive",
       });
-      navigate('/card-catalog');
+      navigate('/cards');
     } finally {
       setLoading(false);
     }
@@ -206,7 +206,7 @@ const CreateCard = () => {
         description: `Your "${displayName}" card has been created.`,
       });
 
-      navigate(`/cards/view/${userCard.id}`);
+      navigate('/cards');
     } catch (error) {
       console.error('Error creating card:', error);
       throw error;

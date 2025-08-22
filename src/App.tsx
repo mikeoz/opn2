@@ -1,13 +1,12 @@
+
 import React from "react";
-import "@/utils/consoleBuffer";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import ErrorBoundary from "@/components/dev/ErrorBoundary";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -19,18 +18,14 @@ import ViewCard from "./pages/ViewCard";
 import EditCard from "./pages/EditCard";
 import NotFound from "./pages/NotFound";
 import StandardTemplateLibrary from "./components/StandardTemplateLibrary";
-import { SecurityDashboard } from "./components/SecurityDashboard";
+import SecurityDashboard from "./pages/SecurityDashboard";
 import BulkImport from "./pages/BulkImport";
 import Profile from "./pages/Profile";
 import UserGuide from "./pages/UserGuide";
 import MerchantOnboardingWizard from "./components/MerchantOnboardingWizard";
 import DemoDataGenerator from './pages/DemoDataGenerator';
 import CustomerInvitations from './pages/CustomerInvitations';
-import CardCatalog from "./pages/CardCatalog";
-import CardRepository from "./pages/CardRepository";
-import Settings from "./pages/Settings";
 import FamilyManagement from './pages/FamilyManagement';
-import MerchantHub from './pages/MerchantHub';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -43,12 +38,11 @@ const queryClient = new QueryClient({
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <Toaster />
-    <Sonner />
-    <TooltipProvider delayDuration={300}>
-      <ErrorBoundary>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
       <AuthProvider>
-      <BrowserRouter>
+        <BrowserRouter>
           <Routes>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/login" element={<Login />} />
@@ -58,7 +52,7 @@ const App = () => (
                 <Dashboard />
               </ProtectedRoute>
             } />
-            <Route path="/my-cards" element={
+            <Route path="/cards" element={
               <ProtectedRoute>
                 <MyCards />
               </ProtectedRoute>
@@ -68,16 +62,16 @@ const App = () => (
                 <Directory />
               </ProtectedRoute>
             } />
-            <Route path="/security" element={
-              <ProtectedRoute>
-                <SecurityDashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/cards" element={
-              <ProtectedRoute>
-                <AdminCards />
-              </ProtectedRoute>
-            } />
+          <Route path="/admin/cards" element={
+            <ProtectedRoute>
+              <AdminCards />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/security" element={
+            <ProtectedRoute>
+              <SecurityDashboard />
+            </ProtectedRoute>
+          } />
            <Route path="/admin/bulk-import" element={
              <ProtectedRoute>
                <BulkImport />
@@ -93,31 +87,11 @@ const App = () => (
                <CustomerInvitations />
              </ProtectedRoute>
            } />
-             <Route path="/family-management" element={
-               <ProtectedRoute>
-                 <FamilyManagement />
-               </ProtectedRoute>
-             } />
-             <Route path="/merchant-hub" element={
-               <ProtectedRoute>
-                 <MerchantHub />
-               </ProtectedRoute>
-             } />
-            <Route path="/card-catalog" element={
-              <ProtectedRoute>
-                <CardCatalog />
-              </ProtectedRoute>
-            } />
-            <Route path="/card-repository" element={
-              <ProtectedRoute>
-                <CardRepository />
-              </ProtectedRoute>
-            } />
-            <Route path="/settings" element={
-              <ProtectedRoute>
-                <Settings />
-              </ProtectedRoute>
-            } />
+           <Route path="/family-management" element={
+             <ProtectedRoute>
+               <FamilyManagement />
+             </ProtectedRoute>
+           } />
           <Route path="/profile" element={
             <ProtectedRoute>
               <Profile />
@@ -162,10 +136,9 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
-    </ErrorBoundary>
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

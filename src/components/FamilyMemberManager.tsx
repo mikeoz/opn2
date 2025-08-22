@@ -8,8 +8,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { UserPlus, Users, Edit, Trash2, Mail, Crown } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -21,14 +19,12 @@ interface FamilyMemberManagerProps {
   isOwner?: boolean;
 }
 
-const addMemberSchema = z.object({
-  userEmail: z.string().email('Please enter a valid email address'),
-  relationshipLabel: z.string().min(1, 'Please select a relationship'),
-  familyGeneration: z.number().min(1).max(10),
-  permissions: z.record(z.boolean())
-});
-
-type AddMemberFormData = z.infer<typeof addMemberSchema>;
+interface AddMemberFormData {
+  userEmail: string;
+  relationshipLabel: string;
+  familyGeneration: number;
+  permissions: Record<string, boolean>;
+}
 
 const FamilyMemberManager: React.FC<FamilyMemberManagerProps> = ({
   familyUnitId,
@@ -44,7 +40,6 @@ const FamilyMemberManager: React.FC<FamilyMemberManagerProps> = ({
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
 
   const form = useForm<AddMemberFormData>({
-    resolver: zodResolver(addMemberSchema),
     defaultValues: {
       userEmail: '',
       relationshipLabel: '',
@@ -112,12 +107,12 @@ const FamilyMemberManager: React.FC<FamilyMemberManagerProps> = ({
         return;
       }
 
-      // Create organization membership for the family unit
+      // Create organization membership
       const { error: membershipError } = await supabase
         .from('organization_memberships')
         .insert({
           individual_user_id: targetUser.id,
-          organization_user_id: user.id, // The trust anchor's user ID
+          organization_user_id: familyUnitId,
           membership_type: 'member',
           relationship_label: data.relationshipLabel,
           family_generation: data.familyGeneration,

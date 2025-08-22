@@ -9,9 +9,6 @@ import { useFamilyUnits, FamilyUnit } from '@/hooks/useFamilyUnits';
 import { FamilyUnitCard } from './FamilyUnitCard';
 import { CreateFamilyUnitDialog } from './CreateFamilyUnitDialog';
 import { EditFamilyUnitDialog } from './EditFamilyUnitDialog';
-import { FamilySetupWizard } from './FamilySetupWizard';
-import { EnhancedInvitationSystem } from './EnhancedInvitationSystem';
-import { InteractiveFamilyTree } from './InteractiveFamilyTree';
 import { FamilyMembersView } from './FamilyMembersView';
 import FamilyMemberManager from './FamilyMemberManager';
 import FamilyTreeVisualization from './FamilyTreeVisualization';
@@ -19,14 +16,12 @@ import FamilySettings from './FamilySettings';
 import { FamilyInvitationsManager } from './FamilyInvitationsManager';
 import { FamilyTreeTab } from './FamilyTreeTab';
 import { Link } from 'react-router-dom';
-import DiagnosticsPanel from '@/components/dev/DiagnosticsPanel';
 
 export const FamilyManagement: React.FC = () => {
   const { user } = useAuth();
-  const { familyUnits, loading, channelStatus, updateFamilyUnit, deactivateFamilyUnit } = useFamilyUnits();
+  const { familyUnits, loading, updateFamilyUnit, deactivateFamilyUnit } = useFamilyUnits();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [showSetupWizard, setShowSetupWizard] = useState(false);
   const [editingFamilyUnit, setEditingFamilyUnit] = useState<FamilyUnit | null>(null);
   const [selectedFamilyUnit, setSelectedFamilyUnit] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
@@ -97,16 +92,10 @@ export const FamilyManagement: React.FC = () => {
               Back to Overview
             </Button>
           )}
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setShowSetupWizard(true)}>
-              <Settings className="mr-2 h-4 w-4" />
-              Setup Wizard
-            </Button>
-            <Button onClick={() => setShowCreateDialog(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Quick Create
-            </Button>
-          </div>
+          <Button onClick={() => setShowCreateDialog(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Create Family Unit
+          </Button>
         </div>
       </div>
 
@@ -132,7 +121,7 @@ export const FamilyManagement: React.FC = () => {
             </TabsTrigger>
             <TabsTrigger value="invitations">
               <Users className="mr-2 h-4 w-4" />
-              Enhanced Invites
+              Invitations
             </TabsTrigger>
             <TabsTrigger value="tree">
               <TreePine className="mr-2 h-4 w-4" />
@@ -255,54 +244,19 @@ export const FamilyManagement: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="invitations">
-            <Tabs defaultValue="enhanced" orientation="horizontal">
-              <TabsList className="mb-4">
-                <TabsTrigger value="enhanced">Enhanced System</TabsTrigger>
-                <TabsTrigger value="standard">Standard View</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="enhanced">
-                <EnhancedInvitationSystem
-                  familyUnitId={selectedFamily.id}
-                  familyUnitLabel={selectedFamily.family_label}
-                  isOwner={selectedFamily.trust_anchor_user_id === user?.id}
-                />
-              </TabsContent>
-              
-              <TabsContent value="standard">
-                <FamilyInvitationsManager
-                  familyUnitId={selectedFamily.id}
-                  familyUnitLabel={selectedFamily.family_label}
-                  isOwner={selectedFamily.trust_anchor_user_id === user?.id}
-                />
-              </TabsContent>
-            </Tabs>
+            <FamilyInvitationsManager
+              familyUnitId={selectedFamily.id}
+              familyUnitLabel={selectedFamily.family_label}
+              isOwner={selectedFamily.trust_anchor_user_id === user?.id}
+            />
           </TabsContent>
 
           <TabsContent value="tree">
-            <Tabs defaultValue="interactive" orientation="horizontal">
-              <TabsList className="mb-4">
-                <TabsTrigger value="interactive">Interactive Tree</TabsTrigger>
-                <TabsTrigger value="standard">Standard View</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="interactive">
-                <InteractiveFamilyTree
-                  familyUnits={familyUnits}
-                  selectedFamilyId={selectedFamilyUnit}
-                  onSelectFamily={setSelectedFamilyUnit}
-                  currentUserId={user?.id}
-                />
-              </TabsContent>
-              
-              <TabsContent value="standard">
-                <FamilyTreeTab
-                  familyUnitId={selectedFamily.id}
-                  familyUnitLabel={selectedFamily.family_label}
-                  isOwner={selectedFamily.trust_anchor_user_id === user?.id}
-                />
-              </TabsContent>
-            </Tabs>
+            <FamilyTreeTab
+              familyUnitId={selectedFamily.id}
+              familyUnitLabel={selectedFamily.family_label}
+              isOwner={selectedFamily.trust_anchor_user_id === user?.id}
+            />
           </TabsContent>
 
           <TabsContent value="settings">
@@ -331,29 +285,11 @@ export const FamilyManagement: React.FC = () => {
           </TabsList>
 
           <TabsContent value="tree">
-            <Tabs defaultValue="interactive" orientation="horizontal">
-              <TabsList className="mb-4">
-                <TabsTrigger value="interactive">Interactive Tree</TabsTrigger>
-                <TabsTrigger value="standard">Standard View</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="interactive">
-                <InteractiveFamilyTree
-                  familyUnits={familyUnits}
-                  selectedFamilyId={selectedFamilyUnit}
-                  onSelectFamily={setSelectedFamilyUnit}
-                  currentUserId={user?.id}
-                />
-              </TabsContent>
-              
-              <TabsContent value="standard">
-                <FamilyTreeVisualization
-                  familyUnits={familyUnits}
-                  selectedFamilyId={selectedFamilyUnit}
-                  onSelectFamily={setSelectedFamilyUnit}
-                />
-              </TabsContent>
-            </Tabs>
+            <FamilyTreeVisualization
+              familyUnits={familyUnits}
+              selectedFamilyId={selectedFamilyUnit}
+              onSelectFamily={setSelectedFamilyUnit}
+            />
           </TabsContent>
 
           <TabsContent value="overview" className="space-y-6">
@@ -365,16 +301,10 @@ export const FamilyManagement: React.FC = () => {
                   <p className="text-muted-foreground text-center mb-4">
                     Create your first family unit to start building your family tree and managing relationships.
                   </p>
-                  <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => setShowSetupWizard(true)}>
-                      <Settings className="mr-2 h-4 w-4" />
-                      Use Setup Wizard
-                    </Button>
-                    <Button onClick={() => setShowCreateDialog(true)}>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Quick Create
-                    </Button>
-                  </div>
+                  <Button onClick={() => setShowCreateDialog(true)}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Create First Family Unit
+                  </Button>
                 </CardContent>
               </Card>
             ) : (
@@ -426,20 +356,6 @@ export const FamilyManagement: React.FC = () => {
         onOpenChange={setShowEditDialog}
         familyUnit={editingFamilyUnit}
         onUpdate={updateFamilyUnit}
-      />
-      
-      <FamilySetupWizard
-        open={showSetupWizard}
-        onOpenChange={setShowSetupWizard}
-        existingFamilyUnits={familyUnits}
-      />
-      
-      <DiagnosticsPanel
-        userEmail={user?.email}
-        familyUnitsCount={familyUnits.length}
-        activeTab={activeTab}
-        selectedFamilyUnitId={selectedFamilyUnit}
-        channelStatus={channelStatus}
       />
     </div>
   );

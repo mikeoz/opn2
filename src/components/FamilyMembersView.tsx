@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Users, Search, UserPlus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Users, Search, UserPlus } from 'lucide-react';
 import { FamilyUnit, FamilyMember, useFamilyUnits } from '@/hooks/useFamilyUnits';
 
 interface FamilyMembersViewProps {
@@ -14,76 +14,48 @@ export const FamilyMembersView: React.FC<FamilyMembersViewProps> = ({
   familyUnits
 }) => {
   const [allMembers, setAllMembers] = useState<(FamilyMember & { familyUnit: FamilyUnit })[]>([]);
+  const [filteredMembers, setFilteredMembers] = useState<(FamilyMember & { familyUnit: FamilyUnit })[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   
   const { fetchFamilyMembers } = useFamilyUnits();
-  const ITEMS_PER_PAGE = 20;
-
-  // Debounce search term
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-      setCurrentPage(1); // Reset to first page on search
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
 
   useEffect(() => {
-    let isMounted = true;
     const loadAllMembers = async () => {
-      console.log('[AllMembers] Loading members for', familyUnits.length, 'family units');
       setLoading(true);
-      const timeout = setTimeout(() => {
-        if (isMounted) {
-          console.warn('[AllMembers] Load timed out - showing partial/no results');
-          setLoading(false);
-        }
-      }, 10000);
       try {
-        const memberPromises = familyUnits.slice(0, 10).map(async (unit) => { // Limit to 10 units for performance
-          try {
-            const members = await fetchFamilyMembers(unit.id);
-            console.log('[AllMembers] Loaded', members.length, 'members for unit', unit.id);
-            return members.map(member => ({ ...member, familyUnit: unit }));
-          } catch (e) {
-            console.error('[AllMembers] Error loading unit members', unit.id, e);
-            return [] as (FamilyMember & { familyUnit: FamilyUnit })[];
-          }
+        const memberPromises = familyUnits.map(async (unit) => {
+          const members = await fetchFamilyMembers(unit.id);
+          return members.map(member => ({ ...member, familyUnit: unit }));
         });
 
         const memberArrays = await Promise.all(memberPromises);
         const flatMembers = memberArrays.flat();
         
-        if (!isMounted) return;
         setAllMembers(flatMembers);
-        console.log('[AllMembers] Total members loaded:', flatMembers.length);
+        setFilteredMembers(flatMembers);
       } catch (error) {
         console.error('Error loading all members:', error);
       } finally {
-        clearTimeout(timeout);
-        if (isMounted) setLoading(false);
+        setLoading(false);
       }
     };
 
     if (familyUnits.length > 0) {
       loadAllMembers();
-    } else {
-      setAllMembers([]);
     }
-
-    return () => { isMounted = false; };
   }, [familyUnits, fetchFamilyMembers]);
 
-  // Filter and paginate members
-  const filteredMembers = useMemo(() => {
-    if (!debouncedSearchTerm.trim()) return allMembers;
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setFilteredMembers(allMembers);
+      return;
+    }
 
-    const searchLower = debouncedSearchTerm.toLowerCase();
-    return allMembers.filter(member => {
+    const filtered = allMembers.filter(member => {
       const profile = member.profile;
+      const searchLower = searchTerm.toLowerCase();
+      
       return (
         profile?.first_name?.toLowerCase().includes(searchLower) ||
         profile?.last_name?.toLowerCase().includes(searchLower) ||
@@ -93,28 +65,9 @@ export const FamilyMembersView: React.FC<FamilyMembersViewProps> = ({
         member.familyUnit.family_label.toLowerCase().includes(searchLower)
       );
     });
-  }, [allMembers, debouncedSearchTerm]);
 
-  const totalPages = Math.ceil(filteredMembers.length / ITEMS_PER_PAGE);
-  const paginatedMembers = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredMembers.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredMembers, currentPage]);
-
-  const groupedMembers = useMemo(() => {
-    return paginatedMembers.reduce((acc, member) => {
-      const unitId = member.familyUnit.id;
-      if (!acc[unitId]) {
-        acc[unitId] = { familyUnit: member.familyUnit, members: [] };
-      }
-      acc[unitId].members.push(member);
-      return acc;
-    }, {} as Record<string, { familyUnit: FamilyUnit; members: FamilyMember[] }>);
-  }, [paginatedMembers]);
-
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  }, []);
+    setFilteredMembers(filtered);
+  }, [searchTerm, allMembers]);
 
   const getDisplayName = (member: FamilyMember) => {
     const profile = member.profile;
@@ -126,6 +79,18 @@ export const FamilyMembersView: React.FC<FamilyMembersViewProps> = ({
     }
     return name || 'Unknown';
   };
+
+  const groupedMembers = filteredMembers.reduce((acc, member) => {
+    const unitId = member.familyUnit.id;
+    if (!acc[unitId]) {
+      acc[unitId] = {
+        familyUnit: member.familyUnit,
+        members: []
+      };
+    }
+    acc[unitId].members.push(member);
+    return acc;
+  }, {} as Record<string, { familyUnit: FamilyUnit; members: FamilyMember[] }>);
 
   if (loading) {
     return (
@@ -140,44 +105,19 @@ export const FamilyMembersView: React.FC<FamilyMembersViewProps> = ({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center gap-4">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search family members..."
             value={searchTerm}
-            onChange={handleSearchChange}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
           />
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline">
-            {filteredMembers.length} member(s)
-          </Badge>
-          {totalPages > 1 && (
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <span className="text-sm text-muted-foreground px-2">
-                {currentPage} / {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
-        </div>
+        <Badge variant="outline">
+          {filteredMembers.length} member(s)
+        </Badge>
       </div>
 
       {Object.keys(groupedMembers).length === 0 ? (

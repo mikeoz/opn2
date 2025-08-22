@@ -26,9 +26,7 @@ export default {
 				foreground: 'hsl(var(--foreground))',
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))',
-					light: 'hsl(var(--primary) / 0.1)',
-					glow: 'hsl(var(--primary) / 0.4)'
+					foreground: 'hsl(var(--primary-foreground))'
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
@@ -63,33 +61,12 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				},
-				benefit: {
-					DEFAULT: 'hsl(var(--benefit))',
-					foreground: 'hsl(var(--benefit-foreground))',
-					light: 'hsl(var(--benefit) / 0.1)',
-					glow: 'hsl(var(--benefit) / 0.4)'
 				}
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)'
-			},
-			spacing: {
-				'touch-target': '44px',
-				'safe-area-top': 'env(safe-area-inset-top)',
-				'safe-area-bottom': 'env(safe-area-inset-bottom)',
-				'safe-area-left': 'env(safe-area-inset-left)',
-				'safe-area-right': 'env(safe-area-inset-right)'
-			},
-			fontSize: {
-				'touch-friendly': ['16px', '1.5'],
-				'mobile-title': ['24px', '1.2'],
-				'mobile-body': ['16px', '1.4']
-			},
-			backdropBlur: {
-				xs: '2px'
 			},
 			keyframes: {
 				'accordion-down': {
@@ -107,51 +84,11 @@ export default {
 					to: {
 						height: '0'
 					}
-				},
-				'fade-in': {
-					'0%': {
-						opacity: '0',
-						transform: 'translateY(10px)'
-					},
-					'100%': {
-						opacity: '1',
-						transform: 'translateY(0)'
-					}
-				},
-				'slide-up': {
-					'0%': {
-						opacity: '0',
-						transform: 'translateY(20px)'
-					},
-					'100%': {
-						opacity: '1',
-						transform: 'translateY(0)'
-					}
-				},
-				'pulse-glow': {
-					'0%, 100%': {
-						boxShadow: '0 0 5px hsl(var(--primary) / 0.5)'
-					},
-					'50%': {
-						boxShadow: '0 0 20px hsl(var(--primary) / 0.8)'
-					}
-				},
-				'bounce-subtle': {
-					'0%, 100%': {
-						transform: 'translateY(0)'
-					},
-					'50%': {
-						transform: 'translateY(-5px)'
-					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out',
-				'fade-in': 'fade-in 0.3s ease-out',
-				'slide-up': 'slide-up 0.3s ease-out',
-				'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
-				'bounce-subtle': 'bounce-subtle 1s ease-in-out infinite'
+				'accordion-up': 'accordion-up 0.2s ease-out'
 			}
 		}
 	},

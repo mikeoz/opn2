@@ -45,13 +45,10 @@ export interface FamilyMember {
 export const useFamilyUnits = () => {
   const [familyUnits, setFamilyUnits] = useState<FamilyUnit[]>([]);
   const [loading, setLoading] = useState(false);
-  const [channelStatus, setChannelStatus] = useState<string>('IDLE');
   const { user } = useAuth();
   // Unique channel instance ID to avoid duplicate subscribe() on shared channels
   const channelInstanceIdRef = useRef<string>('');
   const channelRef = useRef<any>(null);
-  const retryAttemptRef = useRef(0);
-  const retryTimerRef = useRef<number | null>(null);
   
   if (!channelInstanceIdRef.current) {
     try {
@@ -221,15 +218,6 @@ export const useFamilyUnits = () => {
 
   const fetchFamilyMembers = async (familyUnitId: string): Promise<FamilyMember[]> => {
     try {
-      // First get the trust anchor user for this family unit
-      const { data: familyUnit, error: familyError } = await supabase
-        .from('family_units')
-        .select('trust_anchor_user_id')
-        .eq('id', familyUnitId)
-        .single();
-
-      if (familyError) throw familyError;
-
       const { data, error } = await supabase
         .from('organization_memberships')
         .select(`
@@ -246,7 +234,7 @@ export const useFamilyUnits = () => {
             email
           )
         `)
-        .eq('organization_user_id', familyUnit.trust_anchor_user_id)
+        .eq('organization_user_id', familyUnitId)
         .eq('is_family_unit', true)
         .eq('status', 'active')
         .order('family_generation', { ascending: true });
@@ -276,95 +264,92 @@ export const useFamilyUnits = () => {
       console.warn('Failed to add refetch listener', e);
     }
 
-    // Set up real-time subscription with debugging and auto-retry
+    // Clean up any existing channel first
+    if (channelRef.current) {
+      console.log('🧹 Cleaning up existing channel before creating new one');
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+
+    // Set up real-time subscription with debugging
     const channelName = `family-units-${user.id}-${channelInstanceIdRef.current}`;
     console.log('Setting up real-time subscription:', channelName, '(per-instance)');
-
-    const setupChannel = () => {
-      if (retryTimerRef.current) {
-        clearTimeout(retryTimerRef.current);
-        retryTimerRef.current = null;
-      }
-
-      const channel = supabase
-        .channel(channelName)
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'family_units'
-          },
-          (payload) => {
-            console.log('🔥 Family units real-time update received:', payload);
-            // Handle different types of changes
-            if (payload.eventType === 'INSERT') {
-              const newUnit = payload.new as any;
-              setFamilyUnits(prev => {
-                if (prev.some(unit => unit.id === newUnit.id)) return prev;
-                return [...prev, { ...newUnit, trust_anchor_profile: null, parent_family: null, member_count: 0 }];
-              });
-            } else if (payload.eventType === 'UPDATE') {
-              const updatedUnit = payload.new as any;
-              setFamilyUnits(prev => prev.map(unit => unit.id === updatedUnit.id ? { ...unit, ...updatedUnit } : unit));
-            } else if (payload.eventType === 'DELETE') {
-              const deletedUnit = payload.old as any;
-              setFamilyUnits(prev => prev.filter(unit => unit.id !== deletedUnit.id));
-            }
+    
+    const channel = supabase
+      .channel(channelName)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'family_units'
+        },
+        (payload) => {
+          console.log('🔥 Family units real-time update received:', payload);
+          console.log('Event type:', payload.eventType);
+          console.log('New data:', payload.new);
+          console.log('Old data:', payload.old);
+          
+          // Handle different types of changes
+          if (payload.eventType === 'INSERT') {
+            const newUnit = payload.new as any;
+            console.log('Processing INSERT for unit:', newUnit.id);
+            
+            setFamilyUnits(prev => {
+              console.log('Current family units:', prev.length);
+              // Check if already exists to avoid duplicates
+              if (prev.some(unit => unit.id === newUnit.id)) {
+                console.log('Unit already exists, skipping');
+                return prev;
+              }
+              const updatedUnits = [...prev, {
+                ...newUnit,
+                trust_anchor_profile: null,
+                parent_family: null,
+                member_count: 0
+              }];
+              console.log('Added new unit, total units:', updatedUnits.length);
+              return updatedUnits;
+            });
+          } else if (payload.eventType === 'UPDATE') {
+            const updatedUnit = payload.new as any;
+            console.log('Processing UPDATE for unit:', updatedUnit.id);
+            
+            setFamilyUnits(prev => prev.map(unit => 
+              unit.id === updatedUnit.id 
+                ? { ...unit, ...updatedUnit }
+                : unit
+            ));
+          } else if (payload.eventType === 'DELETE') {
+            const deletedUnit = payload.old as any;
+            console.log('Processing DELETE for unit:', deletedUnit.id);
+            
+            setFamilyUnits(prev => prev.filter(unit => unit.id !== deletedUnit.id));
           }
-        )
-        .subscribe((status) => {
-          setChannelStatus(status as string);
-          console.log('Subscription status:', status);
+        }
+      )
+      .subscribe((status) => {
+        console.log('Subscription status:', status);
+      });
 
-          if (status === 'SUBSCRIBED') {
-            retryAttemptRef.current = 0;
-          }
-
-          if (status === 'TIMED_OUT' || status === 'CLOSED') {
-            const attempt = retryAttemptRef.current + 1;
-            retryAttemptRef.current = attempt;
-            const delay = Math.min(30000, 1000 * Math.pow(2, attempt));
-            setChannelStatus(`RECONNECTING in ${Math.round(delay / 1000)}s`);
-            console.warn(`Realtime ${status}. Reconnecting in ${delay}ms (attempt ${attempt})`);
-
-            if (channelRef.current) {
-              try { supabase.removeChannel(channelRef.current); } catch {}
-              channelRef.current = null;
-            }
-
-            retryTimerRef.current = window.setTimeout(() => {
-              setupChannel();
-            }, delay);
-          }
-        });
-
-      channelRef.current = channel;
-    };
-
-    setupChannel();
+    // Store the channel reference
+    channelRef.current = channel;
 
     return () => {
       console.log('🧹 Cleaning up realtime subscription:', channelName);
       try {
         window.removeEventListener('family-units:refetch', onRefetch);
       } catch {}
-      if (retryTimerRef.current) {
-        clearTimeout(retryTimerRef.current);
-        retryTimerRef.current = null;
-      }
       if (channelRef.current) {
-        try { supabase.removeChannel(channelRef.current); } catch {}
+        supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }
-      setChannelStatus('CLOSED');
     };
   }, [user?.id]);
 
   return {
     familyUnits,
     loading,
-    channelStatus,
     createFamilyUnit,
     updateFamilyUnit,
     deactivateFamilyUnit,

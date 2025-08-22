@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -258,50 +259,50 @@ const MyCards = () => {
   const renderCard = (card: UserCard) => (
     <div
       key={card.id}
-      className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-all touch-manipulation min-h-touch-target active:scale-98"
+      className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors"
     >
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1">
-          <h3 className="font-medium truncate">{getCardTitle(card)}</h3>
+      <div className="flex-1">
+        <div className="flex items-center gap-2">
+          <h3 className="font-medium">{getCardTitle(card)}</h3>
           {card.family_role && (
-            <Badge variant="outline" className="text-xs shrink-0">
+            <Badge variant="outline" className="text-xs">
               {card.family_role}
             </Badge>
           )}
         </div>
-        <p className="text-sm text-muted-foreground truncate">{card.template.name}</p>
-        <div className="flex items-center gap-2 mt-2">
+        <p className="text-sm text-muted-foreground">{card.template.name}</p>
+        <div className="flex items-center gap-2 mt-1">
           <p className="text-xs text-muted-foreground">
             Code: {card.card_code}
           </p>
           {card.family_unit_id && (
-            <Badge variant="secondary" className="text-xs bg-benefit/10 text-benefit border-benefit/20">
+            <Badge variant="secondary" className="text-xs">
               <TreePine className="h-3 w-3 mr-1" />
               Family Card
             </Badge>
           )}
         </div>
       </div>
-      <div className="flex gap-1 ml-4 shrink-0">
-        <Button size="sm" variant="ghost" asChild className="h-10 w-10 p-0 touch-manipulation">
+      <div className="flex gap-2 ml-4">
+        <Button size="sm" variant="ghost" asChild>
           <Link to={`/cards/view/${card.id}`}>
             <Eye className="h-4 w-4" />
           </Link>
         </Button>
-        <Button size="sm" variant="ghost" asChild className="h-10 w-10 p-0 touch-manipulation">
+        <Button size="sm" variant="ghost" asChild>
           <Link to={`/cards/edit/${card.id}`}>
             <Edit className="h-4 w-4" />
           </Link>
         </Button>
         <Dialog>
           <DialogTrigger asChild>
-            <Button size="sm" variant="ghost" className="h-10 w-10 p-0 touch-manipulation">
+            <Button size="sm" variant="ghost">
               <Share2 className="h-4 w-4" />
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="text-sm">Share Card: {getCardTitle(card)}</DialogTitle>
+              <DialogTitle>Share Card: {getCardTitle(card)}</DialogTitle>
             </DialogHeader>
             <CardRelationships cardId={card.id} />
           </DialogContent>
@@ -310,7 +311,7 @@ const MyCards = () => {
           size="sm"
           variant="ghost"
           onClick={() => handleDeleteCard(card.id)}
-          className="h-10 w-10 p-0 touch-manipulation text-destructive hover:text-destructive hover:bg-destructive/10"
+          className="text-destructive hover:text-destructive hover:bg-destructive/10"
         >
           <Trash2 className="h-4 w-4" />
         </Button>
@@ -334,65 +335,9 @@ const MyCards = () => {
           )}
         </div>
 
-        {/* User Cards List - Now shown first */}
-        <Card className="mb-6">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-primary" />
-                Your Cards ({userCards.length})
-              </CardTitle>
-              {userCards.some(card => card.family_unit_id) && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setGroupByFamily(!groupByFamily)}
-                  className="flex items-center gap-2"
-                >
-                  <TreePine className="h-4 w-4" />
-                  {groupByFamily ? 'Show All' : 'Group by Family'}
-                </Button>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="text-center py-8">
-                <div className="text-lg">Loading your cards...</div>
-              </div>
-            ) : userCards.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>You haven't created any cards yet.</p>
-                <p className="text-sm">Use the templates below to get started!</p>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {Object.entries(groupedCards).map(([groupName, cards], index) => (
-                  <div key={groupName}>
-                    {groupByFamily && (
-                      <>
-                        <div className="flex items-center gap-2 mb-3">
-                          <TreePine className="h-4 w-4 text-muted-foreground" />
-                          <h3 className="font-medium text-muted-foreground">{groupName}</h3>
-                          <Badge variant="secondary">{cards.length}</Badge>
-                        </div>
-                        {index > 0 && <Separator className="mb-4" />}
-                      </>
-                    )}
-                    <div className="space-y-3">
-                      {cards.map(renderCard)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Available Templates - Now shown second */}
+        {/* Available Templates */}
         {availableTemplates.length > 0 && (
-          <Card>
+          <Card className="mb-6">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Plus className="h-5 w-5 text-accent" />
@@ -432,6 +377,62 @@ const MyCards = () => {
             </CardContent>
           </Card>
         )}
+
+        {/* User Cards List */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" />
+                Your Cards ({userCards.length})
+              </CardTitle>
+              {userCards.some(card => card.family_unit_id) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setGroupByFamily(!groupByFamily)}
+                  className="flex items-center gap-2"
+                >
+                  <TreePine className="h-4 w-4" />
+                  {groupByFamily ? 'Show All' : 'Group by Family'}
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="text-lg">Loading your cards...</div>
+              </div>
+            ) : userCards.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>You haven't created any cards yet.</p>
+                <p className="text-sm">Use the templates above to get started!</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {Object.entries(groupedCards).map(([groupName, cards], index) => (
+                  <div key={groupName}>
+                    {groupByFamily && (
+                      <>
+                        <div className="flex items-center gap-2 mb-3">
+                          <TreePine className="h-4 w-4 text-muted-foreground" />
+                          <h3 className="font-medium text-muted-foreground">{groupName}</h3>
+                          <Badge variant="secondary">{cards.length}</Badge>
+                        </div>
+                        {index > 0 && <Separator className="mb-4" />}
+                      </>
+                    )}
+                    <div className="space-y-3">
+                      {cards.map(renderCard)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </MobileLayout>
   );

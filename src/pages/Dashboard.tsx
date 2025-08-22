@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Settings, Clock, Users, QrCode, Store, BarChart3, FileText, Upload, Activity, TreePine, Shield } from 'lucide-react';
+import { Settings, Clock, Users, QrCode, Store, BarChart3, FileText, Upload, Activity, TreePine } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -96,22 +96,22 @@ const Dashboard = () => {
       <div className="p-4 space-y-6">
         {/* Merchant Overview */}
         {merchantProfile && (
-          <Card className="bg-gradient-to-br from-background to-muted/30 border-benefit/20">
+          <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-benefit">
+              <CardTitle className="flex items-center gap-2">
                 <Store className="h-5 w-5" />
                 {merchantProfile.user_profile?.organization_name || merchantProfile.name}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-3 rounded-lg bg-benefit/5 border border-benefit/20">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Total Customers</p>
-                  <p className="text-2xl font-bold text-benefit">{totalCustomers}</p>
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Customers</p>
+                  <p className="text-2xl font-bold">{totalCustomers}</p>
                 </div>
-                <div className="p-3 rounded-lg bg-accent/5 border border-accent/20">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Total QR Scans</p>
-                  <p className="text-2xl font-bold text-accent">{totalScans}</p>
+                <div>
+                  <p className="text-sm text-muted-foreground">Total QR Scans</p>
+                  <p className="text-2xl font-bold">{totalScans}</p>
                 </div>
               </div>
             </CardContent>
@@ -242,18 +242,12 @@ const Dashboard = () => {
                 Family Management
               </Link>
             </Button>
-              <Button asChild variant="outline" className="w-full">
-                <Link to="/user-guide">
-                  <FileText className="h-4 w-4 mr-2" />
-                  User Guide
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="w-full">
-                <Link to="/security">
-                  <Shield className="h-4 w-4 mr-2" />
-                  Security & Privacy
-                </Link>
-              </Button>
+            <Button asChild variant="outline" className="w-full">
+              <Link to="/user-guide">
+                <FileText className="h-4 w-4 mr-2" />
+                User Guide
+              </Link>
+            </Button>
           </div>
         </div>
 
