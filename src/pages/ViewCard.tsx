@@ -7,10 +7,11 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, FileText, Image, Upload, Edit } from 'lucide-react';
+import { ArrowLeft, FileText, Image, Upload, Edit, Share2 } from 'lucide-react';
 import { getCardTitle } from '@/utils/cardUtils';
 import CardRelationships from '@/components/CardRelationships';
 import BrandedCardDisplay from '@/components/BrandedCardDisplay';
+import GranularSharingDialog from '@/components/GranularSharingDialog';
 
 interface TemplateField {
   id: string;
@@ -50,6 +51,8 @@ const ViewCard = () => {
   const navigate = useNavigate();
   const [card, setCard] = useState<UserCard | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showGranularSharing, setShowGranularSharing] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -174,6 +177,30 @@ const ViewCard = () => {
     navigate(`/cards/edit/${cardId}`);
   };
 
+  const handleGranularShare = async (selectedComponents: Record<string, string[]>) => {
+    setIsSharing(true);
+    try {
+      // Here you would implement the actual sharing logic
+      console.log('Sharing selected components:', selectedComponents);
+      
+      toast({
+        title: "Card shared successfully",
+        description: "Selected information has been shared.",
+      });
+      
+      setShowGranularSharing(false);
+    } catch (error) {
+      console.error('Error sharing card:', error);
+      toast({
+        title: "Error sharing card",
+        description: "Failed to share the selected information. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
   const renderFieldValue = (field: TemplateField) => {
     const value = getFieldValue(field.id);
     
@@ -230,10 +257,16 @@ const ViewCard = () => {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Cards
           </Button>
-          <Button onClick={handleEdit}>
-            <Edit className="h-4 w-4 mr-2" />
-            Edit Card
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowGranularSharing(true)}>
+              <Share2 className="h-4 w-4 mr-2" />
+              Share Card
+            </Button>
+            <Button onClick={handleEdit}>
+              <Edit className="h-4 w-4 mr-2" />
+              Edit Card
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -250,6 +283,16 @@ const ViewCard = () => {
             )}
           </div>
         </div>
+        
+        {card && (
+          <GranularSharingDialog
+            open={showGranularSharing}
+            onOpenChange={setShowGranularSharing}
+            card={card}
+            onShare={handleGranularShare}
+            isSharing={isSharing}
+          />
+        )}
       </div>
     </div>
   );
