@@ -166,7 +166,7 @@ const CardForm: React.FC<CardFormProps> = ({
   };
 
   return (
-    <Card className="max-w-2xl mx-auto">
+    <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
         <div className="flex justify-between items-start">
           <div className="flex items-center gap-3">
@@ -331,11 +331,12 @@ const CardForm: React.FC<CardFormProps> = ({
             {/* Card Fields */}
             {sortedFields.map(renderField)}
             
-            <div className="flex gap-3 pt-4">
+            <div className="flex flex-col sm:flex-row gap-3 pt-6 mt-6 border-t border-border">
               <Button 
                 type="submit" 
                 disabled={isSubmitting}
-                className="flex-1"
+                className="w-full sm:flex-1 h-12"
+                size="lg"
               >
                 {isSubmitting ? 'Saving...' : `${isEditing ? 'Update' : 'Create'} Card`}
               </Button>
@@ -343,6 +344,8 @@ const CardForm: React.FC<CardFormProps> = ({
                 type="button" 
                 variant="outline"
                 onClick={() => window.history.back()}
+                className="w-full sm:w-auto h-12"
+                size="lg"
               >
                 Cancel
               </Button>
