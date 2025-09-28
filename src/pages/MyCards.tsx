@@ -11,7 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useFamilyUnits } from '@/hooks/useFamilyUnits';
 import MobileLayout from '@/components/MobileLayout';
-import CardRelationships from '@/components/CardRelationships';
+import GranularSharingDialog from '@/components/GranularSharingDialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 interface TemplateField {
@@ -65,8 +65,9 @@ const MyCards = () => {
   const [userCards, setUserCards] = useState<UserCard[]>([]);
   const [availableTemplates, setAvailableTemplates] = useState<CardTemplate[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCardForSharing, setSelectedCardForSharing] = useState<string | null>(null);
+  const [selectedCardForSharing, setSelectedCardForSharing] = useState<UserCard | null>(null);
   const [groupByFamily, setGroupByFamily] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -244,6 +245,30 @@ const MyCards = () => {
     }
   };
 
+  const handleGranularShare = async (selectedComponents: Record<string, string[]>) => {
+    setIsSharing(true);
+    try {
+      // Here you would implement the actual sharing logic
+      console.log('Sharing selected components:', selectedComponents);
+      
+      toast({
+        title: "Card shared successfully",
+        description: "Selected information has been shared.",
+      });
+      
+      setSelectedCardForSharing(null);
+    } catch (error) {
+      console.error('Error sharing card:', error);
+      toast({
+        title: "Error sharing card",
+        description: "Failed to share the selected information. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
   // Group cards by family unit or show all together
   const groupedCards = groupByFamily 
     ? userCards.reduce((groups, card) => {
@@ -294,19 +319,13 @@ const MyCards = () => {
             <Edit className="h-4 w-4" />
           </Link>
         </Button>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button size="sm" variant="ghost">
-              <Share2 className="h-4 w-4" />
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Share Card: {getCardTitle(card)}</DialogTitle>
-            </DialogHeader>
-            <CardRelationships cardId={card.id} />
-          </DialogContent>
-        </Dialog>
+        <Button 
+          size="sm" 
+          variant="ghost"
+          onClick={() => setSelectedCardForSharing(card)}
+        >
+          <Share2 className="h-4 w-4" />
+        </Button>
         <Button
           size="sm"
           variant="ghost"
@@ -433,6 +452,35 @@ const MyCards = () => {
             )}
           </CardContent>
         </Card>
+
+        {selectedCardForSharing && (
+          <GranularSharingDialog
+            open={!!selectedCardForSharing}
+            onOpenChange={(open) => !open && setSelectedCardForSharing(null)}
+            card={{
+              id: selectedCardForSharing.id,
+              template: {
+                name: selectedCardForSharing.template.name,
+                fields: selectedCardForSharing.template.fields.map(field => ({
+                  id: field.id,
+                  field_name: field.field_name,
+                  field_type: field.field_type
+                }))
+              },
+              field_values: selectedCardForSharing.field_values.map(fv => {
+                const field = selectedCardForSharing.template.fields.find(f => f.id === fv.template_field_id);
+                return {
+                  template_field_id: fv.template_field_id,
+                  value: fv.value,
+                  field_name: field?.field_name || '',
+                  field_type: field?.field_type || 'string'
+                };
+              })
+            }}
+            onShare={handleGranularShare}
+            isSharing={isSharing}
+          />
+        )}
       </div>
     </MobileLayout>
   );
