@@ -239,7 +239,7 @@ const CardForm: React.FC<CardFormProps> = ({
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="">No family unit</SelectItem>
+                            <SelectItem value="none">No family unit</SelectItem>
                             {familyUnits.map((unit) => (
                               <SelectItem key={unit.id} value={unit.id}>
                                 {unit.family_label} (Gen {unit.generation_level})
@@ -265,7 +265,7 @@ const CardForm: React.FC<CardFormProps> = ({
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="">No specific role</SelectItem>
+                            <SelectItem value="none">No specific role</SelectItem>
                             <SelectItem value="parent">Parent</SelectItem>
                             <SelectItem value="child">Child</SelectItem>
                             <SelectItem value="spouse">Spouse</SelectItem>
