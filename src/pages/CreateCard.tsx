@@ -230,19 +230,21 @@ const CreateCard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 overflow-y-auto">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Create New Card</h1>
-          <p className="text-gray-600">Creating: {template.name}</p>
-        </div>
+    <div className="min-h-screen bg-gray-50">
+      <div className="h-screen overflow-y-auto">
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Create New Card</h1>
+            <p className="text-gray-600">Creating: {template.name}</p>
+          </div>
 
-        <div className="pb-8">
-          <CardForm
-            template={template}
-            onSubmit={handleCreateCard}
-            isEditing={false}
-          />
+          <div className="pb-16">
+            <CardForm
+              template={template}
+              onSubmit={handleCreateCard}
+              isEditing={false}
+            />
+          </div>
         </div>
       </div>
     </div>

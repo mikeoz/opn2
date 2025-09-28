@@ -220,21 +220,23 @@ const EditCard = () => {
   }, {} as Record<string, string>);
 
   return (
-    <div className="min-h-screen bg-gray-50 overflow-y-auto">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Edit Card</h1>
-          <p className="text-gray-600">Editing: {getCardTitle(card)}</p>
-          <p className="text-sm text-gray-500">Card Type: {card.template.name}</p>
-        </div>
+    <div className="min-h-screen bg-gray-50">
+      <div className="h-screen overflow-y-auto">
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Edit Card</h1>
+            <p className="text-gray-600">Editing: {getCardTitle(card)}</p>
+            <p className="text-sm text-gray-500">Card Type: {card.template.name}</p>
+          </div>
 
-        <div className="pb-8">
-          <CardForm
-            template={card.template}
-            onSubmit={handleSubmit}
-            initialValues={initialValues}
-            isEditing={true}
-          />
+          <div className="pb-16">
+            <CardForm
+              template={card.template}
+              onSubmit={handleSubmit}
+              initialValues={initialValues}
+              isEditing={true}
+            />
+          </div>
         </div>
       </div>
     </div>
