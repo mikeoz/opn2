@@ -279,7 +279,19 @@ const ViewCard = () => {
 
           <div>
             {card.template.transaction_code === 'S' && (
-              <CardRelationships cardId={card.id} />
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Share2 className="h-4 w-4" />
+                    Card Relationships
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center text-muted-foreground py-4">
+                    Relationships will be shown here once sharing is implemented
+                  </div>
+                </CardContent>
+              </Card>
             )}
           </div>
         </div>
