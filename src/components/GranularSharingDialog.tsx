@@ -97,87 +97,134 @@ const GranularSharingDialog: React.FC<GranularSharingDialogProps> = ({
   const parseAddress = (address: string): FieldComponent[] => {
     const components: FieldComponent[] = [];
     
-    // Simple regex patterns for common address formats
+    // Enhanced regex patterns for better address parsing
     const addressPatterns = {
-      // Street number: leading digits
+      // Full address pattern: number, street, city, state, zip
+      fullAddress: /^(\d+)\s+([^,]+),\s*([^,]+),\s*([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/,
+      // Alternative pattern: number street, city state zip
+      altAddress: /^(\d+)\s+([^,]+),\s*([^,]+)\s+([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/,
+      // Fallback patterns
       streetNumber: /^(\d+)\s/,
-      // State: common state abbreviations
-      state: /\b([A-Z]{2})\b(?=\s+\d{5}|\s*$)/,
-      // ZIP: 5 digit or 5+4 format
-      zip: /\b(\d{5}(?:-\d{4})?)\b/,
-      // City: word(s) before state and zip
-      city: /,\s*([^,]+?)\s+[A-Z]{2}\s+\d{5}/
+      state: /\b([A-Z]{2})\s+(\d{5}(?:-\d{4})?)\s*$/,
+      zip: /(\d{5}(?:-\d{4})?)\s*$/
     };
 
-    // Extract street number
-    const streetNumberMatch = address.match(addressPatterns.streetNumber);
-    if (streetNumberMatch) {
+    // Try full address pattern first
+    let match = address.match(addressPatterns.fullAddress) || address.match(addressPatterns.altAddress);
+    
+    if (match) {
+      // Full pattern matched: [full, number, street, city, state, zip]
+      const [, streetNumber, streetName, city, state, zip] = match;
+      
       components.push({
         id: 'streetNumber',
         label: 'Street Number',
-        value: streetNumberMatch[1],
+        value: streetNumber,
         selected: false,
         icon: <MapPin className="h-4 w-4" />
       });
-    }
-
-    // Extract street name (everything after number until comma or city)
-    let streetName = address;
-    if (streetNumberMatch) {
-      streetName = streetName.replace(streetNumberMatch[0], '').trim();
-    }
-    
-    // Remove city, state, zip to get street name
-    const stateMatch = address.match(addressPatterns.state);
-    const zipMatch = address.match(addressPatterns.zip);
-    const cityMatch = address.match(addressPatterns.city);
-    
-    if (cityMatch) {
-      const cityIndex = address.indexOf(cityMatch[0]);
-      streetName = streetName.substring(0, cityIndex).replace(/,\s*$/, '').trim();
-    }
-    
-    if (streetName && streetName !== address) {
+      
       components.push({
         id: 'streetName',
         label: 'Street Name',
-        value: streetName,
+        value: streetName.trim(),
         selected: false,
         icon: <MapPin className="h-4 w-4" />
       });
-    }
-
-    // Extract city
-    if (cityMatch) {
+      
       components.push({
         id: 'city',
         label: 'City',
-        value: cityMatch[1].trim(),
+        value: city.trim(),
         selected: true,
         icon: <MapPin className="h-4 w-4" />
       });
-    }
-
-    // Extract state
-    if (stateMatch) {
+      
       components.push({
         id: 'state',
         label: 'State',
-        value: stateMatch[1],
+        value: state.trim(),
         selected: true,
         icon: <MapPin className="h-4 w-4" />
       });
-    }
-
-    // Extract ZIP
-    if (zipMatch) {
+      
       components.push({
         id: 'zip',
         label: 'ZIP Code',
-        value: zipMatch[1],
+        value: zip.trim(),
         selected: false,
         icon: <MapPin className="h-4 w-4" />
       });
+    } else {
+      // Fallback to individual pattern matching
+      const streetNumberMatch = address.match(addressPatterns.streetNumber);
+      if (streetNumberMatch) {
+        components.push({
+          id: 'streetNumber',
+          label: 'Street Number',
+          value: streetNumberMatch[1],
+          selected: false,
+          icon: <MapPin className="h-4 w-4" />
+        });
+      }
+
+      // Extract state and zip together
+      const stateZipMatch = address.match(addressPatterns.state);
+      if (stateZipMatch) {
+        components.push({
+          id: 'state',
+          label: 'State',
+          value: stateZipMatch[1],
+          selected: true,
+          icon: <MapPin className="h-4 w-4" />
+        });
+        
+        components.push({
+          id: 'zip',
+          label: 'ZIP Code',
+          value: stateZipMatch[2],
+          selected: false,
+          icon: <MapPin className="h-4 w-4" />
+        });
+      }
+
+      // Extract remaining as street name and city (simplified)
+      let remaining = address;
+      if (streetNumberMatch) {
+        remaining = remaining.replace(streetNumberMatch[0], '').trim();
+      }
+      if (stateZipMatch) {
+        remaining = remaining.replace(stateZipMatch[0], '').trim().replace(/,\s*$/, '');
+      }
+      
+      if (remaining) {
+        const parts = remaining.split(',').map(p => p.trim());
+        if (parts.length >= 2) {
+          components.push({
+            id: 'streetName',
+            label: 'Street Name',
+            value: parts[0],
+            selected: false,
+            icon: <MapPin className="h-4 w-4" />
+          });
+          
+          components.push({
+            id: 'city',
+            label: 'City',
+            value: parts[1],
+            selected: true,
+            icon: <MapPin className="h-4 w-4" />
+          });
+        } else if (parts.length === 1) {
+          components.push({
+            id: 'streetName',
+            label: 'Street Name',
+            value: parts[0],
+            selected: false,
+            icon: <MapPin className="h-4 w-4" />
+          });
+        }
+      }
     }
 
     return components;
