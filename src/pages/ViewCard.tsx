@@ -12,6 +12,7 @@ import { getCardTitle } from '@/utils/cardUtils';
 import CardRelationships from '@/components/CardRelationships';
 import BrandedCardDisplay from '@/components/BrandedCardDisplay';
 import GranularSharingDialog from '@/components/GranularSharingDialog';
+import MobileLayout from '@/components/MobileLayout';
 
 interface TemplateField {
   id: string;
@@ -233,80 +234,86 @@ const ViewCard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-4 flex items-center justify-center">
-        <div className="text-lg">Loading card...</div>
-      </div>
+      <MobileLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-lg">Loading card...</div>
+        </div>
+      </MobileLayout>
     );
   }
 
   if (!card) {
     return (
-      <div className="min-h-screen bg-gray-50 p-4 flex items-center justify-center">
-        <div className="text-lg">Card not found</div>
-      </div>
+      <MobileLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-lg">Card not found</div>
+        </div>
+      </MobileLayout>
     );
   }
 
   const sortedFields = card.template.fields.sort((a, b) => a.display_order - b.display_order);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8 flex items-center justify-between">
-          <Button variant="outline" onClick={() => navigate('/cards')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Cards
-          </Button>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setShowGranularSharing(true)}>
-              <Share2 className="h-4 w-4 mr-2" />
-              Share Card
+    <MobileLayout>
+      <div className="p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-8 flex items-center justify-between">
+            <Button variant="outline" onClick={() => navigate('/cards')}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Cards
             </Button>
-            <Button onClick={handleEdit}>
-              <Edit className="h-4 w-4 mr-2" />
-              Edit Card
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setShowGranularSharing(true)}>
+                <Share2 className="h-4 w-4 mr-2" />
+                Share Card
+              </Button>
+              <Button onClick={handleEdit}>
+                <Edit className="h-4 w-4 mr-2" />
+                Edit Card
+              </Button>
+            </div>
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <BrandedCardDisplay 
-              card={card} 
-              cardType={card.template.name}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <BrandedCardDisplay 
+                card={card} 
+                cardType={card.template.name}
+              />
+            </div>
+
+            <div>
+              {card.template.transaction_code === 'S' && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Share2 className="h-4 w-4" />
+                      Card Relationships
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center text-muted-foreground py-4">
+                      Relationships will be shown here once sharing is implemented
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </div>
+          
+          {card && (
+            <GranularSharingDialog
+              open={showGranularSharing}
+              onOpenChange={setShowGranularSharing}
+              card={card}
+              onShare={handleGranularShare}
+              isSharing={isSharing}
             />
-          </div>
-
-          <div>
-            {card.template.transaction_code === 'S' && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Share2 className="h-4 w-4" />
-                    Card Relationships
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center text-muted-foreground py-4">
-                    Relationships will be shown here once sharing is implemented
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+          )}
         </div>
-        
-        {card && (
-          <GranularSharingDialog
-            open={showGranularSharing}
-            onOpenChange={setShowGranularSharing}
-            card={card}
-            onShare={handleGranularShare}
-            isSharing={isSharing}
-          />
-        )}
       </div>
-    </div>
+    </MobileLayout>
   );
 };
 

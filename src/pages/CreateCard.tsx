@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import CardForm from '@/components/CardForm';
 import { createCardFromStandardTemplate } from '@/utils/standardTemplateUtils';
+import MobileLayout from '@/components/MobileLayout';
 
 interface TemplateField {
   id: string;
@@ -215,39 +216,41 @@ const CreateCard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-4 flex items-center justify-center">
-        <div className="text-lg">Loading template...</div>
-      </div>
+      <MobileLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-lg">Loading template...</div>
+        </div>
+      </MobileLayout>
     );
   }
 
   if (!template) {
     return (
-      <div className="min-h-screen bg-gray-50 p-4 flex items-center justify-center">
-        <div className="text-lg">Template not found</div>
-      </div>
+      <MobileLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-lg">Template not found</div>
+        </div>
+      </MobileLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="h-screen overflow-y-auto">
-        <div className="container mx-auto px-4 py-8 max-w-4xl">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Create New Card</h1>
-            <p className="text-gray-600">Creating: {template.name}</p>
-          </div>
+    <MobileLayout>
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-foreground mb-2">Create New Card</h1>
+          <p className="text-muted-foreground">Creating: {template.name}</p>
+        </div>
 
-          <div className="pb-16">
-            <CardForm
-              template={template}
-              onSubmit={handleCreateCard}
-              isEditing={false}
-            />
-          </div>
+        <div className="pb-16">
+          <CardForm
+            template={template}
+            onSubmit={handleCreateCard}
+            isEditing={false}
+          />
         </div>
       </div>
-    </div>
+    </MobileLayout>
   );
 };
 

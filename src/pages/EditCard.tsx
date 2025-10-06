@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import CardForm from '@/components/CardForm';
 import { getCardTitle } from '@/utils/cardUtils';
+import MobileLayout from '@/components/MobileLayout';
 
 interface TemplateField {
   id: string;
@@ -199,17 +200,21 @@ const EditCard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-4 flex items-center justify-center">
-        <div className="text-lg">Loading card...</div>
-      </div>
+      <MobileLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-lg">Loading card...</div>
+        </div>
+      </MobileLayout>
     );
   }
 
   if (!card) {
     return (
-      <div className="min-h-screen bg-gray-50 p-4 flex items-center justify-center">
-        <div className="text-lg">Card not found</div>
-      </div>
+      <MobileLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-lg">Card not found</div>
+        </div>
+      </MobileLayout>
     );
   }
 
@@ -220,26 +225,24 @@ const EditCard = () => {
   }, {} as Record<string, string>);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="h-screen overflow-y-auto">
-        <div className="container mx-auto px-4 py-8 max-w-4xl">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Edit Card</h1>
-            <p className="text-gray-600">Editing: {getCardTitle(card)}</p>
-            <p className="text-sm text-gray-500">Card Type: {card.template.name}</p>
-          </div>
+    <MobileLayout>
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-foreground mb-2">Edit Card</h1>
+          <p className="text-muted-foreground">Editing: {getCardTitle(card)}</p>
+          <p className="text-sm text-muted-foreground">Card Type: {card.template.name}</p>
+        </div>
 
-          <div className="pb-16">
-            <CardForm
-              template={card.template}
-              onSubmit={handleSubmit}
-              initialValues={initialValues}
-              isEditing={true}
-            />
-          </div>
+        <div className="pb-16">
+          <CardForm
+            template={card.template}
+            onSubmit={handleSubmit}
+            initialValues={initialValues}
+            isEditing={true}
+          />
         </div>
       </div>
-    </div>
+    </MobileLayout>
   );
 };
 
