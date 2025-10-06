@@ -312,6 +312,59 @@ export type Database = {
           },
         ]
       }
+      card_merge_conflicts: {
+        Row: {
+          conflict_data: Json
+          conflict_type: string
+          created_at: string
+          id: string
+          losing_card_ids: string[]
+          person_id: string
+          resolution_strategy: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          updated_at: string
+          user_id: string
+          winning_card_id: string | null
+        }
+        Insert: {
+          conflict_data?: Json
+          conflict_type: string
+          created_at?: string
+          id?: string
+          losing_card_ids: string[]
+          person_id: string
+          resolution_strategy?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          updated_at?: string
+          user_id: string
+          winning_card_id?: string | null
+        }
+        Update: {
+          conflict_data?: Json
+          conflict_type?: string
+          created_at?: string
+          id?: string
+          losing_card_ids?: string[]
+          person_id?: string
+          resolution_strategy?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          updated_at?: string
+          user_id?: string
+          winning_card_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_merge_conflicts_winning_card_id_fkey"
+            columns: ["winning_card_id"]
+            isOneToOne: false
+            referencedRelation: "user_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       card_relationships: {
         Row: {
           card_id: string
@@ -432,6 +485,140 @@ export type Database = {
           },
         ]
       }
+      consent_receipts: {
+        Row: {
+          card_id: string | null
+          consent_action: string
+          created_at: string
+          evidence: Json | null
+          field_path: string | null
+          granted_at: string | null
+          id: string
+          ip_address: unknown | null
+          recipients: string[] | null
+          revoked_at: string | null
+          scope: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          card_id?: string | null
+          consent_action: string
+          created_at?: string
+          evidence?: Json | null
+          field_path?: string | null
+          granted_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          recipients?: string[] | null
+          revoked_at?: string | null
+          scope: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          card_id?: string | null
+          consent_action?: string
+          created_at?: string
+          evidence?: Json | null
+          field_path?: string | null
+          granted_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          recipients?: string[] | null
+          revoked_at?: string | null
+          scope?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consent_receipts_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "user_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      data_retention_policies: {
+        Row: {
+          archive_first: boolean | null
+          auto_delete: boolean | null
+          created_at: string
+          data_type: string
+          exceptions: Json | null
+          id: string
+          is_active: boolean | null
+          legal_basis: string
+          retention_period_days: number
+          updated_at: string
+        }
+        Insert: {
+          archive_first?: boolean | null
+          auto_delete?: boolean | null
+          created_at?: string
+          data_type: string
+          exceptions?: Json | null
+          id?: string
+          is_active?: boolean | null
+          legal_basis: string
+          retention_period_days: number
+          updated_at?: string
+        }
+        Update: {
+          archive_first?: boolean | null
+          auto_delete?: boolean | null
+          created_at?: string
+          data_type?: string
+          exceptions?: Json | null
+          id?: string
+          is_active?: boolean | null
+          legal_basis?: string
+          retention_period_days?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      data_subject_requests: {
+        Row: {
+          completed_at: string | null
+          created_by: string | null
+          id: string
+          legal_basis: string | null
+          metadata: Json | null
+          notes: string | null
+          request_type: string
+          requested_at: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_by?: string | null
+          id?: string
+          legal_basis?: string | null
+          metadata?: Json | null
+          notes?: string | null
+          request_type: string
+          requested_at?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_by?: string | null
+          id?: string
+          legal_basis?: string | null
+          metadata?: Json | null
+          notes?: string | null
+          request_type?: string
+          requested_at?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       demo_generation_jobs: {
         Row: {
           completed_at: string | null
@@ -481,6 +668,66 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      enhanced_audit_logs: {
+        Row: {
+          compliance_flags: Json | null
+          data_classification: string | null
+          id: string
+          ip_address: unknown | null
+          metadata: Json | null
+          new_values: Json | null
+          old_values: Json | null
+          operation: string
+          privacy_level: string | null
+          record_id: string | null
+          request_id: string | null
+          retention_policy: string | null
+          session_id: string | null
+          table_name: string
+          timestamp: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          compliance_flags?: Json | null
+          data_classification?: string | null
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          new_values?: Json | null
+          old_values?: Json | null
+          operation: string
+          privacy_level?: string | null
+          record_id?: string | null
+          request_id?: string | null
+          retention_policy?: string | null
+          session_id?: string | null
+          table_name: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          compliance_flags?: Json | null
+          data_classification?: string | null
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          new_values?: Json | null
+          old_values?: Json | null
+          operation?: string
+          privacy_level?: string | null
+          record_id?: string | null
+          request_id?: string | null
+          retention_policy?: string | null
+          session_id?: string | null
+          table_name?: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       family_card_templates: {
         Row: {
@@ -949,6 +1196,51 @@ export type Database = {
           },
         ]
       }
+      privacy_consents: {
+        Row: {
+          consent_type: string
+          context: string
+          evidence: string | null
+          granted: boolean
+          granted_at: string
+          id: string
+          ip_address: unknown | null
+          metadata: Json | null
+          revoked_at: string | null
+          user_agent: string | null
+          user_id: string
+          version: string
+        }
+        Insert: {
+          consent_type: string
+          context: string
+          evidence?: string | null
+          granted: boolean
+          granted_at?: string
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          revoked_at?: string | null
+          user_agent?: string | null
+          user_id: string
+          version?: string
+        }
+        Update: {
+          consent_type?: string
+          context?: string
+          evidence?: string | null
+          granted?: boolean
+          granted_at?: string
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          revoked_at?: string | null
+          user_agent?: string | null
+          user_id?: string
+          version?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           account_type: Database["public"]["Enums"]["account_type"]
@@ -1081,6 +1373,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      sharing_permissions: {
+        Row: {
+          conditions: Json | null
+          created_at: string
+          created_by: string
+          expires_at: string | null
+          granted: boolean
+          granted_to_role: string | null
+          granted_to_user_id: string | null
+          id: string
+          is_active: boolean | null
+          permission_type: string
+          resource_id: string
+          resource_type: string
+          updated_at: string
+        }
+        Insert: {
+          conditions?: Json | null
+          created_at?: string
+          created_by: string
+          expires_at?: string | null
+          granted?: boolean
+          granted_to_role?: string | null
+          granted_to_user_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          permission_type: string
+          resource_id: string
+          resource_type: string
+          updated_at?: string
+        }
+        Update: {
+          conditions?: Json | null
+          created_at?: string
+          created_by?: string
+          expires_at?: string | null
+          granted?: boolean
+          granted_to_role?: string | null
+          granted_to_user_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          permission_type?: string
+          resource_id?: string
+          resource_type?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       sharing_templates: {
         Row: {
@@ -1222,36 +1562,57 @@ export type Database = {
       user_cards: {
         Row: {
           card_code: string
+          card_type: string | null
+          consent: Json | null
           created_at: string
           family_role: string | null
           family_unit_id: string | null
+          field_policies: Json | null
           generation_level: number | null
           id: string
+          person_id: string | null
+          provenance: Json | null
+          quality: Json | null
           template_id: string
           updated_at: string
           user_id: string
+          version: string | null
         }
         Insert: {
           card_code: string
+          card_type?: string | null
+          consent?: Json | null
           created_at?: string
           family_role?: string | null
           family_unit_id?: string | null
+          field_policies?: Json | null
           generation_level?: number | null
           id?: string
+          person_id?: string | null
+          provenance?: Json | null
+          quality?: Json | null
           template_id: string
           updated_at?: string
           user_id: string
+          version?: string | null
         }
         Update: {
           card_code?: string
+          card_type?: string | null
+          consent?: Json | null
           created_at?: string
           family_role?: string | null
           family_unit_id?: string | null
+          field_policies?: Json | null
           generation_level?: number | null
           id?: string
+          person_id?: string | null
+          provenance?: Json | null
+          quality?: Json | null
           template_id?: string
           updated_at?: string
           user_id?: string
+          version?: string | null
         }
         Relationships: [
           {
@@ -1327,6 +1688,63 @@ export type Database = {
         }
         Relationships: []
       }
+      vcf_imports: {
+        Row: {
+          cards_created: string[] | null
+          completed_at: string | null
+          created_at: string
+          error_log: Json | null
+          failed_vcards: number | null
+          file_path: string | null
+          id: string
+          import_options: Json | null
+          import_source: string
+          merge_conflicts_created: string[] | null
+          processed_vcards: number | null
+          started_at: string | null
+          status: string
+          total_vcards: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cards_created?: string[] | null
+          completed_at?: string | null
+          created_at?: string
+          error_log?: Json | null
+          failed_vcards?: number | null
+          file_path?: string | null
+          id?: string
+          import_options?: Json | null
+          import_source: string
+          merge_conflicts_created?: string[] | null
+          processed_vcards?: number | null
+          started_at?: string | null
+          status?: string
+          total_vcards?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cards_created?: string[] | null
+          completed_at?: string | null
+          created_at?: string
+          error_log?: Json | null
+          failed_vcards?: number | null
+          file_path?: string | null
+          id?: string
+          import_options?: Json | null
+          import_source?: string
+          merge_conflicts_created?: string[] | null
+          processed_vcards?: number | null
+          started_at?: string | null
+          status?: string
+          total_vcards?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1335,6 +1753,10 @@ export type Database = {
       assign_admin_role: {
         Args: { target_user_id: string }
         Returns: boolean
+      }
+      check_data_retention_compliance: {
+        Args: { p_created_at: string; p_data_type: string }
+        Returns: Json
       }
       generate_card_code: {
         Args: Record<PropertyKey, never>
@@ -1358,6 +1780,18 @@ export type Database = {
       increment_qr_scan_count: {
         Args: { qr_code_id: string }
         Returns: undefined
+      }
+      log_enhanced_audit: {
+        Args: {
+          p_data_classification?: string
+          p_new_values?: Json
+          p_old_values?: Json
+          p_operation: string
+          p_privacy_level?: string
+          p_record_id?: string
+          p_table_name: string
+        }
+        Returns: string
       }
       log_merchant_interaction: {
         Args: {
