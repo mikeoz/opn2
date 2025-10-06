@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opnli.org/schemas/field_policy.schema.json",
+  "title": "Per-field Policy",
+  "type": "object",
+  "required": [
+    "path",
+    "scope"
+  ],
+  "properties": {
+    "path": {
+      "type": "string",
+      "description": "dotted path or JSONPath; e.g., data.dateOfBirth.year"
+    },
+    "scope": {
+      "type": "string",
+      "enum": [
+        "private",
+        "one_to_one",
+        "group",
+        "community",
+        "public",
+        "agent"
+      ]
+    },
+    "recipients": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "purpose": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "expires_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}
