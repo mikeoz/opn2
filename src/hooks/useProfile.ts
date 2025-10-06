@@ -3,6 +3,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+interface ProfilePhoto {
+  url: string;
+  is_primary: boolean;
+  uploaded_at: string;
+}
+
 interface Profile {
   id: string;
   username: string;
@@ -14,6 +20,7 @@ interface Profile {
   avatar_url?: string;
   logo_url?: string;
   guid: string;
+  profile_photos?: ProfilePhoto[];
 }
 
 export const useProfile = () => {
@@ -33,7 +40,15 @@ export const useProfile = () => {
         .single();
 
       if (error) throw error;
-      setProfile(data);
+      
+      // Parse profile_photos from JSON
+      const parsedData = {
+        ...data,
+        profile_photos: data.profile_photos 
+          ? (Array.isArray(data.profile_photos) ? data.profile_photos : JSON.parse(data.profile_photos as string))
+          : []
+      };
+      setProfile(parsedData as Profile);
     } catch (error) {
       console.error('Error fetching profile:', error);
       toast({
@@ -50,9 +65,15 @@ export const useProfile = () => {
     if (!user) return false;
 
     try {
+      // Convert profile_photos to JSON for storage if present
+      const dbUpdates = {
+        ...updates,
+        profile_photos: updates.profile_photos ? JSON.stringify(updates.profile_photos) : undefined
+      };
+
       const { error } = await supabase
         .from('profiles')
-        .update(updates)
+        .update(dbUpdates as any)
         .eq('id', user.id);
 
       if (error) throw error;
@@ -206,6 +227,136 @@ export const useProfile = () => {
     }
   };
 
+  const uploadProfilePhoto = async (file: File) => {
+    if (!user || !validateImageFile(file, 5)) return null;
+
+    try {
+      const photos = profile?.profile_photos || [];
+      
+      if (photos.length >= 5) {
+        toast({
+          title: "Maximum photos reached",
+          description: "You can only have up to 5 profile photos.",
+          variant: "destructive"
+        });
+        return null;
+      }
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/photos/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, { upsert: false });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      const newPhoto: ProfilePhoto = {
+        url: data.publicUrl,
+        is_primary: photos.length === 0,
+        uploaded_at: new Date().toISOString()
+      };
+
+      const updatedPhotos = [...photos, newPhoto];
+      await updateProfile({ profile_photos: updatedPhotos });
+
+      toast({
+        title: "Success",
+        description: "Photo uploaded successfully"
+      });
+
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Error uploading profile photo:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload photo",
+        variant: "destructive"
+      });
+      return null;
+    }
+  };
+
+  const deleteProfilePhoto = async (photoUrl: string) => {
+    if (!user) return false;
+
+    try {
+      const photos = profile?.profile_photos || [];
+      const photoToDelete = photos.find(p => p.url === photoUrl);
+      
+      if (!photoToDelete) return false;
+
+      // Extract file path from URL
+      const urlParts = photoToDelete.url.split('/');
+      const filePath = `${user.id}/photos/${urlParts[urlParts.length - 1]}`;
+
+      // Delete from storage
+      const { error: deleteError } = await supabase.storage
+        .from('avatars')
+        .remove([filePath]);
+
+      if (deleteError) throw deleteError;
+
+      // Update profile photos array
+      let updatedPhotos = photos.filter(p => p.url !== photoUrl);
+      
+      // If deleted photo was primary, make the first photo primary
+      if (photoToDelete.is_primary && updatedPhotos.length > 0) {
+        updatedPhotos[0].is_primary = true;
+      }
+
+      await updateProfile({ profile_photos: updatedPhotos });
+
+      toast({
+        title: "Success",
+        description: "Photo deleted successfully"
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error deleting profile photo:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete photo",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
+  const setPrimaryPhoto = async (photoUrl: string) => {
+    if (!user) return false;
+
+    try {
+      const photos = profile?.profile_photos || [];
+      const updatedPhotos = photos.map(photo => ({
+        ...photo,
+        is_primary: photo.url === photoUrl
+      }));
+
+      await updateProfile({ profile_photos: updatedPhotos });
+
+      toast({
+        title: "Success",
+        description: "Primary photo updated"
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error setting primary photo:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update primary photo",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
   useEffect(() => {
     fetchProfile();
   }, [user]);
@@ -217,6 +368,9 @@ export const useProfile = () => {
     uploadAvatar,
     uploadLogo,
     changePassword,
+    uploadProfilePhoto,
+    deleteProfilePhoto,
+    setPrimaryPhoto,
     refetch: fetchProfile
   };
 };

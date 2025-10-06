@@ -1255,6 +1255,7 @@ export type Database = {
           last_name: string | null
           logo_url: string | null
           organization_name: string | null
+          profile_photos: Json | null
           updated_at: string
           username: string | null
         }
@@ -1271,6 +1272,7 @@ export type Database = {
           last_name?: string | null
           logo_url?: string | null
           organization_name?: string | null
+          profile_photos?: Json | null
           updated_at?: string
           username?: string | null
         }
@@ -1287,6 +1289,7 @@ export type Database = {
           last_name?: string | null
           logo_url?: string | null
           organization_name?: string | null
+          profile_photos?: Json | null
           updated_at?: string
           username?: string | null
         }

@@ -14,9 +14,19 @@ import OrganizationManagement from '@/components/OrganizationManagement';
 import { useProfile } from '@/hooks/useProfile';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useToast } from '@/hooks/use-toast';
+import { ProfilePhotoManager } from '@/components/ProfilePhotoManager';
 
 const Profile = () => {
-  const { profile, loading, updateProfile, uploadAvatar, changePassword } = useProfile();
+  const { 
+    profile, 
+    loading, 
+    updateProfile, 
+    uploadAvatar, 
+    changePassword,
+    uploadProfilePhoto,
+    deleteProfilePhoto,
+    setPrimaryPhoto
+  } = useProfile();
   const { isAdmin } = useUserRole();
   const { toast } = useToast();
   
@@ -141,8 +151,9 @@ const Profile = () => {
         </div>
 
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className={`grid w-full ${profile.account_type === 'non_individual' ? 'grid-cols-4' : 'grid-cols-2'}`}>
+          <TabsList className={`grid w-full ${profile.account_type === 'non_individual' ? 'grid-cols-5' : 'grid-cols-3'}`}>
             <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsTrigger value="photos">Photos</TabsTrigger>
             <TabsTrigger value="security">Security</TabsTrigger>
             {profile.account_type === 'non_individual' && (
               <>
@@ -291,6 +302,25 @@ const Profile = () => {
                     Save Changes
                   </Button>
                 )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="photos" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Camera className="h-5 w-5" />
+                  Profile Photos
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ProfilePhotoManager
+                  photos={profile.profile_photos || []}
+                  onUpload={uploadProfilePhoto}
+                  onDelete={deleteProfilePhoto}
+                  onSetPrimary={setPrimaryPhoto}
+                />
               </CardContent>
             </Card>
           </TabsContent>
