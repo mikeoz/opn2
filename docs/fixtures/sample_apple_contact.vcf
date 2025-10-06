@@ -1,0 +1,17 @@
+BEGIN:VCARD
+VERSION:3.0
+FN:Dr. John Quincy Public, Jr.
+N:Public;John;Quincy;Dr.;Jr.
+TEL;TYPE=CELL;PREF=1:(555) 222-3333
+item1.TEL:(555) 111-2222
+item1.X-ABLabel:iPhone
+EMAIL;TYPE=WORK;PREF=1:john.public@example.com
+item2.X-ABRELATEDNAMES:Mary Public
+item2.X-ABLabel:Mother
+BDAY:2017-09-15
+item3.X-ABDATE:2010-01-01
+item3.X-ABLabel:Anniversary
+item4.ADR;TYPE=HOME:;;123 Main St Apt 5;Smallville;TX;75001;US
+item4.X-ABADR:US
+item4.X-APPLE-SUBLOCALITY:Downtown
+END:VCARD

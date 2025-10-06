@@ -1,0 +1,60 @@
+
+version: 1
+source: vcard_3_apple
+targets:
+  personal_identity_card:
+    FN: data.fullName
+    N.family: data.lastName
+    N.given: data.firstName
+    N.additional: data.middleName
+    N.prefix: data.prefix
+    N.suffix: data.suffix
+    NICKNAME: data.nickname
+    BDAY: data.dateOfBirth (YYYY-MM-DD -> split {year,month,day})
+    X-PHONETIC-FIRST-NAME: data.phoneticFirstName
+    X-PHONETIC-LAST-NAME: data.phoneticLastName
+    PHOTO: data.photo.uri
+  addressCARD[*]:
+    ADR.POBOX: ignore
+    ADR.EXT: data.unit
+    ADR.STREET: data.streetName (parse -> streetNumber, streetName, unit)
+    ADR.LOCALITY: data.city
+    ADR.REGION: data.state
+    ADR.POSTCODE: data.postalCode
+    ADR.COUNTRY: data.country
+    itemN.X-ABADR: data.country (ISO-2)
+    itemN.X-APPLE-SUBLOCALITY: data.sublocality
+    GEO: data.geoLatLon (split)
+  phoneCARD[*]:
+    TEL.value: data.number_raw
+    TEL.TYPE: data.phone_type (fallback -> custom_label)
+    itemN.X-ABLabel: data.custom_label
+    PREF: data.preferred
+    normalize:
+      - e164 from number_raw with region derived from address.country
+      - nanp parts -> areaCode, exchange, lineNumber
+  emailCARD[*]:
+    EMAIL.value: data.address
+    EMAIL.TYPE: data.email_type (fallback -> custom_label)
+    itemN.X-ABLabel: data.custom_label
+    PREF: data.preferred
+    normalize:
+      - lowercase domain; split username/domain
+  relationshipCARD[*]:
+    itemN.X-ABRELATEDNAMES: data.targetDisplay
+    itemN.X-ABLabel: data.kind
+  dateCARD[*]:
+    itemN.X-ABDATE: data.value
+    itemN.X-ABLabel: data.kind  # expect 'Anniversary' -> 'anniversary'
+  socialmediaCARD[*]:
+    X-SOCIALPROFILE.type: data.service
+    X-SOCIALPROFILE.username: data.handle
+    X-SOCIALPROFILE.url: data.url
+  calendar_card:
+    FBURL: data.freeBusyUrl
+    CALURI: data.calendarUrl
+    CALADRURI: data.schedulingAddress
+provenance:
+  source_system: apple_vcard_3.0
+  import_kind: vcf_upload
+merge_precedence: [self_asserted, invite_update, first_party, third_party]
