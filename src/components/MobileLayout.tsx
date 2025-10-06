@@ -26,9 +26,9 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
   return (
     <div className="fixed inset-0 bg-background flex flex-col">
       {/* Top Bar - Fixed at top */}
-      <header className="h-16 bg-primary text-primary-foreground px-4 py-2 flex items-center justify-between flex-shrink-0 z-10">
+      <header className="h-16 bg-primary text-primary-foreground px-4 py-3 pb-4 flex items-center justify-between flex-shrink-0 z-10">
         <div className="flex-1">
-          <h1 className="text-lg font-bold">Opnli Community Directory</h1>
+          <h1 className="text-lg font-bold">Opn2</h1>
           <p className="text-sm opacity-90">{user?.email}</p>
         </div>
         <div className="flex items-center gap-2">
