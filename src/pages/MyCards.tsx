@@ -354,49 +354,6 @@ const MyCards = () => {
           )}
         </div>
 
-        {/* Available Templates */}
-        {availableTemplates.length > 0 && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Plus className="h-5 w-5 text-accent" />
-                Add New Card
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {availableTemplates.map((template) => (
-                  <div
-                    key={template.id}
-                    className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-medium">{template.name}</h3>
-                        {template.type === 'admin' && (
-                          <Badge variant="secondary" className="text-xs">
-                            {template.name === 'Organization' ? 'Organization' : 'Admin'}
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-muted-foreground">{template.description}</p>
-                    </div>
-                    <Button
-                      asChild
-                      size="sm"
-                      className={`ml-4 ${template.name === 'Organization' ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
-                    >
-                      <Link to={`/cards/create/${template.id}`}>
-                        <Plus className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         {/* User Cards List */}
         <Card>
           <CardHeader>
@@ -452,6 +409,49 @@ const MyCards = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Available Templates */}
+        {availableTemplates.length > 0 && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Plus className="h-5 w-5 text-accent" />
+                Add New Card
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {availableTemplates.map((template) => (
+                  <div
+                    key={template.id}
+                    className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-medium">{template.name}</h3>
+                        {template.type === 'admin' && (
+                          <Badge variant="secondary" className="text-xs">
+                            {template.name === 'Organization' ? 'Organization' : 'Admin'}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground">{template.description}</p>
+                    </div>
+                    <Button
+                      asChild
+                      size="sm"
+                      className={`ml-4 ${template.name === 'Organization' ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
+                    >
+                      <Link to={`/cards/create/${template.id}`}>
+                        <Plus className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {selectedCardForSharing && (
           <GranularSharingDialog
