@@ -26,6 +26,9 @@ import MerchantOnboardingWizard from "./components/MerchantOnboardingWizard";
 import DemoDataGenerator from './pages/DemoDataGenerator';
 import CustomerInvitations from './pages/CustomerInvitations';
 import FamilyManagement from './pages/FamilyManagement';
+import Groups from './pages/Groups';
+import Feeds from './pages/Feeds';
+import Peeps from './pages/Peeps';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -90,6 +93,21 @@ const App = () => (
            <Route path="/family-management" element={
              <ProtectedRoute>
                <FamilyManagement />
+             </ProtectedRoute>
+           } />
+           <Route path="/groups" element={
+             <ProtectedRoute>
+               <Groups />
+             </ProtectedRoute>
+           } />
+           <Route path="/feeds" element={
+             <ProtectedRoute>
+               <Feeds />
+             </ProtectedRoute>
+           } />
+           <Route path="/peeps" element={
+             <ProtectedRoute>
+               <Peeps />
              </ProtectedRoute>
            } />
           <Route path="/profile" element={

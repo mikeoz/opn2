@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Home, LogOut, Users, CreditCard, Plus, Share2, Eye, User, Settings, Upload } from 'lucide-react';
+import { Home, LogOut, CreditCard, BookUser, UsersRound, Rss, Sparkles, User, Settings, Upload } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -94,61 +94,61 @@ const MobileLayout: React.FC<MobileLayoutProps> = ({ children }) => {
         {children}
       </main>
 
-      {/* Bottom Bar - Fixed at bottom */}
-      <nav className="h-16 bg-card border-t border-border flex items-center justify-around px-2 flex-shrink-0 z-10">
+      {/* Bottom Bar - Fixed at bottom - 5 Main Navigation Icons */}
+      <nav className="h-20 bg-card border-t border-border flex items-center justify-around px-1 flex-shrink-0 z-10">
         <Button
           variant="ghost"
           size="sm"
-          className="flex-col h-full gap-1 text-xs"
+          className="flex-col h-full gap-0.5 text-xs flex-1 hover:bg-muted"
+          asChild
+        >
+          <Link to="/cards">
+            <CreditCard className="h-6 w-6" />
+            <span className="text-[10px]">Profile</span>
+          </Link>
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="flex-col h-full gap-0.5 text-xs flex-1 hover:bg-muted"
           asChild
         >
           <Link to="/directory">
-            <Users className="h-5 w-5" />
-            Directory
+            <BookUser className="h-6 w-6" />
+            <span className="text-[10px]">Catalog</span>
           </Link>
         </Button>
         <Button
           variant="ghost"
           size="sm"
-          className="flex-col h-full gap-1 text-xs"
+          className="flex-col h-full gap-0.5 text-xs flex-1 hover:bg-muted"
           asChild
         >
-          <Link to="/cards">
-            <CreditCard className="h-5 w-5" />
-            My Cards
+          <Link to="/groups">
+            <UsersRound className="h-6 w-6" />
+            <span className="text-[10px]">Groups</span>
           </Link>
         </Button>
         <Button
           variant="ghost"
           size="sm"
-          className="flex-col h-full gap-1 text-xs bg-accent text-accent-foreground hover:bg-accent/80"
+          className="flex-col h-full gap-0.5 text-xs flex-1 hover:bg-muted"
           asChild
         >
-          <Link to="/cards">
-            <Plus className="h-5 w-5" />
-            Add
+          <Link to="/feeds">
+            <Rss className="h-6 w-6" />
+            <span className="text-[10px]">Feeds</span>
           </Link>
         </Button>
         <Button
           variant="ghost"
           size="sm"
-          className="flex-col h-full gap-1 text-xs"
+          className="flex-col h-full gap-0.5 text-xs flex-1 hover:bg-muted"
           asChild
         >
-          <Link to="/cards">
-            <Share2 className="h-5 w-5" />
-            Share
-          </Link>
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="flex-col h-full gap-1 text-xs"
-          asChild
-        >
-          <Link to="/cards">
-            <Eye className="h-5 w-5" />
-            Views
+          <Link to="/peeps">
+            <Sparkles className="h-6 w-6" />
+            <span className="text-[10px]">Peeps</span>
           </Link>
         </Button>
       </nav>
