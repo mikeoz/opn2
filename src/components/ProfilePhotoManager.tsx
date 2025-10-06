@@ -26,12 +26,10 @@ export const ProfilePhotoManager = ({
   maxPhotos = 5
 }: ProfilePhotoManagerProps) => {
   const [uploading, setUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const { toast } = useToast();
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const validateAndUploadFile = async (file: File) => {
     if (photos.length >= maxPhotos) {
       toast({
         title: "Maximum photos reached",
@@ -44,7 +42,7 @@ export const ProfilePhotoManager = ({
     if (!file.type.startsWith('image/')) {
       toast({
         title: "Invalid file type",
-        description: "Please upload an image file.",
+        description: "Please upload an image file (JPG, PNG).",
         variant: "destructive"
       });
       return;
@@ -64,8 +62,38 @@ export const ProfilePhotoManager = ({
       await onUpload(file);
     } finally {
       setUploading(false);
-      e.target.value = '';
     }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    await validateAndUploadFile(file);
+    e.target.value = '';
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+
+    await validateAndUploadFile(file);
   };
 
   return (
@@ -107,18 +135,31 @@ export const ProfilePhotoManager = ({
         ))}
 
         {photos.length < maxPhotos && (
-          <Card className="border-2 border-dashed hover:border-primary transition-colors cursor-pointer">
+          <Card 
+            className={`border-2 border-dashed transition-all cursor-pointer ${
+              isDragging 
+                ? 'border-primary bg-primary/10 scale-105' 
+                : 'border-muted-foreground/25 hover:border-primary'
+            }`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
             <label className="aspect-square flex flex-col items-center justify-center gap-2 cursor-pointer p-4">
-              <Upload className="w-8 h-8 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground text-center">
-                {uploading ? 'Uploading...' : 'Upload Photo'}
+              <Upload className={`w-8 h-8 transition-colors ${
+                isDragging ? 'text-primary' : 'text-muted-foreground'
+              }`} />
+              <span className={`text-sm text-center font-medium transition-colors ${
+                isDragging ? 'text-primary' : 'text-muted-foreground'
+              }`}>
+                {uploading ? 'Uploading...' : isDragging ? 'Drop image here' : 'Drag & drop or click'}
               </span>
               <span className="text-xs text-muted-foreground">
-                {photos.length}/{maxPhotos}
+                {photos.length}/{maxPhotos} • JPG, PNG • Max 5MB
               </span>
               <input
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/jpg,image/png"
                 onChange={handleFileChange}
                 disabled={uploading}
                 className="hidden"
