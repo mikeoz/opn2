@@ -9,11 +9,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Upload, FileText, Image, Building2, Users } from 'lucide-react';
+import { Upload, FileText, Image, Building2, Users, Loader2, X } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useProfile } from '@/hooks/useProfile';
 import { useFamilyUnits } from '@/hooks/useFamilyUnits';
 import { useFamilyCardTemplates } from '@/hooks/useFamilyCardTemplates';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+
 
 interface TemplateField {
   id: string;
@@ -52,8 +55,11 @@ const CardForm: React.FC<CardFormProps> = ({
   familyContext 
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadingFields, setUploadingFields] = useState<Set<string>>(new Set());
+  const [draggingFields, setDraggingFields] = useState<Set<string>>(new Set());
   const { toast } = useToast();
   const { profile } = useProfile();
+  const { user } = useAuth();
   const { familyUnits } = useFamilyUnits();
   const { getTemplatesForContext } = useFamilyCardTemplates();
   const form = useForm({
@@ -105,8 +111,124 @@ const CardForm: React.FC<CardFormProps> = ({
     }
   };
 
+  const uploadFile = async (file: File, fieldId: string): Promise<string> => {
+    if (!user) throw new Error('User not authenticated');
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      throw new Error('File size must be less than 5MB');
+    }
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user.id}/${fieldId}/${Date.now()}.${fileExt}`;
+
+    const { data, error } = await supabase.storage
+      .from('card-fields')
+      .upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if (error) throw error;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('card-fields')
+      .getPublicUrl(data.path);
+
+    return publicUrl;
+  };
+
+  const handleFileUpload = async (file: File, fieldId: string) => {
+    const fieldKey = `field_${fieldId}`;
+    
+    setUploadingFields(prev => new Set(prev).add(fieldId));
+    
+    try {
+    const url = await uploadFile(file, fieldId);
+      (form.setValue as any)(fieldKey, url);
+      
+      toast({
+        title: "File uploaded",
+        description: `${file.name} has been uploaded successfully.`,
+      });
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      toast({
+        title: "Upload failed",
+        description: error instanceof Error ? error.message : "Failed to upload file. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingFields(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(fieldId);
+        return newSet;
+      });
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent, fieldId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDraggingFields(prev => new Set(prev).add(fieldId));
+  };
+
+  const handleDragLeave = (e: React.DragEvent, fieldId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDraggingFields(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(fieldId);
+      return newSet;
+    });
+  };
+
+  const handleDrop = async (e: React.DragEvent, fieldId: string, fieldType: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    setDraggingFields(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(fieldId);
+      return newSet;
+    });
+
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (fieldType === 'image') {
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Invalid file type",
+          description: "Please upload an image file (JPG, PNG, GIF, WebP).",
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+
+    await handleFileUpload(file, fieldId);
+  };
+
+  const handleFileInputChange = async (e: React.ChangeEvent<HTMLInputElement>, fieldId: string) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    await handleFileUpload(file, fieldId);
+    e.target.value = ''; // Reset input
+  };
+
+  const clearFileField = (fieldId: string) => {
+    const fieldKey = `field_${fieldId}`;
+    (form.setValue as any)(fieldKey, '');
+  };
+
+
   const renderField = (field: TemplateField) => {
     const fieldKey = `field_${field.id}` as any;
+    const isUploading = uploadingFields.has(field.id);
+    const isDragging = draggingFields.has(field.id);
     
     return (
       <FormField
@@ -141,20 +263,85 @@ const CardForm: React.FC<CardFormProps> = ({
                   />
                 )
               ) : (
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                  <Upload className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                  <p className="text-sm text-gray-600">
-                    {field.field_type === 'image' ? 'Upload image' : 'Upload document'}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    File upload functionality coming soon
-                  </p>
-                  <Input
-                    type="text"
-                    placeholder="Enter file URL for now"
-                    className="mt-2"
-                    {...formField}
-                  />
+                <div>
+                  <div 
+                    className={`relative border-2 border-dashed rounded-lg p-6 text-center transition-all ${
+                      isDragging 
+                        ? 'border-primary bg-primary/10 scale-105' 
+                        : formField.value
+                        ? 'border-green-500 bg-green-50'
+                        : 'border-muted-foreground/25 hover:border-primary'
+                    }`}
+                    onDragOver={(e) => handleDragOver(e, field.id)}
+                    onDragLeave={(e) => handleDragLeave(e, field.id)}
+                    onDrop={(e) => handleDrop(e, field.id, field.field_type)}
+                  >
+                    {isUploading ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <p className="text-sm text-muted-foreground">Uploading...</p>
+                      </div>
+                    ) : formField.value ? (
+                      <div className="space-y-3">
+                        {field.field_type === 'image' && (
+                          <img 
+                            src={formField.value} 
+                            alt="Uploaded" 
+                            className="max-h-40 mx-auto rounded-lg object-contain"
+                          />
+                        )}
+                        <div className="flex items-center justify-center gap-2">
+                          <a 
+                            href={formField.value} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-sm text-primary hover:underline truncate max-w-xs"
+                          >
+                            View {field.field_type}
+                          </a>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => clearFileField(field.id)}
+                            className="h-6 w-6 p-0"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <Upload className={`h-8 w-8 mx-auto mb-2 transition-colors ${
+                          isDragging ? 'text-primary' : 'text-muted-foreground'
+                        }`} />
+                        <p className={`text-sm font-medium transition-colors ${
+                          isDragging ? 'text-primary' : 'text-foreground'
+                        }`}>
+                          {isDragging ? 'Drop file here' : 'Drag & drop or click to upload'}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {field.field_type === 'image' ? 'JPG, PNG, GIF, WebP' : 'PDF, DOC, etc.'} • Max 5MB
+                        </p>
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      accept={field.field_type === 'image' ? 'image/*' : '*'}
+                      onChange={(e) => handleFileInputChange(e, field.id)}
+                      disabled={isUploading}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                    />
+                  </div>
+                  {formField.value && (
+                    <Input
+                      type="text"
+                      value={formField.value}
+                      onChange={formField.onChange}
+                      placeholder="Or enter URL directly"
+                      className="mt-2"
+                    />
+                  )}
                 </div>
               )}
             </FormControl>
