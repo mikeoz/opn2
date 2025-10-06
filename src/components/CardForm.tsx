@@ -333,15 +333,6 @@ const CardForm: React.FC<CardFormProps> = ({
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
                     />
                   </div>
-                  {formField.value && (
-                    <Input
-                      type="text"
-                      value={formField.value}
-                      onChange={formField.onChange}
-                      placeholder="Or enter URL directly"
-                      className="mt-2"
-                    />
-                  )}
                 </div>
               )}
             </FormControl>
