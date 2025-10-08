@@ -9,11 +9,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Upload, FileText, Image, Building2, Users, Loader2, X } from 'lucide-react';
+import { Upload, FileText, Image as ImageIcon, Building2, Users, Loader2, X } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useProfile } from '@/hooks/useProfile';
 import { useFamilyUnits } from '@/hooks/useFamilyUnits';
 import { useFamilyCardTemplates } from '@/hooks/useFamilyCardTemplates';
+import { PhotoSelector } from '@/components/PhotoSelector';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -57,6 +58,8 @@ const CardForm: React.FC<CardFormProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadingFields, setUploadingFields] = useState<Set<string>>(new Set());
   const [draggingFields, setDraggingFields] = useState<Set<string>>(new Set());
+  const [photoSelectorOpen, setPhotoSelectorOpen] = useState(false);
+  const [currentImageFieldId, setCurrentImageFieldId] = useState<string | null>(null);
   const { toast } = useToast();
   const { profile } = useProfile();
   const { user } = useAuth();
@@ -224,6 +227,19 @@ const CardForm: React.FC<CardFormProps> = ({
     (form.setValue as any)(fieldKey, '');
   };
 
+  const handlePhotoSelect = (photoUrl: string) => {
+    if (currentImageFieldId) {
+      const fieldKey = `field_${currentImageFieldId}`;
+      (form.setValue as any)(fieldKey, photoUrl);
+      setCurrentImageFieldId(null);
+    }
+  };
+
+  const openPhotoSelector = (fieldId: string) => {
+    setCurrentImageFieldId(fieldId);
+    setPhotoSelectorOpen(true);
+  };
+
 
   const renderField = (field: TemplateField) => {
     const fieldKey = `field_${field.id}` as any;
@@ -242,7 +258,7 @@ const CardForm: React.FC<CardFormProps> = ({
           <FormItem>
             <FormLabel className="flex items-center gap-2">
               {field.field_type === 'string' && <FileText className="h-4 w-4" />}
-              {field.field_type === 'image' && <Image className="h-4 w-4" />}
+              {field.field_type === 'image' && <ImageIcon className="h-4 w-4" />}
               {field.field_type === 'document' && <Upload className="h-4 w-4" />}
               {field.field_name}
               {field.is_required && <span className="text-red-500">*</span>}
@@ -281,7 +297,7 @@ const CardForm: React.FC<CardFormProps> = ({
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
                         <p className="text-sm text-muted-foreground">Uploading...</p>
                       </div>
-                    ) : formField.value ? (
+                     ) : formField.value ? (
                       <div className="space-y-3">
                         {field.field_type === 'image' && (
                           <img 
@@ -309,9 +325,21 @@ const CardForm: React.FC<CardFormProps> = ({
                             <X className="h-4 w-4" />
                           </Button>
                         </div>
+                        {field.field_type === 'image' && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openPhotoSelector(field.id)}
+                            className="w-full"
+                          >
+                            <ImageIcon className="h-4 w-4 mr-2" />
+                            Choose Different Photo
+                          </Button>
+                        )}
                       </div>
                     ) : (
-                      <>
+                      <div className="space-y-3">
                         <Upload className={`h-8 w-8 mx-auto mb-2 transition-colors ${
                           isDragging ? 'text-primary' : 'text-muted-foreground'
                         }`} />
@@ -320,10 +348,34 @@ const CardForm: React.FC<CardFormProps> = ({
                         }`}>
                           {isDragging ? 'Drop file here' : 'Drag & drop or click to upload'}
                         </p>
-                        <p className="text-xs text-muted-foreground mt-1">
+                        <p className="text-xs text-muted-foreground">
                           {field.field_type === 'image' ? 'JPG, PNG, GIF, WebP' : 'PDF, DOC, etc.'} • Max 5MB
                         </p>
-                      </>
+                        {field.field_type === 'image' && (
+                          <>
+                            <div className="relative">
+                              <div className="absolute inset-0 flex items-center">
+                                <span className="w-full border-t" />
+                              </div>
+                              <div className="relative flex justify-center text-xs uppercase">
+                                <span className="bg-background px-2 text-muted-foreground">
+                                  Or
+                                </span>
+                              </div>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openPhotoSelector(field.id)}
+                              className="w-full"
+                            >
+                              <ImageIcon className="h-4 w-4 mr-2" />
+                              Choose from Profile Photos
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     )}
                     <input
                       type="file"
@@ -531,6 +583,14 @@ const CardForm: React.FC<CardFormProps> = ({
           </form>
         </Form>
       </CardContent>
+
+      {/* Photo Selector Dialog */}
+      <PhotoSelector
+        open={photoSelectorOpen}
+        onOpenChange={setPhotoSelectorOpen}
+        onSelect={handlePhotoSelect}
+        currentPhotoUrl={currentImageFieldId ? form.getValues(`field_${currentImageFieldId}` as any) : undefined}
+      />
     </Card>
   );
 };

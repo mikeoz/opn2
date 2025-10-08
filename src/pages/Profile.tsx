@@ -25,7 +25,8 @@ const Profile = () => {
     changePassword,
     uploadProfilePhoto,
     deleteProfilePhoto,
-    setPrimaryPhoto
+    setPrimaryPhoto,
+    updatePhotoMetadata
   } = useProfile();
   const { isAdmin } = useUserRole();
   const { toast } = useToast();
@@ -320,6 +321,7 @@ const Profile = () => {
                   onUpload={uploadProfilePhoto}
                   onDelete={deleteProfilePhoto}
                   onSetPrimary={setPrimaryPhoto}
+                  onUpdateMetadata={updatePhotoMetadata}
                 />
               </CardContent>
             </Card>

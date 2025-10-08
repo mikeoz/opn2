@@ -7,6 +7,8 @@ interface ProfilePhoto {
   url: string;
   is_primary: boolean;
   uploaded_at: string;
+  use_for: string[]; // ['profile', 'identity_card', 'both']
+  description?: string; // Optional description
 }
 
 interface Profile {
@@ -258,7 +260,9 @@ export const useProfile = () => {
       const newPhoto: ProfilePhoto = {
         url: data.publicUrl,
         is_primary: photos.length === 0,
-        uploaded_at: new Date().toISOString()
+        uploaded_at: new Date().toISOString(),
+        use_for: ['both'], // Default to both profile and cards
+        description: ''
       };
 
       const updatedPhotos = [...photos, newPhoto];
@@ -338,7 +342,14 @@ export const useProfile = () => {
         is_primary: photo.url === photoUrl
       }));
 
-      await updateProfile({ profile_photos: updatedPhotos });
+      // Update avatar_url to match primary photo
+      const primaryPhoto = updatedPhotos.find(p => p.is_primary);
+      const updateData: any = { profile_photos: updatedPhotos };
+      if (primaryPhoto) {
+        updateData.avatar_url = primaryPhoto.url;
+      }
+
+      await updateProfile(updateData);
 
       toast({
         title: "Success",
@@ -351,6 +362,36 @@ export const useProfile = () => {
       toast({
         title: "Error",
         description: "Failed to update primary photo",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
+  const updatePhotoMetadata = async (photoUrl: string, metadata: Partial<Pick<ProfilePhoto, 'use_for' | 'description'>>) => {
+    if (!user) return false;
+
+    try {
+      const photos = profile?.profile_photos || [];
+      const updatedPhotos = photos.map(photo =>
+        photo.url === photoUrl
+          ? { ...photo, ...metadata }
+          : photo
+      );
+
+      await updateProfile({ profile_photos: updatedPhotos });
+
+      toast({
+        title: "Success",
+        description: "Photo metadata updated"
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error updating photo metadata:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update photo metadata",
         variant: "destructive"
       });
       return false;
@@ -371,6 +412,7 @@ export const useProfile = () => {
     uploadProfilePhoto,
     deleteProfilePhoto,
     setPrimaryPhoto,
+    updatePhotoMetadata,
     refetch: fetchProfile
   };
 };
