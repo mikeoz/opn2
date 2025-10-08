@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, FileText, Image, Upload, Edit, Share2 } from 'lucide-react';
 import { getCardTitle } from '@/utils/cardUtils';
+import { migrateCardImageToProfilePhotos } from '@/utils/photoMigration';
 import CardRelationships from '@/components/CardRelationships';
 import BrandedCardDisplay from '@/components/BrandedCardDisplay';
 import GranularSharingDialog from '@/components/GranularSharingDialog';
@@ -156,6 +156,20 @@ const ViewCard = () => {
           field_type: fv.template_fields.field_type
         })) || []
       });
+
+      // Migrate any image fields to profile_photos
+      if (fieldValues && user) {
+        for (const fieldValue of fieldValues) {
+          if (fieldValue.template_fields.field_type === 'image' && fieldValue.value) {
+            // Migrate in background, don't block UI
+            migrateCardImageToProfilePhotos(
+              user.id, 
+              fieldValue.value, 
+              `${fieldValue.template_fields.field_name} from ${template.name}`
+            ).catch(err => console.error('Failed to migrate image:', err));
+          }
+        }
+      }
     } catch (error) {
       console.error('Error fetching card:', error);
       toast({

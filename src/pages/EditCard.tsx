@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import CardForm from '@/components/CardForm';
 import { getCardTitle } from '@/utils/cardUtils';
+import { migrateCardImageToProfilePhotos } from '@/utils/photoMigration';
 import MobileLayout from '@/components/MobileLayout';
 
 interface TemplateField {
@@ -134,6 +134,22 @@ const EditCard = () => {
         },
         field_values: fieldValues || []
       });
+
+      // Migrate any image fields to profile_photos
+      if (fieldValues && user) {
+        const imageFields = template.template_fields?.filter(f => f.field_type === 'image') || [];
+        for (const imageField of imageFields) {
+          const imageValue = fieldValues.find(fv => fv.template_field_id === imageField.id);
+          if (imageValue?.value) {
+            // Migrate in background, don't block UI
+            migrateCardImageToProfilePhotos(
+              user.id, 
+              imageValue.value, 
+              `${imageField.field_name} from ${template.name}`
+            ).catch(err => console.error('Failed to migrate image:', err));
+          }
+        }
+      }
     } catch (error) {
       console.error('Error fetching card:', error);
       toast({

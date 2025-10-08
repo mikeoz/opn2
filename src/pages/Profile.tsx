@@ -176,7 +176,13 @@ const Profile = () => {
               <CardContent className="flex flex-col items-center space-y-4">
                 <div className="relative">
                   <Avatar className="h-24 w-24">
-                    <AvatarImage src={profile.avatar_url} alt="Profile" />
+                    <AvatarImage 
+                      src={
+                        profile.profile_photos?.find(p => p.is_primary)?.url || 
+                        profile.avatar_url
+                      } 
+                      alt="Profile" 
+                    />
                     <AvatarFallback className="text-lg">
                       {getInitials().toUpperCase()}
                     </AvatarFallback>
