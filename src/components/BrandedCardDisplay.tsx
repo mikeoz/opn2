@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Building2, FileText, Image, Upload } from 'lucide-react';
 import { useProfile } from '@/hooks/useProfile';
-import { supabase } from '@/integrations/supabase/client';
-import opnliLogo from "@/assets/opnli-logo.svg";
+import opnliLogoFooter from "@/assets/opnli-logo-footer.png";
 
 interface TemplateField {
   id: string;
@@ -54,52 +53,8 @@ const BrandedCardDisplay: React.FC<BrandedCardDisplayProps> = ({
   cardType = card.template.name.toLowerCase()
 }) => {
   const { profile } = useProfile();
-  const [generatedLogo, setGeneratedLogo] = useState<string | null>(null);
-  const [logoError, setLogoError] = useState<string | null>(null);
-
   const isOrganizationCard = profile?.account_type === 'non_individual';
   const hasOrganizationLogo = isOrganizationCard && profile?.logo_url;
-
-  // Standard card types that should get custom AI-generated logos
-  const standardCardTypes = [
-    'social media profile', 'phone number', 'address information', 'organization',
-    'personal identity card', 'professional contact card', 'birthcard', 'anniversarycard',
-    'sexcard', 'maritalcard', 'gradecard', 'schoolcard', 'medicalcard', 'kidcard',
-    'statuscard', 'rolecard', 'addresscard', 'phonecard', 'emailcard'
-  ];
-
-  const shouldGenerateLogo = !hasOrganizationLogo && standardCardTypes.includes(cardType.toLowerCase());
-
-  useEffect(() => {
-    if (shouldGenerateLogo) {
-      generateCardLogo();
-    }
-  }, [cardType, shouldGenerateLogo]);
-
-  const generateCardLogo = async () => {
-    try {
-      setLogoError(null);
-      const { data, error } = await supabase.functions.invoke('generate-card-logo', {
-        body: { 
-          cardType: cardType,
-          dimensions: "256x256"
-        }
-      });
-
-      if (error) {
-        console.error('Error generating logo:', error);
-        setLogoError('Failed to generate custom logo');
-        return;
-      }
-
-      if (data?.logo) {
-        setGeneratedLogo(data.logo);
-      }
-    } catch (error) {
-      console.error('Error generating logo:', error);
-      setLogoError('Failed to generate custom logo');
-    }
-  };
 
   const getFieldValue = (fieldId: string) => {
     const fieldValue = card.field_values.find(fv => fv.template_field_id === fieldId);
@@ -229,28 +184,17 @@ const BrandedCardDisplay: React.FC<BrandedCardDisplayProps> = ({
                 alt={profile.organization_name || "Organization Logo"} 
                 className="h-8 w-auto object-contain"
               />
-            ) : generatedLogo ? (
-              <img 
-                src={generatedLogo} 
-                alt={`Opnli ${cardType} Logo`} 
-                className="h-8 w-auto object-contain opacity-90"
-              />
             ) : (
               <img 
-                src={opnliLogo} 
+                src={opnliLogoFooter} 
                 alt="Opnli" 
-                className="h-8 w-auto object-contain opacity-80"
+                className="h-8 w-auto object-contain"
               />
             )}
             <div className="text-right">
               <span className="text-xs text-muted-foreground block">
                 {hasOrganizationLogo ? profile.organization_name : "Powered by Opnli"}
               </span>
-              {logoError && (
-                <span className="text-xs text-destructive/60 block">
-                  {logoError}
-                </span>
-              )}
             </div>
           </div>
         </div>
