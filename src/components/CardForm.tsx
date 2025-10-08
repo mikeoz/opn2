@@ -114,7 +114,7 @@ const CardForm: React.FC<CardFormProps> = ({
     }
   };
 
-  const uploadFile = async (file: File, fieldId: string): Promise<string> => {
+  const uploadFile = async (file: File, fieldId: string, isImage: boolean = false): Promise<string> => {
     if (!user) throw new Error('User not authenticated');
 
     // Validate file size (5MB max)
@@ -138,21 +138,52 @@ const CardForm: React.FC<CardFormProps> = ({
       .from('card-fields')
       .getPublicUrl(data.path);
 
+    // If it's an image, also add it to profile_photos for unified photo management
+    if (isImage && profile) {
+      const photos = profile.profile_photos || [];
+      
+      // Check if this URL is already in profile photos
+      const existingPhoto = photos.find(p => p.url === publicUrl);
+      
+      if (!existingPhoto && photos.length < 5) {
+        const newPhoto = {
+          url: publicUrl,
+          is_primary: photos.length === 0,
+          uploaded_at: new Date().toISOString(),
+          use_for: ['identity_card'] as string[],
+          description: 'Identity card photo'
+        };
+        
+        const updatedPhotos = [...photos, newPhoto];
+        
+        // Update profile photos in database
+        await supabase
+          .from('profiles')
+          .update({ 
+            profile_photos: updatedPhotos as any,
+            // If first photo, also set as avatar
+            ...(photos.length === 0 && { avatar_url: publicUrl })
+          })
+          .eq('id', user.id);
+      }
+    }
+
     return publicUrl;
   };
 
-  const handleFileUpload = async (file: File, fieldId: string) => {
+  const handleFileUpload = async (file: File, fieldId: string, fieldType: string = 'document') => {
     const fieldKey = `field_${fieldId}`;
     
     setUploadingFields(prev => new Set(prev).add(fieldId));
     
     try {
-    const url = await uploadFile(file, fieldId);
+      const isImage = fieldType === 'image';
+      const url = await uploadFile(file, fieldId, isImage);
       (form.setValue as any)(fieldKey, url);
       
       toast({
         title: "File uploaded",
-        description: `${file.name} has been uploaded successfully.`,
+        description: `${file.name} has been uploaded${isImage ? ' and added to your profile photos' : ''}.`,
       });
     } catch (error) {
       console.error('Error uploading file:', error);
@@ -211,14 +242,14 @@ const CardForm: React.FC<CardFormProps> = ({
       }
     }
 
-    await handleFileUpload(file, fieldId);
+    await handleFileUpload(file, fieldId, fieldType);
   };
 
-  const handleFileInputChange = async (e: React.ChangeEvent<HTMLInputElement>, fieldId: string) => {
+  const handleFileInputChange = async (e: React.ChangeEvent<HTMLInputElement>, fieldId: string, fieldType: string) => {
     const file = e.target.files?.[0];
     if (!file) return;
     
-    await handleFileUpload(file, fieldId);
+    await handleFileUpload(file, fieldId, fieldType);
     e.target.value = ''; // Reset input
   };
 
@@ -380,7 +411,7 @@ const CardForm: React.FC<CardFormProps> = ({
                     <input
                       type="file"
                       accept={field.field_type === 'image' ? 'image/*' : '*'}
-                      onChange={(e) => handleFileInputChange(e, field.id)}
+                      onChange={(e) => handleFileInputChange(e, field.id, field.field_type)}
                       disabled={isUploading}
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
                     />
