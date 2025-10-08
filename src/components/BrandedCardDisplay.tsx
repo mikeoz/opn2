@@ -120,16 +120,33 @@ const BrandedCardDisplay: React.FC<BrandedCardDisplayProps> = ({
         <div className="pl-6">
           {field.field_type === 'string' ? (
             <p className="text-foreground">{value || 'Not provided'}</p>
-          ) : (
-            <div className="text-muted-foreground">
-              {value ? (
-                <a href={value} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                  {value}
-                </a>
-              ) : (
-                'Not provided'
-              )}
+          ) : field.field_type === 'image' && value ? (
+            <div className="space-y-2">
+              <img 
+                src={value} 
+                alt={field.field_name}
+                className="max-w-full max-h-64 rounded-lg shadow-md object-contain"
+              />
+              <a 
+                href={value} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-sm text-primary hover:underline block"
+              >
+                View full size
+              </a>
             </div>
+          ) : field.field_type === 'document' && value ? (
+            <a 
+              href={value} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="text-primary hover:underline"
+            >
+              View document
+            </a>
+          ) : (
+            <p className="text-muted-foreground">Not provided</p>
           )}
         </div>
       </div>
