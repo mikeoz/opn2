@@ -204,9 +204,9 @@ const FamilyMemberManager: React.FC<FamilyMemberManagerProps> = ({
           {isOwner && (
             <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
               <DialogTrigger asChild>
-                <Button size="sm">
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Add Member
+                <Button size="sm" className="md:h-9">
+                  <UserPlus className="h-4 w-4 md:mr-2" />
+                  <span className="hidden sm:inline">Add Member</span>
                 </Button>
               </DialogTrigger>
               <DialogContent>
@@ -278,13 +278,19 @@ const FamilyMemberManager: React.FC<FamilyMemberManagerProps> = ({
                       )}
                     />
                     
-                    <div className="flex gap-3">
-                      <Button type="submit" className="flex-1">
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                      <Button 
+                        type="submit" 
+                        size="sm"
+                        className="flex-1 sm:h-10"
+                      >
                         Add Member
                       </Button>
                       <Button
                         type="button"
                         variant="outline"
+                        size="sm"
+                        className="sm:h-10"
                         onClick={() => setInviteDialogOpen(false)}
                       >
                         Cancel
@@ -332,19 +338,20 @@ const FamilyMemberManager: React.FC<FamilyMemberManagerProps> = ({
                 </div>
                 
                 {isOwner && member.individual_user_id !== user?.id && (
-                  <div className="flex gap-2">
+                  <div className="flex gap-1 md:gap-2">
                     <Button
-                      size="sm"
+                      size="icon"
                       variant="ghost"
+                      className="h-9 w-9 md:h-8 md:w-8"
                       onClick={() => setSelectedMember(member)}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button
-                      size="sm"
+                      size="icon"
                       variant="ghost"
+                      className="h-9 w-9 md:h-8 md:w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                       onClick={() => handleRemoveMember(member.id, getDisplayName(member))}
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

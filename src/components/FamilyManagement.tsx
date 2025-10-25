@@ -67,34 +67,40 @@ export const FamilyManagement: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">
+          <h2 className="text-xl md:text-2xl font-bold tracking-tight">
             {selectedFamily ? selectedFamily.family_label : 'Family Management'}
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-sm md:text-base text-muted-foreground">
             {selectedFamily 
               ? `Managing ${selectedFamily.family_label} • ${selectedFamily.member_count || 0} members • Generation ${selectedFamily.generation_level}`
               : 'Manage family relationships and generational connections'
             }
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           {selectedFamily && (
             <Button
               variant="outline"
+              size="sm"
+              className="md:h-10"
               onClick={() => {
                 setSelectedFamilyUnit(null);
                 setActiveTab('overview');
               }}
             >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Overview
+              <ArrowLeft className="h-4 w-4 md:mr-2" />
+              <span className="hidden sm:inline">Back to Overview</span>
             </Button>
           )}
-          <Button onClick={() => setShowCreateDialog(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Create Family Unit
+          <Button 
+            size="sm"
+            className="md:h-10"
+            onClick={() => setShowCreateDialog(true)}
+          >
+            <Plus className="h-4 w-4 md:mr-2" />
+            <span className="hidden sm:inline">Create Family Unit</span>
           </Button>
         </div>
       </div>
@@ -102,30 +108,30 @@ export const FamilyManagement: React.FC = () => {
       {selectedFamily ? (
         // Individual Family Management View
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="overview">
-              <TreePine className="mr-2 h-4 w-4" />
-              Overview
+          <TabsList className="grid grid-cols-3 md:grid-cols-6 h-auto gap-1 p-1">
+            <TabsTrigger value="overview" className="text-xs md:text-sm py-2">
+              <TreePine className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Overview</span>
             </TabsTrigger>
-            <TabsTrigger value="members">
-              <Users className="mr-2 h-4 w-4" />
-              Members
+            <TabsTrigger value="members" className="text-xs md:text-sm py-2">
+              <Users className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Members</span>
             </TabsTrigger>
-            <TabsTrigger value="cards">
-              <Settings className="mr-2 h-4 w-4" />
-              Family Cards
+            <TabsTrigger value="cards" className="text-xs md:text-sm py-2">
+              <Settings className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Cards</span>
             </TabsTrigger>
-            <TabsTrigger value="settings">
-              <Settings className="mr-2 h-4 w-4" />
-              Settings
+            <TabsTrigger value="settings" className="text-xs md:text-sm py-2">
+              <Settings className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Settings</span>
             </TabsTrigger>
-            <TabsTrigger value="invitations">
-              <Users className="mr-2 h-4 w-4" />
-              Invitations
+            <TabsTrigger value="invitations" className="text-xs md:text-sm py-2">
+              <Users className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Invites</span>
             </TabsTrigger>
-            <TabsTrigger value="tree">
-              <TreePine className="mr-2 h-4 w-4" />
-              Family Tree
+            <TabsTrigger value="tree" className="text-xs md:text-sm py-2">
+              <TreePine className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Tree</span>
             </TabsTrigger>
           </TabsList>
 
@@ -269,18 +275,18 @@ export const FamilyManagement: React.FC = () => {
       ) : (
         // Family Overview/List View
         <Tabs defaultValue="tree" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="tree">
-              <TreePine className="mr-2 h-4 w-4" />
-              Family Tree
+          <TabsList className="grid grid-cols-3 h-auto gap-1 p-1">
+            <TabsTrigger value="tree" className="text-xs md:text-sm py-2">
+              <TreePine className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Family Tree</span>
             </TabsTrigger>
-            <TabsTrigger value="overview">
-              <Users className="mr-2 h-4 w-4" />
-              Generation View
+            <TabsTrigger value="overview" className="text-xs md:text-sm py-2">
+              <Users className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Generation View</span>
             </TabsTrigger>
-            <TabsTrigger value="members">
-              <Users className="mr-2 h-4 w-4" />
-              All Members
+            <TabsTrigger value="members" className="text-xs md:text-sm py-2">
+              <Users className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">All Members</span>
             </TabsTrigger>
           </TabsList>
 
@@ -301,9 +307,9 @@ export const FamilyManagement: React.FC = () => {
                   <p className="text-muted-foreground text-center mb-4">
                     Create your first family unit to start building your family tree and managing relationships.
                   </p>
-                  <Button onClick={() => setShowCreateDialog(true)}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Create First Family Unit
+                  <Button size="sm" className="md:h-10" onClick={() => setShowCreateDialog(true)}>
+                    <Plus className="h-4 w-4 md:mr-2" />
+                    <span className="hidden sm:inline">Create First Family Unit</span>
                   </Button>
                 </CardContent>
               </Card>

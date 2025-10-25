@@ -116,16 +116,23 @@ export const CreateFamilyUnitDialog: React.FC<CreateFamilyUnitDialogProps> = ({
             />
           </div>
 
-          <div className="flex justify-end gap-2 pt-4">
+          <div className="flex flex-col sm:flex-row justify-end gap-2 pt-4">
             <Button
               type="button"
               variant="outline"
               onClick={handleClose}
               disabled={creating}
+              size="sm"
+              className="sm:h-10 w-full sm:w-auto"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={creating || !familyLabel.trim()}>
+            <Button 
+              type="submit" 
+              disabled={creating || !familyLabel.trim()}
+              size="sm"
+              className="sm:h-10 w-full sm:w-auto"
+            >
               {creating ? 'Creating...' : 'Create Family Unit'}
             </Button>
           </div>

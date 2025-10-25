@@ -52,7 +52,7 @@ export const FamilyUnitCard: React.FC<FamilyUnitCardProps> = ({
             {(onEdit || onDelete) && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Button variant="ghost" size="icon" className="h-9 w-9 md:h-8 md:w-8">
                     <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -116,8 +116,8 @@ export const FamilyUnitCard: React.FC<FamilyUnitCardProps> = ({
             {familyUnit.member_count || 0} members
           </div>
           
-          <Button variant="ghost" size="sm">
-            <ChevronRight className="h-4 w-4" />
+          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+            <ChevronRight className="h-5 w-5" />
           </Button>
         </div>
       </CardContent>
