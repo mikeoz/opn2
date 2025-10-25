@@ -17,7 +17,7 @@ export type Database = {
       audit_logs: {
         Row: {
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           new_values: Json | null
           old_values: Json | null
           operation: string
@@ -29,7 +29,7 @@ export type Database = {
         }
         Insert: {
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           new_values?: Json | null
           old_values?: Json | null
           operation: string
@@ -41,7 +41,7 @@ export type Database = {
         }
         Update: {
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           new_values?: Json | null
           old_values?: Json | null
           operation?: string
@@ -494,7 +494,7 @@ export type Database = {
           field_path: string | null
           granted_at: string | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           recipients: string[] | null
           revoked_at: string | null
           scope: string
@@ -509,7 +509,7 @@ export type Database = {
           field_path?: string | null
           granted_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           recipients?: string[] | null
           revoked_at?: string | null
           scope: string
@@ -524,7 +524,7 @@ export type Database = {
           field_path?: string | null
           granted_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           recipients?: string[] | null
           revoked_at?: string | null
           scope?: string
@@ -674,7 +674,7 @@ export type Database = {
           compliance_flags: Json | null
           data_classification: string | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           metadata: Json | null
           new_values: Json | null
           old_values: Json | null
@@ -693,7 +693,7 @@ export type Database = {
           compliance_flags?: Json | null
           data_classification?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           metadata?: Json | null
           new_values?: Json | null
           old_values?: Json | null
@@ -712,7 +712,7 @@ export type Database = {
           compliance_flags?: Json | null
           data_classification?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           metadata?: Json | null
           new_values?: Json | null
           old_values?: Json | null
@@ -820,6 +820,62 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "family_invitations_family_unit_id_fkey"
+            columns: ["family_unit_id"]
+            isOneToOne: false
+            referencedRelation: "family_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      family_ownership_transfers: {
+        Row: {
+          created_at: string | null
+          current_owner: string
+          expires_at: string | null
+          family_unit_id: string
+          id: string
+          message: string | null
+          proposed_owner_email: string
+          proposed_owner_id: string | null
+          responded_at: string | null
+          sent_at: string | null
+          status: string
+          transfer_token: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_owner: string
+          expires_at?: string | null
+          family_unit_id: string
+          id?: string
+          message?: string | null
+          proposed_owner_email: string
+          proposed_owner_id?: string | null
+          responded_at?: string | null
+          sent_at?: string | null
+          status?: string
+          transfer_token?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_owner?: string
+          expires_at?: string | null
+          family_unit_id?: string
+          id?: string
+          message?: string | null
+          proposed_owner_email?: string
+          proposed_owner_id?: string | null
+          responded_at?: string | null
+          sent_at?: string | null
+          status?: string
+          transfer_token?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_ownership_transfers_family_unit_id_fkey"
             columns: ["family_unit_id"]
             isOneToOne: false
             referencedRelation: "family_units"
@@ -1129,9 +1185,11 @@ export type Database = {
           created_by: string | null
           expires_at: string | null
           family_generation: number | null
+          guardian_user_id: string | null
           id: string
           individual_user_id: string
           is_family_unit: boolean | null
+          is_minor: boolean | null
           joined_at: string | null
           membership_type: string
           organization_user_id: string
@@ -1145,9 +1203,11 @@ export type Database = {
           created_by?: string | null
           expires_at?: string | null
           family_generation?: number | null
+          guardian_user_id?: string | null
           id?: string
           individual_user_id: string
           is_family_unit?: boolean | null
+          is_minor?: boolean | null
           joined_at?: string | null
           membership_type?: string
           organization_user_id: string
@@ -1161,9 +1221,11 @@ export type Database = {
           created_by?: string | null
           expires_at?: string | null
           family_generation?: number | null
+          guardian_user_id?: string | null
           id?: string
           individual_user_id?: string
           is_family_unit?: boolean | null
+          is_minor?: boolean | null
           joined_at?: string | null
           membership_type?: string
           organization_user_id?: string
@@ -1196,6 +1258,80 @@ export type Database = {
           },
         ]
       }
+      pending_family_profiles: {
+        Row: {
+          claimed_at: string | null
+          claimed_by: string | null
+          created_at: string | null
+          created_by: string
+          email: string
+          expires_at: string | null
+          family_unit_id: string
+          first_name: string
+          generation_level: number | null
+          id: string
+          invitation_token: string | null
+          last_name: string | null
+          member_type: string
+          phone: string | null
+          relationship_label: string
+          seed_data: Json | null
+          sent_at: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          claimed_at?: string | null
+          claimed_by?: string | null
+          created_at?: string | null
+          created_by: string
+          email: string
+          expires_at?: string | null
+          family_unit_id: string
+          first_name: string
+          generation_level?: number | null
+          id?: string
+          invitation_token?: string | null
+          last_name?: string | null
+          member_type: string
+          phone?: string | null
+          relationship_label: string
+          seed_data?: Json | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          claimed_at?: string | null
+          claimed_by?: string | null
+          created_at?: string | null
+          created_by?: string
+          email?: string
+          expires_at?: string | null
+          family_unit_id?: string
+          first_name?: string
+          generation_level?: number | null
+          id?: string
+          invitation_token?: string | null
+          last_name?: string | null
+          member_type?: string
+          phone?: string | null
+          relationship_label?: string
+          seed_data?: Json | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pending_family_profiles_family_unit_id_fkey"
+            columns: ["family_unit_id"]
+            isOneToOne: false
+            referencedRelation: "family_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       privacy_consents: {
         Row: {
           consent_type: string
@@ -1204,7 +1340,7 @@ export type Database = {
           granted: boolean
           granted_at: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           metadata: Json | null
           revoked_at: string | null
           user_agent: string | null
@@ -1218,7 +1354,7 @@ export type Database = {
           granted: boolean
           granted_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           metadata?: Json | null
           revoked_at?: string | null
           user_agent?: string | null
@@ -1232,7 +1368,7 @@ export type Database = {
           granted?: boolean
           granted_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           metadata?: Json | null
           revoked_at?: string | null
           user_agent?: string | null
@@ -1255,6 +1391,7 @@ export type Database = {
           last_name: string | null
           logo_url: string | null
           organization_name: string | null
+          profile_claimed_from: string | null
           profile_photos: Json | null
           updated_at: string
           username: string | null
@@ -1272,6 +1409,7 @@ export type Database = {
           last_name?: string | null
           logo_url?: string | null
           organization_name?: string | null
+          profile_claimed_from?: string | null
           profile_photos?: Json | null
           updated_at?: string
           username?: string | null
@@ -1289,6 +1427,7 @@ export type Database = {
           last_name?: string | null
           logo_url?: string | null
           organization_name?: string | null
+          profile_claimed_from?: string | null
           profile_photos?: Json | null
           updated_at?: string
           username?: string | null
@@ -1753,22 +1892,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      assign_admin_role: {
-        Args: { target_user_id: string }
-        Returns: boolean
-      }
+      assign_admin_role: { Args: { target_user_id: string }; Returns: boolean }
       check_data_retention_compliance: {
         Args: { p_created_at: string; p_data_type: string }
         Returns: Json
       }
-      generate_card_code: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_guid: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      generate_card_code: { Args: never; Returns: string }
+      generate_guid: { Args: never; Returns: string }
       generate_qr_code_data: {
         Args: { merchant_id: string; qr_type?: string }
         Returns: string
@@ -1806,10 +1936,7 @@ export type Database = {
         }
         Returns: string
       }
-      revoke_admin_role: {
-        Args: { target_user_id: string }
-        Returns: boolean
-      }
+      revoke_admin_role: { Args: { target_user_id: string }; Returns: boolean }
     }
     Enums: {
       access_permission_type:
