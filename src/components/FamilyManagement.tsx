@@ -66,8 +66,8 @@ export const FamilyManagement: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div className="space-y-4">
+      <div className="flex flex-col gap-2">
         <div>
           <h2 className="text-xl md:text-2xl font-bold tracking-tight">
             {selectedFamily ? selectedFamily.family_label : 'Family Management'}
@@ -78,30 +78,6 @@ export const FamilyManagement: React.FC = () => {
               : 'Manage family relationships and generational connections'
             }
           </p>
-        </div>
-        <div className="flex gap-2 flex-wrap">
-          {selectedFamily && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="md:h-10"
-              onClick={() => {
-                setSelectedFamilyUnit(null);
-                setActiveTab('overview');
-              }}
-            >
-              <ArrowLeft className="h-4 w-4 md:mr-2" />
-              <span className="hidden sm:inline">Back to Overview</span>
-            </Button>
-          )}
-          <Button 
-            size="sm"
-            className="md:h-10"
-            onClick={() => setShowCreateDialog(true)}
-          >
-            <Plus className="h-4 w-4 md:mr-2" />
-            <span className="hidden sm:inline">Create Family Unit</span>
-          </Button>
         </div>
       </div>
 
@@ -144,7 +120,7 @@ export const FamilyManagement: React.FC = () => {
                     Family Information
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-2">
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Family Name</label>
                     <p className="text-lg font-medium">{selectedFamily.family_label}</p>
@@ -191,13 +167,13 @@ export const FamilyManagement: React.FC = () => {
                     Quick Stats
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-3 border rounded-lg">
+                <CardContent className="space-y-2">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="text-center p-2 border rounded-lg">
                       <div className="text-2xl font-bold text-primary">{selectedFamily.member_count || 0}</div>
                       <div className="text-sm text-muted-foreground">Members</div>
                     </div>
-                    <div className="text-center p-3 border rounded-lg">
+                    <div className="text-center p-2 border rounded-lg">
                       <div className="text-2xl font-bold text-primary">{selectedFamily.generation_level}</div>
                       <div className="text-sm text-muted-foreground">Generation</div>
                     </div>
@@ -314,29 +290,54 @@ export const FamilyManagement: React.FC = () => {
                 </CardContent>
               </Card>
             ) : (
-              <div className="space-y-8">
+              <div className="space-y-6">
                 {generations.map(generation => (
-                  <div key={generation} className="space-y-4">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-sm">
-                        Generation {generation}
-                      </Badge>
-                      <span className="text-sm text-muted-foreground">
-                        {groupedByGeneration[generation].length} family unit(s)
-                      </span>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {groupedByGeneration[generation].map(unit => (
-                        <FamilyUnitCard
-                          key={unit.id}
-                          familyUnit={unit}
-                          onSelect={() => setSelectedFamilyUnit(unit.id)}
-                          isSelected={selectedFamilyUnit === unit.id}
-                          onEdit={unit.trust_anchor_user_id === user?.id ? handleEditFamilyUnit : undefined}
-                          onDelete={unit.trust_anchor_user_id === user?.id ? handleDeleteFamilyUnit : undefined}
-                        />
-                      ))}
+                  <div key={generation} className="space-y-3">
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-sm">
+                          Generation {generation}
+                        </Badge>
+                        <span className="text-sm text-muted-foreground">
+                          {groupedByGeneration[generation].length} family unit(s)
+                        </span>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {groupedByGeneration[generation].map(unit => (
+                          <FamilyUnitCard
+                            key={unit.id}
+                            familyUnit={unit}
+                            onSelect={() => setSelectedFamilyUnit(unit.id)}
+                            isSelected={selectedFamilyUnit === unit.id}
+                            onEdit={unit.trust_anchor_user_id === user?.id ? handleEditFamilyUnit : undefined}
+                            onDelete={unit.trust_anchor_user_id === user?.id ? handleDeleteFamilyUnit : undefined}
+                          />
+                        ))}
+                      </div>
+                      
+                      <div className="flex gap-2 flex-wrap pt-2">
+                        {selectedFamily && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedFamilyUnit(null);
+                              setActiveTab('overview');
+                            }}
+                          >
+                            <ArrowLeft className="h-4 w-4 mr-2" />
+                            Back to Overview
+                          </Button>
+                        )}
+                        <Button 
+                          size="sm"
+                          onClick={() => setShowCreateDialog(true)}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Create Family Unit
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ))}
