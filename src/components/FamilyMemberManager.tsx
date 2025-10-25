@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { UserPlus, Users, Edit, Trash2, Mail, Crown } from 'lucide-react';
@@ -194,21 +195,27 @@ const FamilyMemberManager: React.FC<FamilyMemberManagerProps> = ({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Family Members ({members.length})
-          </CardTitle>
-          {isOwner && (
-            <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" className="md:h-9">
-                  <UserPlus className="h-4 w-4 md:mr-2" />
-                  <span className="hidden sm:inline">Add Member</span>
-                </Button>
-              </DialogTrigger>
+    <TooltipProvider>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Family Members ({members.length})
+            </CardTitle>
+            {isOwner && (
+              <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DialogTrigger asChild>
+                      <Button size="sm" className="md:h-9">
+                        <UserPlus className="h-4 w-4 md:mr-2" />
+                        <span className="hidden sm:inline">Add Member</span>
+                      </Button>
+                    </DialogTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent className="sm:hidden">Add Member</TooltipContent>
+                </Tooltip>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Add Family Member</DialogTitle>
@@ -339,22 +346,32 @@ const FamilyMemberManager: React.FC<FamilyMemberManagerProps> = ({
                 
                 {isOwner && member.individual_user_id !== user?.id && (
                   <div className="flex gap-1 md:gap-2">
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-9 w-9 md:h-8 md:w-8"
-                      onClick={() => setSelectedMember(member)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-9 w-9 md:h-8 md:w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={() => handleRemoveMember(member.id, getDisplayName(member))}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-9 w-9 md:h-8 md:w-8"
+                          onClick={() => setSelectedMember(member)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Edit member</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-9 w-9 md:h-8 md:w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => handleRemoveMember(member.id, getDisplayName(member))}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Remove member</TooltipContent>
+                    </Tooltip>
                   </div>
                 )}
                 
@@ -369,7 +386,8 @@ const FamilyMemberManager: React.FC<FamilyMemberManagerProps> = ({
           )}
         </div>
       </CardContent>
-    </Card>
+      </Card>
+    </TooltipProvider>
   );
 };
 

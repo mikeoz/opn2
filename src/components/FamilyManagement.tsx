@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Users, Plus, Settings, TreePine, ArrowLeft, Crown } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFamilyUnits, FamilyUnit } from '@/hooks/useFamilyUnits';
@@ -83,33 +84,64 @@ export const FamilyManagement: React.FC = () => {
 
       {selectedFamily ? (
         // Individual Family Management View
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid grid-cols-3 md:grid-cols-6 h-auto gap-1 p-1">
-            <TabsTrigger value="overview" className="text-xs md:text-sm py-2">
-              <TreePine className="h-4 w-4 md:mr-2" />
-              <span className="hidden md:inline">Overview</span>
-            </TabsTrigger>
-            <TabsTrigger value="members" className="text-xs md:text-sm py-2">
-              <Users className="h-4 w-4 md:mr-2" />
-              <span className="hidden md:inline">Members</span>
-            </TabsTrigger>
-            <TabsTrigger value="cards" className="text-xs md:text-sm py-2">
-              <Settings className="h-4 w-4 md:mr-2" />
-              <span className="hidden md:inline">Cards</span>
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="text-xs md:text-sm py-2">
-              <Settings className="h-4 w-4 md:mr-2" />
-              <span className="hidden md:inline">Settings</span>
-            </TabsTrigger>
-            <TabsTrigger value="invitations" className="text-xs md:text-sm py-2">
-              <Users className="h-4 w-4 md:mr-2" />
-              <span className="hidden md:inline">Invites</span>
-            </TabsTrigger>
-            <TabsTrigger value="tree" className="text-xs md:text-sm py-2">
-              <TreePine className="h-4 w-4 md:mr-2" />
-              <span className="hidden md:inline">Tree</span>
-            </TabsTrigger>
-          </TabsList>
+        <TooltipProvider>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+            <TabsList className="grid grid-cols-3 md:grid-cols-6 h-auto gap-1 p-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <TabsTrigger value="overview" className="text-xs md:text-sm py-2">
+                    <TreePine className="h-4 w-4 md:mr-2" />
+                    <span className="hidden md:inline">Overview</span>
+                  </TabsTrigger>
+                </TooltipTrigger>
+                <TooltipContent className="md:hidden">Overview</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <TabsTrigger value="members" className="text-xs md:text-sm py-2">
+                    <Users className="h-4 w-4 md:mr-2" />
+                    <span className="hidden md:inline">Members</span>
+                  </TabsTrigger>
+                </TooltipTrigger>
+                <TooltipContent className="md:hidden">Members</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <TabsTrigger value="cards" className="text-xs md:text-sm py-2">
+                    <Settings className="h-4 w-4 md:mr-2" />
+                    <span className="hidden md:inline">Cards</span>
+                  </TabsTrigger>
+                </TooltipTrigger>
+                <TooltipContent className="md:hidden">Cards</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <TabsTrigger value="settings" className="text-xs md:text-sm py-2">
+                    <Settings className="h-4 w-4 md:mr-2" />
+                    <span className="hidden md:inline">Settings</span>
+                  </TabsTrigger>
+                </TooltipTrigger>
+                <TooltipContent className="md:hidden">Settings</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <TabsTrigger value="invitations" className="text-xs md:text-sm py-2">
+                    <Users className="h-4 w-4 md:mr-2" />
+                    <span className="hidden md:inline">Invites</span>
+                  </TabsTrigger>
+                </TooltipTrigger>
+                <TooltipContent className="md:hidden">Invitations</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <TabsTrigger value="tree" className="text-xs md:text-sm py-2">
+                    <TreePine className="h-4 w-4 md:mr-2" />
+                    <span className="hidden md:inline">Tree</span>
+                  </TabsTrigger>
+                </TooltipTrigger>
+                <TooltipContent className="md:hidden">Tree</TooltipContent>
+              </Tooltip>
+            </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
@@ -247,24 +279,41 @@ export const FamilyManagement: React.FC = () => {
               isOwner={isOwnerOfSelectedFamily}
             />
           </TabsContent>
-        </Tabs>
+          </Tabs>
+        </TooltipProvider>
       ) : (
         // Family Overview/List View
-        <Tabs defaultValue="tree" className="space-y-4">
-          <TabsList className="grid grid-cols-3 h-auto gap-1 p-1">
-            <TabsTrigger value="tree" className="text-xs md:text-sm py-2">
-              <TreePine className="h-4 w-4 md:mr-2" />
-              <span className="hidden md:inline">Family Tree</span>
-            </TabsTrigger>
-            <TabsTrigger value="overview" className="text-xs md:text-sm py-2">
-              <Users className="h-4 w-4 md:mr-2" />
-              <span className="hidden md:inline">Generation View</span>
-            </TabsTrigger>
-            <TabsTrigger value="members" className="text-xs md:text-sm py-2">
-              <Users className="h-4 w-4 md:mr-2" />
-              <span className="hidden md:inline">All Members</span>
-            </TabsTrigger>
-          </TabsList>
+        <TooltipProvider>
+          <Tabs defaultValue="tree" className="space-y-4">
+            <TabsList className="grid grid-cols-3 h-auto gap-1 p-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <TabsTrigger value="tree" className="text-xs md:text-sm py-2">
+                    <TreePine className="h-4 w-4 md:mr-2" />
+                    <span className="hidden md:inline">Family Tree</span>
+                  </TabsTrigger>
+                </TooltipTrigger>
+                <TooltipContent className="md:hidden">Family Tree</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <TabsTrigger value="overview" className="text-xs md:text-sm py-2">
+                    <Users className="h-4 w-4 md:mr-2" />
+                    <span className="hidden md:inline">Generation View</span>
+                  </TabsTrigger>
+                </TooltipTrigger>
+                <TooltipContent className="md:hidden">Generation View</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <TabsTrigger value="members" className="text-xs md:text-sm py-2">
+                    <Users className="h-4 w-4 md:mr-2" />
+                    <span className="hidden md:inline">All Members</span>
+                  </TabsTrigger>
+                </TooltipTrigger>
+                <TooltipContent className="md:hidden">All Members</TooltipContent>
+              </Tooltip>
+            </TabsList>
 
           <TabsContent value="tree">
             <FamilyTreeVisualization
@@ -280,13 +329,18 @@ export const FamilyManagement: React.FC = () => {
                 <CardContent className="flex flex-col items-center justify-center py-12">
                   <TreePine className="h-12 w-12 text-muted-foreground mb-4" />
                   <h3 className="text-lg font-semibold mb-2">No Family Units Yet</h3>
-                  <p className="text-muted-foreground text-center mb-4">
-                    Create your first family unit to start building your family tree and managing relationships.
-                  </p>
-                  <Button size="sm" className="md:h-10" onClick={() => setShowCreateDialog(true)}>
-                    <Plus className="h-4 w-4 md:mr-2" />
-                    <span className="hidden sm:inline">Create First Family Unit</span>
-                  </Button>
+                   <p className="text-muted-foreground text-center mb-4">
+                     Create your first family unit to start building your family tree and managing relationships.
+                   </p>
+                   <Tooltip>
+                     <TooltipTrigger asChild>
+                       <Button size="sm" className="md:h-10" onClick={() => setShowCreateDialog(true)}>
+                         <Plus className="h-4 w-4 md:mr-2" />
+                         <span className="hidden sm:inline">Create First Family Unit</span>
+                       </Button>
+                     </TooltipTrigger>
+                     <TooltipContent className="sm:hidden">Create First Family Unit</TooltipContent>
+                   </Tooltip>
                 </CardContent>
               </Card>
             ) : (
@@ -316,28 +370,38 @@ export const FamilyManagement: React.FC = () => {
                         ))}
                       </div>
                       
-                      <div className="flex gap-2 flex-wrap pt-2">
-                        {selectedFamily && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedFamilyUnit(null);
-                              setActiveTab('overview');
-                            }}
-                          >
-                            <ArrowLeft className="h-4 w-4 mr-2" />
-                            Back to Overview
-                          </Button>
-                        )}
-                        <Button 
-                          size="sm"
-                          onClick={() => setShowCreateDialog(true)}
-                        >
-                          <Plus className="h-4 w-4 mr-2" />
-                          Create Family Unit
-                        </Button>
-                      </div>
+                       <div className="flex gap-2 flex-wrap pt-2">
+                         {selectedFamily && (
+                           <Tooltip>
+                             <TooltipTrigger asChild>
+                               <Button
+                                 variant="outline"
+                                 size="sm"
+                                 onClick={() => {
+                                   setSelectedFamilyUnit(null);
+                                   setActiveTab('overview');
+                                 }}
+                               >
+                                 <ArrowLeft className="h-4 w-4 mr-2" />
+                                 Back to Overview
+                               </Button>
+                             </TooltipTrigger>
+                             <TooltipContent>Return to family overview</TooltipContent>
+                           </Tooltip>
+                         )}
+                         <Tooltip>
+                           <TooltipTrigger asChild>
+                             <Button 
+                               size="sm"
+                               onClick={() => setShowCreateDialog(true)}
+                             >
+                               <Plus className="h-4 w-4 mr-2" />
+                               Create Family Unit
+                             </Button>
+                           </TooltipTrigger>
+                           <TooltipContent>Create a new family unit</TooltipContent>
+                         </Tooltip>
+                       </div>
                     </div>
                   </div>
                 ))}
@@ -348,7 +412,8 @@ export const FamilyManagement: React.FC = () => {
           <TabsContent value="members" className="space-y-4">
             <FamilyMembersView familyUnits={familyUnits} />
           </TabsContent>
-        </Tabs>
+          </Tabs>
+        </TooltipProvider>
       )}
 
 
