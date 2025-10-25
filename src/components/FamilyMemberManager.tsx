@@ -5,31 +5,24 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { UserPlus, Users, Edit, Trash2, Mail, Crown } from 'lucide-react';
-import { useForm } from 'react-hook-form';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useFamilyUnits, FamilyMember } from '@/hooks/useFamilyUnits';
+import { SeedProfileDialog } from './SeedProfileDialog';
 
 interface FamilyMemberManagerProps {
   familyUnitId: string;
   familyUnitLabel: string;
+  generationLevel: number;
   isOwner?: boolean;
-}
-
-interface AddMemberFormData {
-  userEmail: string;
-  relationshipLabel: string;
-  familyGeneration: number;
-  permissions: Record<string, boolean>;
 }
 
 const FamilyMemberManager: React.FC<FamilyMemberManagerProps> = ({
   familyUnitId,
   familyUnitLabel,
+  generationLevel,
   isOwner = false
 }) => {
   const { user } = useAuth();
@@ -37,22 +30,8 @@ const FamilyMemberManager: React.FC<FamilyMemberManagerProps> = ({
   const { fetchFamilyMembers } = useFamilyUnits();
   const [members, setMembers] = useState<FamilyMember[]>([]);
   const [loading, setLoading] = useState(true);
-  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [seedDialogOpen, setSeedDialogOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
-
-  const form = useForm<AddMemberFormData>({
-    defaultValues: {
-      userEmail: '',
-      relationshipLabel: '',
-      familyGeneration: 1,
-      permissions: {
-        view_family_cards: true,
-        edit_family_info: false,
-        manage_members: false,
-        admin_access: false
-      }
-    }
-  });
 
   useEffect(() => {
     loadMembers();
@@ -72,74 +51,6 @@ const FamilyMemberManager: React.FC<FamilyMemberManagerProps> = ({
       });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleInviteMember = async (data: AddMemberFormData) => {
-    if (!user) return;
-
-    try {
-      // First check if user exists
-      const { data: targetUser, error: userError } = await supabase
-        .from('profiles')
-        .select('id, email')
-        .eq('email', data.userEmail)
-        .maybeSingle();
-
-      if (userError) throw userError;
-
-      if (!targetUser) {
-        toast({
-          title: "User not found",
-          description: "No user found with that email address. They need to create an account first.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Check if already a member
-      const existingMember = members.find(m => m.individual_user_id === targetUser.id);
-      if (existingMember) {
-        toast({
-          title: "Already a member",
-          description: "This user is already a member of this family unit.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Create organization membership
-      const { error: membershipError } = await supabase
-        .from('organization_memberships')
-        .insert({
-          individual_user_id: targetUser.id,
-          organization_user_id: familyUnitId,
-          membership_type: 'member',
-          relationship_label: data.relationshipLabel,
-          family_generation: data.familyGeneration,
-          permissions: data.permissions,
-          is_family_unit: true,
-          status: 'active',
-          created_by: user.id
-        });
-
-      if (membershipError) throw membershipError;
-
-      toast({
-        title: "Member added successfully",
-        description: `${data.userEmail} has been added to ${familyUnitLabel}.`,
-      });
-
-      setInviteDialogOpen(false);
-      form.reset();
-      loadMembers();
-    } catch (error) {
-      console.error('Error inviting member:', error);
-      toast({
-        title: "Error adding member",
-        description: "Failed to add family member. Please try again.",
-        variant: "destructive",
-      });
     }
   };
 
@@ -178,12 +89,6 @@ const FamilyMemberManager: React.FC<FamilyMemberManagerProps> = ({
     return profile?.email || 'Unknown Member';
   };
 
-  const relationshipOptions = [
-    'parent', 'child', 'spouse', 'sibling', 
-    'grandparent', 'grandchild', 'aunt', 'uncle',
-    'cousin', 'niece', 'nephew', 'other'
-  ];
-
   if (loading) {
     return (
       <Card>
@@ -204,110 +109,16 @@ const FamilyMemberManager: React.FC<FamilyMemberManagerProps> = ({
               Family Members ({members.length})
             </CardTitle>
             {isOwner && (
-              <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <DialogTrigger asChild>
-                      <Button size="sm" className="md:h-9">
-                        <UserPlus className="h-4 w-4 md:mr-2" />
-                        <span className="hidden sm:inline">Add Member</span>
-                      </Button>
-                    </DialogTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent className="sm:hidden">Add Member</TooltipContent>
-                </Tooltip>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add Family Member</DialogTitle>
-                </DialogHeader>
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(handleInviteMember)} className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="userEmail"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email Address</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="email"
-                              placeholder="Enter user's email"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="relationshipLabel"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Relationship</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select relationship" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {relationshipOptions.map((relationship) => (
-                                <SelectItem key={relationship} value={relationship}>
-                                  {relationship.charAt(0).toUpperCase() + relationship.slice(1)}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="familyGeneration"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Generation Level</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              min="1"
-                              max="10"
-                              {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                      <Button 
-                        type="submit" 
-                        size="sm"
-                        className="flex-1 sm:h-10"
-                      >
-                        Add Member
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="sm:h-10"
-                        onClick={() => setInviteDialogOpen(false)}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  </form>
-                </Form>
-              </DialogContent>
-            </Dialog>
-          )}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button size="sm" className="md:h-9" onClick={() => setSeedDialogOpen(true)}>
+                    <UserPlus className="h-4 w-4 md:mr-2" />
+                    <span className="hidden sm:inline">Add Member</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent className="sm:hidden">Add Member</TooltipContent>
+              </Tooltip>
+            )}
         </div>
       </CardHeader>
       <CardContent>
@@ -387,6 +198,14 @@ const FamilyMemberManager: React.FC<FamilyMemberManagerProps> = ({
         </div>
       </CardContent>
       </Card>
+
+      <SeedProfileDialog
+        open={seedDialogOpen}
+        onOpenChange={setSeedDialogOpen}
+        familyUnitId={familyUnitId}
+        familyUnitLabel={familyUnitLabel}
+        generationLevel={generationLevel}
+      />
     </TooltipProvider>
   );
 };

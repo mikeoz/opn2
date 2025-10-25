@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Edit, Trash, Users, Crown, ChevronRight } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { MoreHorizontal, Edit, Trash, Users, Crown, ChevronRight, ArrowRightLeft } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { FamilyUnit } from '@/hooks/useFamilyUnits';
+import { TransferOwnershipDialog } from './TransferOwnershipDialog';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface FamilyUnitCardProps {
   familyUnit: FamilyUnit;
@@ -23,6 +25,10 @@ export const FamilyUnitCard: React.FC<FamilyUnitCardProps> = ({
   onEdit,
   onDelete
 }) => {
+  const { user } = useAuth();
+  const [transferDialogOpen, setTransferDialogOpen] = useState(false);
+  const isOwner = user?.id === familyUnit.trust_anchor_user_id;
+
   const getDisplayName = () => {
     if (!familyUnit.trust_anchor_profile) {
       return familyUnit.family_label;
@@ -64,7 +70,51 @@ export const FamilyUnitCard: React.FC<FamilyUnitCardProps> = ({
                     <TooltipContent>More options</TooltipContent>
                   </Tooltip>
                   <DropdownMenuContent align="end">
-...
+                    {onEdit && (
+                      <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(familyUnit); }}>
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit Family Unit
+                      </DropdownMenuItem>
+                    )}
+                    {isOwner && (
+                      <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setTransferDialogOpen(true); }}>
+                        <ArrowRightLeft className="h-4 w-4 mr-2" />
+                        Transfer Ownership
+                      </DropdownMenuItem>
+                    )}
+                    {onDelete && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <DropdownMenuItem 
+                              onSelect={(e) => e.preventDefault()}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash className="h-4 w-4 mr-2" />
+                              Delete Family Unit
+                            </DropdownMenuItem>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This will permanently delete "{familyUnit.family_label}" and all associated data.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={(e) => { e.stopPropagation(); onDelete(familyUnit); }}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
@@ -102,6 +152,13 @@ export const FamilyUnitCard: React.FC<FamilyUnitCardProps> = ({
           </div>
         </CardContent>
       </Card>
+
+      <TransferOwnershipDialog
+        open={transferDialogOpen}
+        onOpenChange={setTransferDialogOpen}
+        familyUnitId={familyUnit.id}
+        familyUnitLabel={familyUnit.family_label}
+      />
     </TooltipProvider>
   );
 };

@@ -226,6 +226,7 @@ export const FamilyManagement: React.FC = () => {
             <FamilyMemberManager
               familyUnitId={selectedFamily.id}
               familyUnitLabel={selectedFamily.family_label}
+              generationLevel={selectedFamily.generation_level}
               isOwner={isOwnerOfSelectedFamily}
             />
           </TabsContent>
