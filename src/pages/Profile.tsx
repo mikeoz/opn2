@@ -7,7 +7,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Camera, Save, Lock, User, Building2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Camera, Save, Lock, User, Building2, Check } from 'lucide-react';
 import MobileLayout from '@/components/MobileLayout';
 import OrganizationBrandingSettings from '@/components/OrganizationBrandingSettings';
 import OrganizationManagement from '@/components/OrganizationManagement';
@@ -43,6 +44,7 @@ const Profile = () => {
     confirmPassword: ''
   });
   const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [showPhotoSelector, setShowPhotoSelector] = useState(false);
 
   React.useEffect(() => {
     if (profile) {
@@ -187,24 +189,16 @@ const Profile = () => {
                       {getInitials().toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  <Label
-                    htmlFor="avatar-upload"
+                  <Button
+                    size="icon"
                     className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-2 cursor-pointer hover:bg-primary/90"
+                    onClick={() => setShowPhotoSelector(true)}
                   >
                     <Camera className="h-4 w-4" />
-                    <Input
-                      id="avatar-upload"
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleAvatarUpload}
-                    />
-                  </Label>
+                  </Button>
                 </div>
                 <p className="text-sm text-muted-foreground text-center">
-                  Click the camera icon to upload a new profile picture
-                  <br />
-                  (Max 5MB, JPG/PNG/WebP)
+                  Click the camera icon to select from your Photo Library
                 </p>
               </CardContent>
             </Card>
@@ -415,6 +409,81 @@ const Profile = () => {
             </>
           )}
         </Tabs>
+
+        {/* Photo Library Selector Dialog */}
+        <Dialog open={showPhotoSelector} onOpenChange={setShowPhotoSelector}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Select Profile Photo</DialogTitle>
+              <DialogDescription>
+                Choose a photo from your Photo Library to use as your profile picture
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              {(!profile.profile_photos || profile.profile_photos.length === 0) ? (
+                <div className="text-center py-8">
+                  <Camera className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+                  <p className="text-sm text-muted-foreground">
+                    No photos in your Photo Library yet.
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Go to the Photos tab to upload photos to your library.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-3 gap-3 max-h-96 overflow-y-auto">
+                    {profile.profile_photos.map((photo: any) => (
+                      <Card
+                        key={photo.url}
+                        className={`relative cursor-pointer transition-all ${
+                          photo.is_primary
+                            ? 'ring-2 ring-primary ring-offset-2' 
+                            : 'hover:ring-2 hover:ring-muted-foreground/50'
+                        }`}
+                        onClick={async () => {
+                          await setPrimaryPhoto(photo.url);
+                          setShowPhotoSelector(false);
+                          toast({
+                            title: "Success",
+                            description: "Profile photo updated"
+                          });
+                        }}
+                      >
+                        <div className="aspect-square relative overflow-hidden rounded-md">
+                          <img
+                            src={photo.url}
+                            alt={photo.description || 'Profile photo'}
+                            className="w-full h-full object-cover"
+                          />
+                          {photo.is_primary && (
+                            <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                              <div className="bg-primary text-primary-foreground rounded-full p-2">
+                                <Check className="w-5 h-5" />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        {photo.description && (
+                          <p className="text-xs text-muted-foreground p-2 truncate">
+                            {photo.description}
+                          </p>
+                        )}
+                      </Card>
+                    ))}
+                  </div>
+
+                  <div className="flex gap-2 pt-4 border-t">
+                    <Button variant="outline" onClick={() => setShowPhotoSelector(false)} className="flex-1">
+                      Cancel
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </MobileLayout>
   );
