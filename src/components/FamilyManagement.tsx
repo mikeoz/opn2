@@ -16,6 +16,7 @@ import FamilyTreeVisualization from './FamilyTreeVisualization';
 import FamilySettings from './FamilySettings';
 import { FamilyInvitationsManager } from './FamilyInvitationsManager';
 import { FamilyTreeTab } from './FamilyTreeTab';
+import { RelationshipCardsView } from './RelationshipCardsView';
 import { Link } from 'react-router-dom';
 
 export const FamilyManagement: React.FC = () => {
@@ -86,7 +87,7 @@ export const FamilyManagement: React.FC = () => {
         // Individual Family Management View
         <TooltipProvider>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="grid grid-cols-3 md:grid-cols-6 h-auto gap-1 p-1">
+            <TabsList className="grid grid-cols-3 md:grid-cols-7 h-auto gap-1 p-1">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <TabsTrigger value="overview" className="text-xs md:text-sm py-2">
@@ -104,6 +105,15 @@ export const FamilyManagement: React.FC = () => {
                   </TabsTrigger>
                 </TooltipTrigger>
                 <TooltipContent className="md:hidden">Members</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <TabsTrigger value="relationships" className="text-xs md:text-sm py-2">
+                    <Users className="h-4 w-4 md:mr-2" />
+                    <span className="hidden md:inline">Relationships</span>
+                  </TabsTrigger>
+                </TooltipTrigger>
+                <TooltipContent className="md:hidden">Relationships</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -229,6 +239,10 @@ export const FamilyManagement: React.FC = () => {
               generationLevel={selectedFamily.generation_level}
               isOwner={isOwnerOfSelectedFamily}
             />
+          </TabsContent>
+
+          <TabsContent value="relationships">
+            <RelationshipCardsView />
           </TabsContent>
 
           <TabsContent value="cards">

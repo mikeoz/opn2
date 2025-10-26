@@ -1481,6 +1481,80 @@ export type Database = {
           },
         ]
       }
+      relationship_cards: {
+        Row: {
+          accepted_at: string | null
+          card_id: string
+          confidence: Json | null
+          created_at: string | null
+          expires_at: string | null
+          from_user_id: string
+          id: string
+          invitation_token: string | null
+          metadata: Json | null
+          modified_at: string | null
+          network_rules: string | null
+          reciprocal_card_id: string | null
+          relationship_label_from: string
+          relationship_label_to: string
+          shared_attributes: string[] | null
+          status: string
+          to_user_email: string | null
+          to_user_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          card_id?: string
+          confidence?: Json | null
+          created_at?: string | null
+          expires_at?: string | null
+          from_user_id: string
+          id?: string
+          invitation_token?: string | null
+          metadata?: Json | null
+          modified_at?: string | null
+          network_rules?: string | null
+          reciprocal_card_id?: string | null
+          relationship_label_from: string
+          relationship_label_to: string
+          shared_attributes?: string[] | null
+          status?: string
+          to_user_email?: string | null
+          to_user_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          card_id?: string
+          confidence?: Json | null
+          created_at?: string | null
+          expires_at?: string | null
+          from_user_id?: string
+          id?: string
+          invitation_token?: string | null
+          metadata?: Json | null
+          modified_at?: string | null
+          network_rules?: string | null
+          reciprocal_card_id?: string | null
+          relationship_label_from?: string
+          relationship_label_to?: string
+          shared_attributes?: string[] | null
+          status?: string
+          to_user_email?: string | null
+          to_user_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "relationship_cards_reciprocal_card_id_fkey"
+            columns: ["reciprocal_card_id"]
+            isOneToOne: false
+            referencedRelation: "relationship_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       relationship_interactions: {
         Row: {
           created_at: string
@@ -1892,6 +1966,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_relationship_invitation: {
+        Args: { p_invitation_token: string; p_modified_label_to?: string }
+        Returns: string
+      }
       assign_admin_role: { Args: { target_user_id: string }; Returns: boolean }
       check_data_retention_compliance: {
         Args: { p_created_at: string; p_data_type: string }
