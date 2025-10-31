@@ -40,6 +40,19 @@ const Register = () => {
     const invitationToken = searchParams.get('invitation');
     
     if (invitationToken) {
+      // If user is logged in when accessing invitation, sign them out
+      if (user) {
+        toast({
+          title: "Signing out",
+          description: "You need to sign out to accept this invitation for another user.",
+        });
+        supabase.auth.signOut().then(() => {
+          // Reload to clear state after sign out
+          window.location.reload();
+        });
+        return;
+      }
+
       // Fetch invitation details
       const fetchInvitation = async () => {
         try {
@@ -89,14 +102,18 @@ const Register = () => {
 
       fetchInvitation();
     }
-  }, [location.search, toast]);
+  }, [location.search, toast, user]);
 
-  // Only redirect authenticated users to dashboard, but allow navigation between auth pages
+  // Only redirect authenticated users to dashboard if NO invitation token
   React.useEffect(() => {
-    if (user && location.pathname === '/register') {
+    const searchParams = new URLSearchParams(location.search);
+    const hasInvitation = searchParams.get('invitation');
+    
+    // Don't redirect if there's an invitation token (handled above)
+    if (user && location.pathname === '/register' && !hasInvitation) {
       navigate('/dashboard');
     }
-  }, [user, navigate, location.pathname]);
+  }, [user, navigate, location.pathname, location.search]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
