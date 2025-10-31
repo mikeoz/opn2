@@ -214,6 +214,12 @@ const Register = () => {
     e.preventDefault();
     setLoading(true);
 
+    console.log('🔐 Sign-in started', { 
+      email: signInData.email, 
+      hasInvitationData: !!invitationData,
+      invitationToken: invitationData?.invitation_token 
+    });
+
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: signInData.email,
@@ -221,10 +227,14 @@ const Register = () => {
       });
 
       if (error) {
+        console.error('❌ Sign-in error:', error);
         throw error;
       }
 
+      console.log('✅ Sign-in successful', { userId: data.user?.id });
+
       if (data.user) {
+        console.log('📞 Calling handleInvitationAcceptance...');
         await handleInvitationAcceptance(data.user);
         
         toast({
@@ -258,9 +268,20 @@ const Register = () => {
   };
 
   const handleInvitationAcceptance = async (user: any) => {
-    if (!invitationData) return;
+    console.log('🎯 handleInvitationAcceptance called', { 
+      userId: user?.id, 
+      hasInvitationData: !!invitationData,
+      invitationToken: invitationData?.invitation_token 
+    });
+
+    if (!invitationData) {
+      console.warn('⚠️ No invitation data, skipping acceptance');
+      return;
+    }
 
     try {
+      console.log('📡 Calling accept-family-invitation edge function...');
+      
       // Call the edge function to accept the invitation with proper permissions
       const { data, error } = await supabase.functions.invoke('accept-family-invitation', {
         body: {
@@ -268,15 +289,19 @@ const Register = () => {
         }
       });
 
+      console.log('📨 Edge function response:', { data, error });
+
       if (error) {
+        console.error('❌ Edge function error:', error);
         throw error;
       }
 
       if (data?.error) {
+        console.error('❌ Edge function returned error:', data.error);
         throw new Error(data.error);
       }
 
-      console.log('Invitation accepted successfully:', data);
+      console.log('✅ Invitation accepted successfully:', data);
     } catch (inviteError: any) {
       console.error('Error accepting invitation:', inviteError);
       toast({
