@@ -32,7 +32,7 @@ const FamilyMemberManager: React.FC<FamilyMemberManagerProps> = ({
   const { user } = useAuth();
   const { toast } = useToast();
   const { fetchFamilyMembers } = useFamilyUnits();
-  const { invitations, loading: invitationsLoading, cancelInvitation } = useFamilyInvitations(familyUnitId);
+  const { invitations, loading: invitationsLoading, cancelInvitation, resendInvitation } = useFamilyInvitations(familyUnitId);
   const { profiles: pendingProfiles, loading: profilesLoading, deleteProfile } = usePendingFamilyProfiles(familyUnitId);
   const [members, setMembers] = useState<FamilyMember[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,6 +77,23 @@ const FamilyMemberManager: React.FC<FamilyMemberManagerProps> = ({
       toast({
         title: "Error deleting invitation",
         description: "Failed to delete invitation. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleResendInvitation = async (invitationId: string, name: string) => {
+    try {
+      await resendInvitation(invitationId);
+      toast({
+        title: "Invitation resent",
+        description: `Invitation reminder sent to ${name}.`,
+      });
+    } catch (error) {
+      console.error('Error resending invitation:', error);
+      toast({
+        title: "Error resending invitation",
+        description: "Failed to resend invitation. Please try again.",
         variant: "destructive",
       });
     }
@@ -274,19 +291,34 @@ const FamilyMemberManager: React.FC<FamilyMemberManagerProps> = ({
                   </div>
                   
                   {isOwner && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-9 w-9 md:h-8 md:w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => handleDeleteInvitation(invitation.id, invitation.invitee_name || invitation.invitee_email)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Delete invitation</TooltipContent>
-                    </Tooltip>
+                    <div className="flex gap-1 md:gap-2">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-9 w-9 md:h-8 md:w-8"
+                            onClick={() => handleResendInvitation(invitation.id, invitation.invitee_name || invitation.invitee_email)}
+                          >
+                            <Mail className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Resend invitation</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-9 w-9 md:h-8 md:w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => handleDeleteInvitation(invitation.id, invitation.invitee_name || invitation.invitee_email)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Delete invitation</TooltipContent>
+                      </Tooltip>
+                    </div>
                   )}
                 </div>
               ))}
