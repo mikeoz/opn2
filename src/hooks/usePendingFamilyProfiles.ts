@@ -69,26 +69,28 @@ export const usePendingFamilyProfiles = (familyUnitId?: string) => {
     }
   };
 
-  const createSeedProfile = async (profileData: CreateSeedProfileData): Promise<boolean> => {
+  const createSeedProfile = async (profileData: CreateSeedProfileData): Promise<string | null> => {
     if (!user) {
       toast.error('You must be logged in');
-      return false;
+      return null;
     }
 
     try {
-      // Check if email already exists in profiles
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('id, email, first_name, last_name')
-        .eq('email', profileData.email)
-        .single();
+      // Check if email already exists in profiles (skip for minors with placeholder emails)
+      if (!profileData.email.includes('@pending.opn2.com')) {
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('id, email, first_name, last_name')
+          .eq('email', profileData.email)
+          .single();
 
-      if (existingProfile) {
-        toast.error('This email is already associated with an Opn2 account. Use "Invite Existing Member" instead.');
-        return false;
+        if (existingProfile) {
+          toast.error('This email is already associated with an Opn2 account. Use "Invite Existing Member" instead.');
+          return null;
+        }
       }
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('pending_family_profiles')
         .insert({
           created_by: user.id,
@@ -101,22 +103,24 @@ export const usePendingFamilyProfiles = (familyUnitId?: string) => {
           generation_level: profileData.generationLevel,
           member_type: profileData.memberType,
           seed_data: profileData.seedData || {}
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
       toast.success(
         profileData.memberType === 'minor' 
-          ? 'Minor child profile created'
-          : 'Profile created. Invitation will be sent.'
+          ? 'Minor child profile created. You retain control until ownership transfer.'
+          : 'Adult child profile created successfully.'
       );
       
       await fetchProfiles();
-      return true;
+      return data.id;
     } catch (error: any) {
       console.error('Error creating seed profile:', error);
       toast.error('Failed to create profile');
-      return false;
+      return null;
     }
   };
 

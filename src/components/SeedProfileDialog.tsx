@@ -118,7 +118,7 @@ export const SeedProfileDialog: React.FC<SeedProfileDialogProps> = ({
       }
 
       setLoading(true);
-      const success = await createSeedProfile({
+      const profileId = await createSeedProfile({
         familyUnitId,
         firstName: adultFirstName,
         lastName: adultLastName,
@@ -129,7 +129,9 @@ export const SeedProfileDialog: React.FC<SeedProfileDialogProps> = ({
         memberType: 'adult'
       });
 
-      if (success) {
+      if (profileId) {
+        // Automatically send invitation to the adult's email
+        await sendClaimInvitation(profileId);
         resetForms();
         onOpenChange(false);
       }
@@ -251,7 +253,7 @@ export const SeedProfileDialog: React.FC<SeedProfileDialogProps> = ({
 
           <TabsContent value="adult" className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Create a profile for an adult and invite them to claim it by joining Opn2.
+              Create a profile for an adult child. An invitation email will be sent to them to claim their profile.
             </p>
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
@@ -322,7 +324,7 @@ export const SeedProfileDialog: React.FC<SeedProfileDialogProps> = ({
 
           <TabsContent value="minor" className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Create a profile for a minor child. You will retain guardian control until they're upgraded to an adult.
+              Create a profile for a minor child. Email is optional. You will retain control until you transfer ownership to them.
             </p>
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
