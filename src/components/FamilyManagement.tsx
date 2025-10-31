@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -27,6 +27,15 @@ export const FamilyManagement: React.FC = () => {
   const [editingFamilyUnit, setEditingFamilyUnit] = useState<FamilyUnit | null>(null);
   const [selectedFamilyUnit, setSelectedFamilyUnit] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
+
+  // Reset activeTab when switching between family views
+  useEffect(() => {
+    if (selectedFamilyUnit) {
+      setActiveTab('overview');
+    } else {
+      setActiveTab('tree');
+    }
+  }, [selectedFamilyUnit]);
 
   const groupedByGeneration = familyUnits.reduce((acc, unit) => {
     const gen = unit.generation_level;
@@ -300,7 +309,7 @@ export const FamilyManagement: React.FC = () => {
       ) : (
         // Family Overview/List View
         <TooltipProvider>
-          <Tabs defaultValue="tree" className="space-y-4">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
             <TabsList className="grid grid-cols-3 h-auto gap-1 p-1">
               <Tooltip>
                 <TooltipTrigger asChild>
