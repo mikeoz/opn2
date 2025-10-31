@@ -39,7 +39,15 @@ const Register = () => {
     const searchParams = new URLSearchParams(location.search);
     const invitationToken = searchParams.get('invitation');
     
+    console.log('🔍 URL Check:', { 
+      pathname: location.pathname, 
+      search: location.search,
+      invitationToken,
+      hasToken: !!invitationToken 
+    });
+    
     if (invitationToken) {
+      console.log('✉️ Found invitation token, fetching details...');
       // If user is logged in when accessing invitation, sign them out
       if (user) {
         toast({
@@ -82,6 +90,13 @@ const Register = () => {
             return;
           }
 
+          console.log('✅ Invitation loaded:', {
+            id: data.id,
+            email: data.invitee_email,
+            token: data.invitation_token,
+            expiresAt: data.expires_at
+          });
+          
           setInvitationData(data);
           
           // Parse invitee_name intelligently (don't use email as firstName)
@@ -110,12 +125,15 @@ const Register = () => {
           
           if (existingUser && !userCheckError) {
             // User exists, automatically switch to sign-in mode
+            console.log('👤 Existing user found, switching to sign-in mode');
             setShowSignIn(true);
             setSignInData({ email: data.invitee_email, password: '' });
             toast({
               title: "Account Found",
               description: "An account with this email already exists. Please sign in to accept the invitation.",
             });
+          } else {
+            console.log('👤 No existing user, staying in registration mode');
           }
         } catch (error) {
           console.error('Error fetching invitation:', error);
@@ -128,6 +146,8 @@ const Register = () => {
       };
 
       fetchInvitation();
+    } else {
+      console.log('⚠️ No invitation token in URL');
     }
   }, [location.search, toast, user]);
 
@@ -403,7 +423,13 @@ const Register = () => {
                 />
               </div>
 
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button type="submit" className="w-full" disabled={loading} onClick={() => {
+                console.log('🖱️ Sign-in button clicked!', {
+                  hasInvitationData: !!invitationData,
+                  invitationToken: invitationData?.invitation_token,
+                  email: signInData.email
+                });
+              }}>
                 {loading ? 'Signing In...' : 'Accept Invitation & Sign In'}
               </Button>
             </form>
