@@ -94,13 +94,16 @@ export const useFamilyUnits = () => {
       const unitIds = unitsData?.map(unit => unit.trust_anchor_user_id) || [];
       
       const enrichmentPromises = unitIds.map(async (trustAnchorId) => {
-        // Get member count
+        // Get member count - count only active organization_memberships
+        // This excludes the trust anchor themselves and only counts members
         const { count, error: countError } = await supabase
           .from('organization_memberships')
           .select('*', { count: 'exact', head: true })
           .eq('organization_user_id', trustAnchorId)
           .eq('is_family_unit', true)
           .eq('status', 'active');
+        
+        console.log(`📊 Member count for family ${trustAnchorId}:`, { count, countError });
         
         // Check if current user is a member of this family
         const { data: membershipData, error: membershipError } = await supabase
