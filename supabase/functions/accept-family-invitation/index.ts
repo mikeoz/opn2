@@ -17,14 +17,19 @@ serve(async (req: Request): Promise<Response> => {
   }
 
   try {
+    console.log('🚀 Accept invitation function called');
+    
     // Initialize Supabase with service role key for admin operations
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    console.log('✅ Supabase client initialized');
+
     // Get user from JWT token
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
+      console.error('❌ No authorization header');
       return new Response(
         JSON.stringify({ error: 'No authorization header' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -35,24 +40,26 @@ serve(async (req: Request): Promise<Response> => {
     const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
     
     if (userError || !user) {
-      console.error('Auth error:', userError);
+      console.error('❌ Auth error:', userError);
       return new Response(
         JSON.stringify({ error: 'Invalid token' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
+    console.log(`✅ User authenticated: ${user.email} (${user.id})`);
+
     // Parse request body
     const { invitationToken }: AcceptInvitationRequest = await req.json();
+    console.log(`📨 Processing invitation token: ${invitationToken}`);
 
     if (!invitationToken) {
+      console.error('❌ Missing invitation token in request');
       return new Response(
         JSON.stringify({ error: 'Missing invitation token' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    console.log(`Processing invitation acceptance for user ${user.email} with token ${invitationToken}`);
 
     // Fetch invitation details
     const { data: invitation, error: invitationError } = await supabase
@@ -70,22 +77,25 @@ serve(async (req: Request): Promise<Response> => {
       .single();
 
     if (invitationError || !invitation) {
-      console.error('Invitation fetch error:', invitationError);
+      console.error('❌ Invitation fetch error:', invitationError);
       return new Response(
         JSON.stringify({ error: 'Invalid or expired invitation' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
+    console.log(`✅ Found invitation ID: ${invitation.id}`);
+    console.log(`   Family: ${invitation.family_units.family_label}`);
+    console.log(`   Trust anchor: ${invitation.family_units.trust_anchor_user_id}`);
+
     // Check if invitation is expired
     if (new Date(invitation.expires_at) < new Date()) {
+      console.error('❌ Invitation expired');
       return new Response(
         JSON.stringify({ error: 'Invitation has expired' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    console.log(`Found valid invitation for family unit: ${invitation.family_units.family_label}`);
 
     // Check if user is already a member of this family unit
     const { data: existingMembership } = await supabase
@@ -98,11 +108,14 @@ serve(async (req: Request): Promise<Response> => {
       .single();
 
     if (existingMembership) {
+      console.log('⚠️ User already member of this family');
       return new Response(
         JSON.stringify({ error: 'User is already a member of this family unit' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log('🔄 Creating membership...');
 
     // Use a transaction to update invitation and create membership
     const { error: transactionError } = await supabase.rpc('accept_family_invitation_transaction', {
@@ -114,10 +127,8 @@ serve(async (req: Request): Promise<Response> => {
     });
 
     if (transactionError) {
-      console.error('Transaction error:', transactionError);
-      
-      // Fallback to individual operations if RPC doesn't exist
-      console.log('Falling back to individual operations...');
+      console.error('⚠️ Transaction RPC error:', transactionError);
+      console.log('🔄 Falling back to individual operations...');
       
       // Update invitation status
       const { error: updateError } = await supabase
@@ -129,14 +140,17 @@ serve(async (req: Request): Promise<Response> => {
         .eq('id', invitation.id);
 
       if (updateError) {
-        console.error('Failed to update invitation:', updateError);
+        console.error('❌ Failed to update invitation:', updateError);
         return new Response(
           JSON.stringify({ error: 'Failed to accept invitation' }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
+      console.log('✅ Invitation status updated to accepted');
+
       // Create organization membership
+      console.log('🔄 Creating organization membership...');
       const { error: membershipError } = await supabase
         .from('organization_memberships')
         .insert({
@@ -151,15 +165,18 @@ serve(async (req: Request): Promise<Response> => {
         });
 
       if (membershipError) {
-        console.error('Failed to create membership:', membershipError);
+        console.error('❌ Failed to create membership:', membershipError);
         return new Response(
           JSON.stringify({ error: 'Failed to create family membership' }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
+
+      console.log('✅ Membership created successfully');
     }
 
-    console.log(`Successfully accepted invitation for user ${user.email}`);
+    console.log(`✅ Successfully accepted invitation for user ${user.email}`);
+    console.log(`   Family: ${invitation.family_units.family_label}`);
 
     return new Response(
       JSON.stringify({ 

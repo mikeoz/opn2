@@ -297,8 +297,16 @@ export const useFamilyUnits = () => {
       console.log('🔄 family-units:refetch event received');
       fetchFamilyUnits();
     };
+    
+    // Listen for family membership updates (from invitation acceptance)
+    const onMembershipUpdate = () => {
+      console.log('🔄 family-membership-updated event received');
+      fetchFamilyUnits();
+    };
+    
     try {
       window.addEventListener('family-units:refetch', onRefetch);
+      window.addEventListener('family-membership-updated', onMembershipUpdate);
     } catch (e) {
       console.warn('Failed to add refetch listener', e);
     }
@@ -431,6 +439,7 @@ export const useFamilyUnits = () => {
       console.log('🧹 Cleaning up realtime subscription:', channelName);
       try {
         window.removeEventListener('family-units:refetch', onRefetch);
+        window.removeEventListener('family-membership-updated', onMembershipUpdate);
       } catch {}
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);

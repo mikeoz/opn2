@@ -187,6 +187,11 @@ const Register = () => {
             : "Please check your email to verify your account.",
         });
         
+        // Trigger manual refetch of family units for immediate UI update
+        if (invitationData) {
+          window.dispatchEvent(new CustomEvent('family-membership-updated'));
+        }
+        
         // Redirect to family management if invitation, otherwise dashboard
         if (invitationData) {
           navigate('/family-management');
@@ -228,6 +233,11 @@ const Register = () => {
             ? "You've successfully joined the family unit."
             : "You've been signed in successfully.",
         });
+        
+        // Trigger manual refetch of family units for immediate UI update
+        if (invitationData) {
+          window.dispatchEvent(new CustomEvent('family-membership-updated'));
+        }
         
         // Redirect to family management if invitation, otherwise dashboard
         if (invitationData) {
