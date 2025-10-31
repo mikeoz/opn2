@@ -361,66 +361,93 @@ export const FamilyManagement: React.FC = () => {
               </Card>
             ) : (
               <div className="space-y-6">
-                {generations.map(generation => (
-                  <div key={generation} className="space-y-3">
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="text-sm">
-                          Generation {generation}
-                        </Badge>
-                        <span className="text-sm text-muted-foreground">
-                          {groupedByGeneration[generation].length} family unit(s)
-                        </span>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {groupedByGeneration[generation].map(unit => (
-                          <FamilyUnitCard
-                            key={unit.id}
-                            familyUnit={unit}
-                            onSelect={() => setSelectedFamilyUnit(unit.id)}
-                            isSelected={selectedFamilyUnit === unit.id}
-                            onEdit={unit.trust_anchor_user_id === user?.id ? handleEditFamilyUnit : undefined}
-                            onDelete={unit.trust_anchor_user_id === user?.id ? handleDeleteFamilyUnit : undefined}
-                          />
-                        ))}
-                      </div>
-                      
-                       <div className="flex gap-2 flex-wrap pt-2">
-                         {selectedFamily && (
-                           <Tooltip>
-                             <TooltipTrigger asChild>
-                               <Button
-                                 variant="outline"
-                                 size="sm"
-                                 onClick={() => {
-                                   setSelectedFamilyUnit(null);
-                                   setActiveTab('overview');
-                                 }}
-                               >
-                                 <ArrowLeft className="h-4 w-4 mr-2" />
-                                 Back to Overview
-                               </Button>
-                             </TooltipTrigger>
-                             <TooltipContent>Return to family overview</TooltipContent>
-                           </Tooltip>
-                         )}
-                         <Tooltip>
-                           <TooltipTrigger asChild>
-                             <Button 
-                               size="sm"
-                               onClick={() => setShowCreateDialog(true)}
-                             >
-                               <Plus className="h-4 w-4 mr-2" />
-                               Create Family Unit
-                             </Button>
-                           </TooltipTrigger>
-                           <TooltipContent>Create a new family unit</TooltipContent>
-                         </Tooltip>
-                       </div>
+                {/* Member of families */}
+                {familyUnits.filter(f => f.isMember && !f.isOwner).length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="text-sm">
+                        <Users className="h-3 w-3 mr-1" />
+                        Member Of
+                      </Badge>
+                      <span className="text-sm text-muted-foreground">
+                        {familyUnits.filter(f => f.isMember && !f.isOwner).length} family unit(s)
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {familyUnits.filter(f => f.isMember && !f.isOwner).map(unit => (
+                        <FamilyUnitCard
+                          key={unit.id}
+                          familyUnit={unit}
+                          onSelect={() => setSelectedFamilyUnit(unit.id)}
+                          isSelected={selectedFamilyUnit === unit.id}
+                        />
+                      ))}
                     </div>
                   </div>
-                ))}
+                )}
+
+                {/* Families you own - grouped by generation */}
+                {familyUnits.filter(f => f.isOwner).length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="default" className="text-sm">
+                        <Crown className="h-3 w-3 mr-1" />
+                        Your Families
+                      </Badge>
+                      <span className="text-sm text-muted-foreground">
+                        {familyUnits.filter(f => f.isOwner).length} family unit(s)
+                      </span>
+                    </div>
+                  </div>
+                )}
+                {/* Group owned families by generation */}
+                {Object.keys(groupedByGeneration)
+                  .map(Number)
+                  .sort((a, b) => a - b)
+                  .filter(generation => groupedByGeneration[generation].some(u => u.isOwner))
+                  .map(generation => (
+                    <div key={generation} className="space-y-3">
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-2 ml-4">
+                          <Badge variant="outline" className="text-sm">
+                            Generation {generation}
+                          </Badge>
+                          <span className="text-sm text-muted-foreground">
+                            {groupedByGeneration[generation].filter(u => u.isOwner).length} family unit(s)
+                          </span>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {groupedByGeneration[generation].filter(u => u.isOwner).map(unit => (
+                            <FamilyUnitCard
+                              key={unit.id}
+                              familyUnit={unit}
+                              onSelect={() => setSelectedFamilyUnit(unit.id)}
+                              isSelected={selectedFamilyUnit === unit.id}
+                              onEdit={handleEditFamilyUnit}
+                              onDelete={handleDeleteFamilyUnit}
+                            />
+                          ))}
+                        </div>
+                       
+                        <div className="flex gap-2 flex-wrap pt-2">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                size="sm"
+                                onClick={() => setShowCreateDialog(true)}
+                              >
+                                <Plus className="h-4 w-4 mr-2" />
+                                Create Family Unit
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Create a new family unit</TooltipContent>
+                          </Tooltip>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                }
               </div>
             )}
           </TabsContent>

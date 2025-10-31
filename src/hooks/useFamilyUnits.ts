@@ -25,6 +25,14 @@ export interface FamilyUnit {
     generation_level: number;
   };
   member_count?: number;
+  // User relationship flags
+  isOwner?: boolean;
+  isMember?: boolean;
+  membershipDetails?: {
+    relationship_label?: string;
+    family_generation?: number;
+    joined_at?: string;
+  };
 }
 
 export interface FamilyMember {
@@ -66,39 +74,67 @@ export const useFamilyUnits = () => {
     
     setLoading(true);
     try {
-      // Get family units where user is trust anchor or member
+      // Get family units where user is trust anchor or member (RLS handles this)
       const { data: unitsData, error: unitsError } = await supabase
         .from('family_units')
         .select(`
-          *
+          *,
+          trust_anchor_profile:profiles!trust_anchor_user_id(
+            first_name,
+            last_name,
+            birth_name
+          )
         `)
         .eq('is_active', true)
         .order('generation_level', { ascending: true });
 
       if (unitsError) throw unitsError;
 
-      // Get member counts for each family unit
+      // Get member counts and user's membership details for each family unit
       const unitIds = unitsData?.map(unit => unit.trust_anchor_user_id) || [];
-      const memberCountPromises = unitIds.map(async (trustAnchorId) => {
-        const { count, error } = await supabase
+      
+      const enrichmentPromises = unitIds.map(async (trustAnchorId) => {
+        // Get member count
+        const { count, error: countError } = await supabase
           .from('organization_memberships')
           .select('*', { count: 'exact', head: true })
           .eq('organization_user_id', trustAnchorId)
           .eq('is_family_unit', true)
           .eq('status', 'active');
         
-        return { trustAnchorId, count: count || 0 };
+        // Check if current user is a member of this family
+        const { data: membershipData, error: membershipError } = await supabase
+          .from('organization_memberships')
+          .select('relationship_label, family_generation, joined_at')
+          .eq('organization_user_id', trustAnchorId)
+          .eq('individual_user_id', user.id)
+          .eq('is_family_unit', true)
+          .eq('status', 'active')
+          .maybeSingle();
+        
+        return { 
+          trustAnchorId, 
+          count: count || 0,
+          membership: membershipData
+        };
       });
 
-      const memberCounts = await Promise.all(memberCountPromises);
+      const enrichmentData = await Promise.all(enrichmentPromises);
 
       // Combine data and normalize to expected format
-      const enrichedUnits = (unitsData as any)?.map((unit: any) => ({
-        ...unit,
-        trust_anchor_profile: null, // We'll fetch profile separately if needed
-        parent_family: null, // We'll fetch parent separately if needed  
-        member_count: memberCounts.find(mc => mc.trustAnchorId === unit.trust_anchor_user_id)?.count || 0
-      })) || [];
+      const enrichedUnits = (unitsData as any)?.map((unit: any) => {
+        const enrichment = enrichmentData.find(e => e.trustAnchorId === unit.trust_anchor_user_id);
+        const isOwner = unit.trust_anchor_user_id === user.id;
+        const isMember = !!enrichment?.membership;
+        
+        return {
+          ...unit,
+          member_count: enrichment?.count || 0,
+          isOwner,
+          isMember,
+          membershipDetails: enrichment?.membership || null
+        };
+      }) || [];
 
       setFamilyUnits(enrichedUnits as FamilyUnit[]);
     } catch (error) {
@@ -152,7 +188,10 @@ export const useFamilyUnits = () => {
             ...data,
             trust_anchor_profile: null,
             parent_family: null,
-            member_count: 0
+            member_count: 0,
+            isOwner: true, // User just created it
+            isMember: false,
+            membershipDetails: null
           }];
         });
       }, 1000);
@@ -302,11 +341,18 @@ export const useFamilyUnits = () => {
                 console.log('Unit already exists, skipping');
                 return prev;
               }
+              
+              // Determine if user is owner or member
+              const isOwner = newUnit.trust_anchor_user_id === user.id;
+              
               const updatedUnits = [...prev, {
                 ...newUnit,
                 trust_anchor_profile: null,
                 parent_family: null,
-                member_count: 0
+                member_count: 0,
+                isOwner,
+                isMember: false, // Will be updated by refetch if needed
+                membershipDetails: null
               }];
               console.log('Added new unit, total units:', updatedUnits.length);
               return updatedUnits;

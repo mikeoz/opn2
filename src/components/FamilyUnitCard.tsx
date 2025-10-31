@@ -52,12 +52,16 @@ export const FamilyUnitCard: React.FC<FamilyUnitCardProps> = ({
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg flex items-center gap-2">
-              <Crown className="h-4 w-4 text-amber-500" />
+              {isOwner ? (
+                <Crown className="h-4 w-4 text-amber-500" />
+              ) : (
+                <Users className="h-4 w-4 text-blue-500" />
+              )}
               {familyUnit.family_label}
             </CardTitle>
             <div className="flex items-center gap-2">
               <Badge variant="secondary">Gen {familyUnit.generation_level}</Badge>
-              {(onEdit || onDelete) && (
+              {isOwner && (onEdit || onDelete) && (
                 <DropdownMenu>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -127,6 +131,22 @@ export const FamilyUnitCard: React.FC<FamilyUnitCardProps> = ({
             <p className="text-sm text-muted-foreground">Trust Anchor</p>
             <p className="font-medium">{getDisplayName()}</p>
           </div>
+
+          {!isOwner && familyUnit.membershipDetails && (
+            <div>
+              <p className="text-sm text-muted-foreground">Your Role</p>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-xs">
+                  {familyUnit.membershipDetails.relationship_label || 'Member'}
+                </Badge>
+                {familyUnit.membershipDetails.joined_at && (
+                  <p className="text-xs text-muted-foreground">
+                    Joined {new Date(familyUnit.membershipDetails.joined_at).toLocaleDateString()}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
 
           {familyUnit.parent_family && (
             <div>
