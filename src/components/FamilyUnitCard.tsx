@@ -158,7 +158,8 @@ export const FamilyUnitCard: React.FC<FamilyUnitCardProps> = ({
           <div className="flex items-center justify-between pt-2">
             <div className="flex items-center gap-1 text-sm text-muted-foreground">
               <Users className="h-4 w-4" />
-              {familyUnit.member_count || 0} members
+              {familyUnit.member_count || 0} {familyUnit.member_count === 1 ? 'member' : 'members'}
+              {isOwner && <span className="text-xs ml-1">(active)</span>}
             </div>
             
             <Tooltip>

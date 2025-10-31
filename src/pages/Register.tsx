@@ -117,23 +117,36 @@ const Register = () => {
           setUserType('individual'); // Force individual type for family invitations
           
           // Check if email already exists in the system
+          console.log('🔍 Checking for existing user with email:', data.invitee_email);
+          
           const { data: existingUser, error: userCheckError } = await supabase
             .from('profiles')
-            .select('id')
+            .select('id, email, first_name, last_name')
             .eq('email', data.invitee_email)
             .maybeSingle();
           
+          console.log('📊 User check results:', { 
+            existingUser, 
+            userCheckError,
+            hasData: !!existingUser,
+            errorMessage: userCheckError?.message,
+            errorCode: userCheckError?.code
+          });
+          
           if (existingUser && !userCheckError) {
             // User exists, automatically switch to sign-in mode
-            console.log('👤 Existing user found, switching to sign-in mode');
+            console.log('✅ Existing user found, switching to sign-in mode');
             setShowSignIn(true);
             setSignInData({ email: data.invitee_email, password: '' });
             toast({
               title: "Account Found",
-              description: "An account with this email already exists. Please sign in to accept the invitation.",
+              description: `Welcome back ${existingUser.first_name}! Please sign in to accept the invitation.`,
             });
           } else {
-            console.log('👤 No existing user, staying in registration mode');
+            console.log('❌ No existing user found, staying in registration mode');
+            if (userCheckError) {
+              console.error('⚠️ Error checking for existing user:', userCheckError);
+            }
           }
         } catch (error) {
           console.error('Error fetching invitation:', error);
