@@ -21,7 +21,8 @@ interface UnifiedFamilyAddDialogProps {
 
 const relationshipOptions = [
   { value: 'spouse', label: 'Spouse/Partner', description: 'Married or life partner' },
-  { value: 'child', label: 'Child', description: 'Son or daughter' },
+  { value: 'adult_child', label: 'Adult Child', description: 'Son or daughter (adult)' },
+  { value: 'minor_child', label: 'Minor Child', description: 'Son or daughter (minor)' },
   { value: 'parent', label: 'Parent', description: 'Mother or father' },
   { value: 'sibling', label: 'Sibling', description: 'Brother or sister' },
   { value: 'grandparent', label: 'Grandparent', description: 'Grandmother or grandfather' },

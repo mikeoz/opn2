@@ -25,8 +25,8 @@ const nameSchema = z.string().trim().min(1, 'Name is required').max(100);
 const phoneSchema = z.string().trim().max(20).optional();
 
 const relationshipOptions = [
-  'Parent', 'Child', 'Spouse', 'Sibling', 'Grandparent', 
-  'Grandchild', 'Aunt/Uncle', 'Cousin', 'Other'
+  'Parent', 'Adult Child', 'Minor Child', 'Spouse', 'Sibling', 
+  'Grandparent', 'Grandchild', 'Aunt/Uncle', 'Cousin', 'Other'
 ];
 
 export const SeedProfileDialog: React.FC<SeedProfileDialogProps> = ({

@@ -17,7 +17,8 @@ interface FamilyInvitationDialogProps {
 
 const relationshipOptions = [
   { value: 'spouse', label: 'Spouse/Partner' },
-  { value: 'child', label: 'Child' },
+  { value: 'adult_child', label: 'Adult Child' },
+  { value: 'minor_child', label: 'Minor Child' },
   { value: 'parent', label: 'Parent' },
   { value: 'sibling', label: 'Sibling' },
   { value: 'grandparent', label: 'Grandparent' },
