@@ -216,7 +216,7 @@ export const useFamilyUnits = () => {
     }
   };
 
-  const fetchFamilyMembers = async (familyUnitId: string): Promise<FamilyMember[]> => {
+  const fetchFamilyMembers = async (trustAnchorUserId: string): Promise<FamilyMember[]> => {
     try {
       const { data, error } = await supabase
         .from('organization_memberships')
@@ -234,7 +234,7 @@ export const useFamilyUnits = () => {
             email
           )
         `)
-        .eq('organization_user_id', familyUnitId)
+        .eq('organization_user_id', trustAnchorUserId)
         .eq('is_family_unit', true)
         .eq('status', 'active')
         .order('family_generation', { ascending: true });

@@ -237,6 +237,7 @@ export const FamilyManagement: React.FC = () => {
               familyUnitId={selectedFamily.id}
               familyUnitLabel={selectedFamily.family_label}
               generationLevel={selectedFamily.generation_level}
+              trustAnchorUserId={selectedFamily.trust_anchor_user_id}
               isOwner={isOwnerOfSelectedFamily}
             />
           </TabsContent>

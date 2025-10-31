@@ -25,7 +25,7 @@ export const FamilyMembersView: React.FC<FamilyMembersViewProps> = ({
       setLoading(true);
       try {
         const memberPromises = familyUnits.map(async (unit) => {
-          const members = await fetchFamilyMembers(unit.id);
+          const members = await fetchFamilyMembers(unit.trust_anchor_user_id);
           return members.map(member => ({ ...member, familyUnit: unit }));
         });
 

@@ -16,6 +16,7 @@ interface FamilyMemberManagerProps {
   familyUnitId: string;
   familyUnitLabel: string;
   generationLevel: number;
+  trustAnchorUserId: string;
   isOwner?: boolean;
 }
 
@@ -23,6 +24,7 @@ const FamilyMemberManager: React.FC<FamilyMemberManagerProps> = ({
   familyUnitId,
   familyUnitLabel,
   generationLevel,
+  trustAnchorUserId,
   isOwner = false
 }) => {
   const { user } = useAuth();
@@ -35,12 +37,12 @@ const FamilyMemberManager: React.FC<FamilyMemberManagerProps> = ({
 
   useEffect(() => {
     loadMembers();
-  }, [familyUnitId]);
+  }, [trustAnchorUserId]);
 
   const loadMembers = async () => {
     setLoading(true);
     try {
-      const familyMembers = await fetchFamilyMembers(familyUnitId);
+      const familyMembers = await fetchFamilyMembers(trustAnchorUserId);
       setMembers(familyMembers);
     } catch (error) {
       console.error('Error loading family members:', error);
