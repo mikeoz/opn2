@@ -825,6 +825,13 @@ export type Database = {
             referencedRelation: "family_units"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "family_invitations_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       family_ownership_transfers: {
