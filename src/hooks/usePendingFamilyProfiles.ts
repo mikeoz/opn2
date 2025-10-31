@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -41,6 +41,19 @@ export const usePendingFamilyProfiles = (familyUnitId?: string) => {
   const { user } = useAuth();
   const [profiles, setProfiles] = useState<PendingFamilyProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const channelRef = useRef<any>(null);
+  const instanceIdRef = useRef<string>('');
+
+  if (!instanceIdRef.current) {
+    try {
+      instanceIdRef.current =
+        typeof crypto !== 'undefined' && (crypto as any).randomUUID
+          ? (crypto as any).randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    } catch {
+      instanceIdRef.current = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    }
+  }
 
   const fetchProfiles = async () => {
     if (!user) return;
@@ -199,11 +212,23 @@ export const usePendingFamilyProfiles = (familyUnitId?: string) => {
   };
 
   useEffect(() => {
+    if (!user) return;
+
     fetchProfiles();
+
+    // Clean up any existing channel first
+    if (channelRef.current) {
+      console.log('🧹 Cleaning up existing pending profiles channel');
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+
+    const channelName = `pending-profiles-${user.id}-${familyUnitId || 'all'}-${instanceIdRef.current}`;
+    console.log('Setting up pending profiles subscription:', channelName);
 
     // Set up real-time subscription
     const channel = supabase
-      .channel('pending_profiles_changes')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -213,15 +238,22 @@ export const usePendingFamilyProfiles = (familyUnitId?: string) => {
           filter: familyUnitId ? `family_unit_id=eq.${familyUnitId}` : undefined
         },
         () => {
+          console.log('Pending profiles updated, refreshing...');
           fetchProfiles();
         }
       )
       .subscribe();
 
+    channelRef.current = channel;
+
     return () => {
-      supabase.removeChannel(channel);
+      console.log('🧹 Cleaning up pending profiles subscription:', channelName);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
-  }, [user, familyUnitId]);
+  }, [user?.id, familyUnitId]);
 
   return {
     profiles,
