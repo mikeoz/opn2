@@ -374,6 +374,52 @@ export const useFamilyUnits = () => {
           }
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'organization_memberships',
+          filter: `individual_user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('🔥 Membership change detected (as member):', payload.eventType);
+          // Refetch to get updated membership details and family units
+          fetchFamilyUnits();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'organization_memberships',
+          filter: `organization_user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('🔥 Membership change detected (as owner):', payload.eventType);
+          // Someone joined or left a family you own, refetch to update counts
+          fetchFamilyUnits();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'family_invitations',
+          filter: `invitee_email=eq.${user.email}`
+        },
+        (payload) => {
+          console.log('🔥 Invitation status changed:', payload);
+          const newStatus = (payload.new as any)?.status;
+          if (newStatus === 'accepted') {
+            // Invitation was accepted, refetch family units
+            console.log('Invitation accepted, refetching family units...');
+            fetchFamilyUnits();
+          }
+        }
+      )
       .subscribe((status) => {
         console.log('Subscription status:', status);
       });

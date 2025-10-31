@@ -83,13 +83,40 @@ const Register = () => {
           }
 
           setInvitationData(data);
+          
+          // Parse invitee_name intelligently (don't use email as firstName)
+          let firstName = '';
+          let lastName = '';
+          if (data.invitee_name && !data.invitee_name.includes('@')) {
+            const nameParts = data.invitee_name.split(' ');
+            firstName = nameParts[0] || '';
+            lastName = nameParts.slice(1).join(' ') || '';
+          }
+          
           setFormData(prev => ({
             ...prev,
             email: data.invitee_email,
-            firstName: data.invitee_name?.split(' ')[0] || '',
-            lastName: data.invitee_name?.split(' ').slice(1).join(' ') || '',
+            firstName,
+            lastName,
           }));
           setUserType('individual'); // Force individual type for family invitations
+          
+          // Check if email already exists in the system
+          const { data: existingUser, error: userCheckError } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('email', data.invitee_email)
+            .maybeSingle();
+          
+          if (existingUser && !userCheckError) {
+            // User exists, automatically switch to sign-in mode
+            setShowSignIn(true);
+            setSignInData({ email: data.invitee_email, password: '' });
+            toast({
+              title: "Account Found",
+              description: "An account with this email already exists. Please sign in to accept the invitation.",
+            });
+          }
         } catch (error) {
           console.error('Error fetching invitation:', error);
           toast({
