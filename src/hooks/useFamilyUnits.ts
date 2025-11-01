@@ -151,7 +151,7 @@ export const useFamilyUnits = () => {
         
         return { 
           trustAnchorId, 
-          count: count || 0,
+          count: (count || 0) + 1, // Add 1 to include the trust anchor in the total member count
           membership: membershipData
         };
       });

@@ -353,9 +353,9 @@ export const FamilyManagement: React.FC = () => {
               <Card>
                 <CardContent className="flex flex-col items-center justify-center py-12">
                   <TreePine className="h-12 w-12 text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No Family Units Yet</h3>
+                  <h3 className="text-lg font-semibold mb-2">No family units created yet.</h3>
                    <p className="text-muted-foreground text-center mb-4">
-                     Create your first family unit to start building your family tree and managing relationships.
+                     Create your first family unit to get started!
                    </p>
                    <Tooltip>
                      <TooltipTrigger asChild>
@@ -370,7 +370,24 @@ export const FamilyManagement: React.FC = () => {
               </Card>
             ) : (
               <div className="space-y-6">
-                {/* Member of families */}
+                {/* Prompt to create own family if user only has memberships */}
+                {familyUnits.filter(f => f.isOwner).length === 0 && familyUnits.filter(f => f.isMember).length > 0 && (
+                  <Card className="border-2 border-dashed">
+                    <CardContent className="flex flex-col items-center justify-center py-8">
+                      <TreePine className="h-10 w-10 text-primary mb-3" />
+                      <h3 className="text-lg font-semibold mb-2">Create Your Own Family Unit</h3>
+                      <p className="text-muted-foreground text-center text-sm mb-4 max-w-md">
+                        You're currently a member of other family units. Start your own family tree to manage your family relationships and invite others!
+                      </p>
+                      <Button size="sm" onClick={() => setShowCreateDialog(true)}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create Your Family Unit
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Member of families - Compact View */}
                 {familyUnits.filter(f => f.isMember && !f.isOwner).length > 0 && (
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
@@ -378,18 +395,45 @@ export const FamilyManagement: React.FC = () => {
                         <Users className="h-3 w-3 mr-1" />
                         Member Of
                       </Badge>
-                      <span className="text-sm text-muted-foreground">
-                        {familyUnits.filter(f => f.isMember && !f.isOwner).length} family unit(s)
-                      </span>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="space-y-3">
                       {familyUnits.filter(f => f.isMember && !f.isOwner).map(unit => (
-                        <FamilyUnitCard
-                          key={unit.id}
-                          familyUnit={unit}
-                          onSelect={() => setSelectedFamilyUnit(unit.id)}
-                          isSelected={selectedFamilyUnit === unit.id}
-                        />
+                        <Card key={unit.id} className="hover:bg-accent/50 transition-colors">
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <h3 className="font-semibold text-lg mb-1">
+                                  Member of {unit.family_label}
+                                </h3>
+                                <p className="text-sm text-muted-foreground mb-2">
+                                  Led by {unit.trust_anchor_profile?.first_name} {unit.trust_anchor_profile?.last_name}
+                                </p>
+                                <div className="flex items-center gap-3 text-sm">
+                                  <span className="flex items-center gap-1">
+                                    <Users className="h-3 w-3" />
+                                    {unit.member_count || 0} members
+                                  </span>
+                                  <Badge variant="outline" className="text-xs">
+                                    Gen {unit.generation_level}
+                                  </Badge>
+                                  {unit.membershipDetails?.relationship_label && (
+                                    <span className="text-muted-foreground">
+                                      ({unit.membershipDetails.relationship_label})
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setSelectedFamilyUnit(unit.id)}
+                                className="ml-4"
+                              >
+                                More Details
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
                       ))}
                     </div>
                   </div>
