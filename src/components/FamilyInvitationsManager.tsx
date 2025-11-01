@@ -60,28 +60,32 @@ const InvitationCard: React.FC<{
   return (
     <Card className="mb-4">
       <CardContent className="pt-6">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <h4 className="font-medium">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              <h4 className="font-medium text-sm sm:text-base break-words">
                 {invitation.invitee_name || invitation.invitee_email}
               </h4>
-              <Badge className={`${statusColors[actualStatus]} flex items-center gap-1`}>
+              <Badge className={`${statusColors[actualStatus]} flex items-center gap-1 text-xs shrink-0`}>
                 {statusIcons[actualStatus]}
                 {actualStatus.charAt(0).toUpperCase() + actualStatus.slice(1)}
               </Badge>
             </div>
             
-            <div className="text-sm text-muted-foreground space-y-1">
-              <p><Mail className="h-3 w-3 inline mr-1" /> {invitation.invitee_email}</p>
+            <div className="text-xs sm:text-sm text-muted-foreground space-y-2">
+              <p className="flex items-center gap-1 break-all">
+                <Mail className="h-3 w-3 shrink-0" /> 
+                <span>{invitation.invitee_email}</span>
+              </p>
               <p><strong>Relationship:</strong> {invitation.relationship_role}</p>
-              <p><Calendar className="h-3 w-3 inline mr-1" /> 
-                Sent: {invitation.sent_at ? formatDate(invitation.sent_at) : 'Not sent yet'}
+              <p className="flex items-start gap-1">
+                <Calendar className="h-3 w-3 shrink-0 mt-0.5" /> 
+                <span>Sent: {invitation.sent_at ? formatDate(invitation.sent_at) : 'Not sent yet'}</span>
               </p>
               <p><strong>Expires:</strong> {formatDate(invitation.expires_at)}</p>
               
               {invitation.personal_message && (
-                <div className="mt-2 p-2 bg-muted rounded text-sm">
+                <div className="mt-2 p-2 bg-muted rounded text-xs sm:text-sm">
                   <strong>Message:</strong> "{invitation.personal_message}"
                 </div>
               )}
@@ -89,16 +93,16 @@ const InvitationCard: React.FC<{
           </div>
 
           {isOwner && (
-            <div className="flex gap-2 ml-4">
+            <div className="flex gap-2 sm:flex-col sm:ml-4">
               {actualStatus === 'pending' && (
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => onResend(invitation.id)}
-                  className="flex items-center gap-1"
+                  className="flex items-center gap-1 flex-1 sm:flex-none text-xs sm:text-sm"
                 >
                   <Send className="h-3 w-3" />
-                  Resend
+                  <span className="sm:inline">Resend</span>
                 </Button>
               )}
               
@@ -107,10 +111,10 @@ const InvitationCard: React.FC<{
                   size="sm"
                   variant="outline"
                   onClick={() => onCancel(invitation.id)}
-                  className="flex items-center gap-1 text-red-600 hover:text-red-700"
+                  className="flex items-center gap-1 flex-1 sm:flex-none text-xs sm:text-sm text-red-600 hover:text-red-700"
                 >
                   <Trash2 className="h-3 w-3" />
-                  Cancel
+                  <span className="sm:inline">Cancel</span>
                 </Button>
               )}
             </div>
@@ -158,24 +162,26 @@ export const FamilyInvitationsManager: React.FC<FamilyInvitationsManagerProps> =
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex-1">
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-2xl">
                 <UserPlus className="h-5 w-5" />
                 Family Invitations
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="mt-1">
                 Manage invitations for the {familyUnitLabel} family unit
               </CardDescription>
             </div>
             
             {isOwner && (
-              <div className="flex gap-2">
-                <Button onClick={() => setShowInviteDialog(true)} variant="default">
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Add Family Members
-                </Button>
-              </div>
+              <Button 
+                onClick={() => setShowInviteDialog(true)} 
+                variant="default"
+                className="w-full sm:w-auto"
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Add Family Members
+              </Button>
             )}
           </div>
         </CardHeader>
@@ -191,17 +197,17 @@ export const FamilyInvitationsManager: React.FC<FamilyInvitationsManagerProps> =
             </div>
           ) : (
             <Tabs defaultValue="pending" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="pending">
+              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1">
+                <TabsTrigger value="pending" className="text-xs sm:text-sm">
                   Pending ({pendingInvitations.length})
                 </TabsTrigger>
-                <TabsTrigger value="accepted">
+                <TabsTrigger value="accepted" className="text-xs sm:text-sm">
                   Accepted ({acceptedInvitations.length})
                 </TabsTrigger>
-                <TabsTrigger value="expired">
+                <TabsTrigger value="expired" className="text-xs sm:text-sm">
                   Expired ({expiredInvitations.length})
                 </TabsTrigger>
-                <TabsTrigger value="cancelled">
+                <TabsTrigger value="cancelled" className="text-xs sm:text-sm">
                   Cancelled ({cancelledInvitations.length})
                 </TabsTrigger>
               </TabsList>
