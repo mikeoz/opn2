@@ -1,9 +1,36 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.10'
-// noop: trigger redeploy timestamp
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+// Retry helper with exponential backoff
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries = 3,
+  baseDelay = 1000
+): Promise<T> {
+  let lastError: Error | null = null;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      console.log(`🔄 Attempt ${attempt + 1}/${maxRetries}`);
+      return await fn();
+    } catch (error) {
+      lastError = error as Error;
+      console.warn(`⚠️ Attempt ${attempt + 1} failed:`, error);
+      
+      if (attempt < maxRetries - 1) {
+        const delay = baseDelay * Math.pow(2, attempt);
+        console.log(`⏱️ Waiting ${delay}ms before retry...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+  
+  throw lastError;
 }
 
 interface AcceptInvitationRequest {
@@ -115,74 +142,41 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
-      console.log('🔄 Creating membership...');
+      console.log('🔄 Creating membership with retry logic...');
 
-      // Use a transaction to update invitation and create membership
-      const { error: transactionError } = await supabase.rpc('accept_family_invitation_transaction', {
-        p_invitation_id: invitation.id,
-        p_user_id: user.id,
-        p_trust_anchor_user_id: invitation.family_units.trust_anchor_user_id,
-        p_relationship_role: invitation.relationship_role,
-        p_invited_by: invitation.invited_by
-      });
-
-      if (transactionError) {
-        console.error('⚠️ Transaction RPC error:', transactionError);
-        console.log('🔄 Falling back to individual operations...');
+      // Use retry logic with the atomic transaction function
+      const result = await retryWithBackoff(async () => {
+        console.log('📞 Calling accept_family_invitation_transaction RPC...');
         
-        // Update invitation status
-        const { error: updateError } = await supabase
-          .from('family_invitations')
-          .update({ 
-            status: 'accepted', 
-            accepted_at: new Date().toISOString() 
-          })
-          .eq('id', invitation.id);
+        const { data: rpcResult, error: rpcError } = await supabase.rpc(
+          'accept_family_invitation_transaction',
+          {
+            p_invitation_id: invitation.id,
+            p_user_id: user.id,
+            p_trust_anchor_user_id: invitation.family_units.trust_anchor_user_id,
+            p_relationship_role: invitation.relationship_role,
+            p_invited_by: invitation.invited_by
+          }
+        );
 
-        if (updateError) {
-          console.error('❌ Failed to update invitation:', updateError);
-          return new Response(
-            JSON.stringify({ error: 'Failed to accept invitation' }),
-            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
+        console.log('📨 RPC Response:', { rpcResult, rpcError });
+
+        if (rpcError) {
+          console.error('❌ RPC Error:', rpcError);
+          throw new Error(`RPC failed: ${rpcError.message}`);
         }
 
-        console.log('✅ Invitation status updated to accepted');
-
-        // Create organization membership
-        console.log('🔄 Creating organization membership...');
-        console.log('   individual_user_id:', user.id);
-        console.log('   organization_user_id (trust anchor):', invitation.family_units.trust_anchor_user_id);
-        console.log('   relationship_label:', invitation.relationship_role);
-        
-        const { data: membershipData, error: membershipError } = await supabase
-          .from('organization_memberships')
-          .insert({
-            individual_user_id: user.id,
-            organization_user_id: invitation.family_units.trust_anchor_user_id,
-            relationship_label: invitation.relationship_role,
-            permissions: { family_member: true },
-            is_family_unit: true,
-            membership_type: 'member',
-            status: 'active',
-            created_by: invitation.invited_by
-          })
-          .select()
-          .single();
-
-        if (membershipError) {
-          console.error('❌ Failed to create membership:', membershipError);
-          console.error('   Error details:', JSON.stringify(membershipError, null, 2));
-          return new Response(
-            JSON.stringify({ error: 'Failed to create family membership', details: membershipError.message }),
-            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
+        // Check if the RPC function returned an error in its result
+        if (rpcResult && !rpcResult.success) {
+          console.error('❌ RPC returned error:', rpcResult.error);
+          throw new Error(rpcResult.error);
         }
 
-        console.log('✅ Membership created successfully:', membershipData);
-      } else {
-        console.log('✅ Transaction completed successfully');
-      }
+        console.log('✅ RPC completed successfully:', rpcResult);
+        return rpcResult;
+      }, 3, 2000); // 3 retries, 2-second base delay
+
+      console.log('✅ Membership creation successful:', result);
 
     console.log(`✅ Successfully accepted invitation for user ${user.email}`);
     console.log(`   Family: ${invitation.family_units.family_label}`);

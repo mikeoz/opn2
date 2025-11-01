@@ -1973,6 +1973,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_family_invitation_transaction: {
+        Args: {
+          p_invitation_id: string
+          p_invited_by: string
+          p_relationship_role: string
+          p_trust_anchor_user_id: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       accept_relationship_invitation: {
         Args: { p_invitation_token: string; p_modified_label_to?: string }
         Returns: string
