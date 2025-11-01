@@ -115,65 +115,74 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log('🔄 Creating membership...');
+      console.log('🔄 Creating membership...');
 
-    // Use a transaction to update invitation and create membership
-    const { error: transactionError } = await supabase.rpc('accept_family_invitation_transaction', {
-      p_invitation_id: invitation.id,
-      p_user_id: user.id,
-      p_trust_anchor_user_id: invitation.family_units.trust_anchor_user_id,
-      p_relationship_role: invitation.relationship_role,
-      p_invited_by: invitation.invited_by
-    });
+      // Use a transaction to update invitation and create membership
+      const { error: transactionError } = await supabase.rpc('accept_family_invitation_transaction', {
+        p_invitation_id: invitation.id,
+        p_user_id: user.id,
+        p_trust_anchor_user_id: invitation.family_units.trust_anchor_user_id,
+        p_relationship_role: invitation.relationship_role,
+        p_invited_by: invitation.invited_by
+      });
 
-    if (transactionError) {
-      console.error('⚠️ Transaction RPC error:', transactionError);
-      console.log('🔄 Falling back to individual operations...');
-      
-      // Update invitation status
-      const { error: updateError } = await supabase
-        .from('family_invitations')
-        .update({ 
-          status: 'accepted', 
-          accepted_at: new Date().toISOString() 
-        })
-        .eq('id', invitation.id);
+      if (transactionError) {
+        console.error('⚠️ Transaction RPC error:', transactionError);
+        console.log('🔄 Falling back to individual operations...');
+        
+        // Update invitation status
+        const { error: updateError } = await supabase
+          .from('family_invitations')
+          .update({ 
+            status: 'accepted', 
+            accepted_at: new Date().toISOString() 
+          })
+          .eq('id', invitation.id);
 
-      if (updateError) {
-        console.error('❌ Failed to update invitation:', updateError);
-        return new Response(
-          JSON.stringify({ error: 'Failed to accept invitation' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        if (updateError) {
+          console.error('❌ Failed to update invitation:', updateError);
+          return new Response(
+            JSON.stringify({ error: 'Failed to accept invitation' }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        console.log('✅ Invitation status updated to accepted');
+
+        // Create organization membership
+        console.log('🔄 Creating organization membership...');
+        console.log('   individual_user_id:', user.id);
+        console.log('   organization_user_id (trust anchor):', invitation.family_units.trust_anchor_user_id);
+        console.log('   relationship_label:', invitation.relationship_role);
+        
+        const { data: membershipData, error: membershipError } = await supabase
+          .from('organization_memberships')
+          .insert({
+            individual_user_id: user.id,
+            organization_user_id: invitation.family_units.trust_anchor_user_id,
+            relationship_label: invitation.relationship_role,
+            permissions: { family_member: true },
+            is_family_unit: true,
+            membership_type: 'member',
+            status: 'active',
+            created_by: invitation.invited_by
+          })
+          .select()
+          .single();
+
+        if (membershipError) {
+          console.error('❌ Failed to create membership:', membershipError);
+          console.error('   Error details:', JSON.stringify(membershipError, null, 2));
+          return new Response(
+            JSON.stringify({ error: 'Failed to create family membership', details: membershipError.message }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        console.log('✅ Membership created successfully:', membershipData);
+      } else {
+        console.log('✅ Transaction completed successfully');
       }
-
-      console.log('✅ Invitation status updated to accepted');
-
-      // Create organization membership
-      console.log('🔄 Creating organization membership...');
-      const { error: membershipError } = await supabase
-        .from('organization_memberships')
-        .insert({
-          individual_user_id: user.id,
-          organization_user_id: invitation.family_units.trust_anchor_user_id,
-          relationship_label: invitation.relationship_role,
-          permissions: { family_member: true },
-          is_family_unit: true,
-          membership_type: 'member',
-          status: 'active',
-          created_by: invitation.invited_by
-        });
-
-      if (membershipError) {
-        console.error('❌ Failed to create membership:', membershipError);
-        return new Response(
-          JSON.stringify({ error: 'Failed to create family membership' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      console.log('✅ Membership created successfully');
-    }
 
     console.log(`✅ Successfully accepted invitation for user ${user.email}`);
     console.log(`   Family: ${invitation.family_units.family_label}`);

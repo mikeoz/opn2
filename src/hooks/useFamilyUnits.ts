@@ -72,6 +72,8 @@ export const useFamilyUnits = () => {
   const fetchFamilyUnits = async () => {
     if (!user) return;
     
+    console.log('🔍 [FamilyUnits] Starting fetch for user:', user.id, user.email);
+    
     setLoading(true);
     try {
       // Get family units where user is trust anchor or member (RLS handles this)
@@ -87,6 +89,17 @@ export const useFamilyUnits = () => {
         `)
         .eq('is_active', true)
         .order('generation_level', { ascending: true });
+      
+      console.log('📊 [FamilyUnits] Fetched family units:', {
+        count: unitsData?.length || 0,
+        error: unitsError?.message,
+        units: unitsData?.map(u => ({
+          id: u.id,
+          label: (u as any).family_label,
+          trustAnchor: (u as any).trust_anchor_user_id,
+          isCurrentUserTrustAnchor: (u as any).trust_anchor_user_id === user.id
+        }))
+      });
 
       if (unitsError) throw unitsError;
 
@@ -103,9 +116,22 @@ export const useFamilyUnits = () => {
           .eq('is_family_unit', true)
           .eq('status', 'active');
         
-        console.log(`📊 Member count for family ${trustAnchorId}:`, { count, countError });
+        console.log(`📊 [FamilyUnits] Member count for family ${trustAnchorId}:`, { 
+          count, 
+          countError: countError?.message,
+          query: `organization_user_id=${trustAnchorId}, is_family_unit=true, status=active`
+        });
         
-        // Check if current user is a member of this family
+        // Check if current user is a member of this family (but NOT the trust anchor)
+        const isCurrentUserTrustAnchor = trustAnchorId === user.id;
+        
+        console.log(`🔍 [FamilyUnits] Checking membership for family ${trustAnchorId}:`, {
+          trustAnchorId,
+          currentUserId: user.id,
+          isCurrentUserTrustAnchor,
+          willQueryMembership: true
+        });
+        
         const { data: membershipData, error: membershipError } = await supabase
           .from('organization_memberships')
           .select('relationship_label, family_generation, joined_at')
@@ -114,6 +140,14 @@ export const useFamilyUnits = () => {
           .eq('is_family_unit', true)
           .eq('status', 'active')
           .maybeSingle();
+        
+        console.log(`📊 [FamilyUnits] Membership query result for ${trustAnchorId}:`, {
+          hasMembership: !!membershipData,
+          membershipData,
+          error: membershipError?.message,
+          errorCode: membershipError?.code,
+          query: `organization_user_id=${trustAnchorId}, individual_user_id=${user.id}, is_family_unit=true, status=active`
+        });
         
         return { 
           trustAnchorId, 
@@ -130,14 +164,36 @@ export const useFamilyUnits = () => {
         const isOwner = unit.trust_anchor_user_id === user.id;
         const isMember = !!enrichment?.membership;
         
-        return {
+        const enrichedUnit = {
           ...unit,
           member_count: enrichment?.count || 0,
           isOwner,
           isMember,
           membershipDetails: enrichment?.membership || null
         };
+        
+        console.log(`🏠 [FamilyUnits] Enriched unit "${unit.family_label}":`, {
+          id: unit.id,
+          trustAnchor: unit.trust_anchor_user_id,
+          memberCount: enrichedUnit.member_count,
+          isOwner: enrichedUnit.isOwner,
+          isMember: enrichedUnit.isMember,
+          hasMembershipData: !!enrichedUnit.membershipDetails
+        });
+        
+        return enrichedUnit;
       }) || [];
+
+      console.log('✅ [FamilyUnits] Final enriched units:', {
+        totalCount: enrichedUnits.length,
+        ownedCount: enrichedUnits.filter((u: any) => u.isOwner).length,
+        memberCount: enrichedUnits.filter((u: any) => u.isMember && !u.isOwner).length,
+        units: enrichedUnits.map((u: any) => ({
+          label: u.family_label,
+          isOwner: u.isOwner,
+          isMember: u.isMember
+        }))
+      });
 
       setFamilyUnits(enrichedUnits as FamilyUnit[]);
     } catch (error) {
