@@ -29,6 +29,7 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [invitationData, setInvitationData] = useState<any>(null);
   const [showSignIn, setShowSignIn] = useState(false);
+  const [isProcessingInvitation, setIsProcessingInvitation] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { user, handlePostRegistrationSetup } = useAuth();
@@ -48,8 +49,9 @@ const Register = () => {
     
     if (invitationToken) {
       console.log('✉️ Found invitation token, fetching details...');
-      // If user is logged in when accessing invitation, sign them out
-      if (user) {
+      // If user is logged in when accessing invitation AND not processing, sign them out
+      // This prevents signing out after a successful sign-in for invitation acceptance
+      if (user && !isProcessingInvitation) {
         toast({
           title: "Signing out",
           description: "You need to sign out to accept this invitation for another user.",
@@ -178,6 +180,7 @@ const Register = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setIsProcessingInvitation(true); // Prevent sign-out loop
 
     try {
       const redirectUrl = `${window.location.origin}/`;
@@ -203,9 +206,11 @@ const Register = () => {
             description: "An account with this email already exists. Please sign in instead.",
             variant: "destructive",
           });
+          setIsProcessingInvitation(false);
           navigate('/login');
           return;
         }
+        setIsProcessingInvitation(false);
         throw error;
       }
 
@@ -233,6 +238,7 @@ const Register = () => {
         }
       }
     } catch (error: any) {
+      setIsProcessingInvitation(false);
       toast({
         title: "Registration failed",
         description: error.message || "An unexpected error occurred. Please try again.",
@@ -246,6 +252,7 @@ const Register = () => {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setIsProcessingInvitation(true); // Prevent sign-out loop
 
     console.log('🔐 Sign-in started', { 
       email: signInData.email, 
@@ -261,6 +268,7 @@ const Register = () => {
 
       if (error) {
         console.error('❌ Sign-in error:', error);
+        setIsProcessingInvitation(false);
         throw error;
       }
 
@@ -290,6 +298,7 @@ const Register = () => {
         }
       }
     } catch (error: any) {
+      setIsProcessingInvitation(false);
       toast({
         title: "Sign in failed",
         description: error.message || "Invalid email or password.",
