@@ -107,19 +107,15 @@ export const useFamilyUnits = () => {
       const unitIds = unitsData?.map(unit => unit.trust_anchor_user_id) || [];
       
       const enrichmentPromises = unitIds.map(async (trustAnchorId) => {
-        // Get member count - count only active organization_memberships
-        // This excludes the trust anchor themselves and only counts members
-        const { count, error: countError } = await supabase
-          .from('organization_memberships')
-          .select('*', { count: 'exact', head: true })
-          .eq('organization_user_id', trustAnchorId)
-          .eq('is_family_unit', true)
-          .eq('status', 'active');
+        // Get member count using security definer function to bypass RLS
+        // This returns the accurate count of all family members
+        const { data: memberCount, error: countError } = await supabase
+          .rpc('get_family_member_count', { family_trust_anchor_id: trustAnchorId });
         
         console.log(`📊 [FamilyUnits] Member count for family ${trustAnchorId}:`, { 
-          count, 
+          count: memberCount, 
           countError: countError?.message,
-          query: `organization_user_id=${trustAnchorId}, is_family_unit=true, status=active`
+          query: `get_family_member_count(${trustAnchorId})`
         });
         
         // Check if current user is a member of this family (but NOT the trust anchor)
@@ -151,7 +147,7 @@ export const useFamilyUnits = () => {
         
         return { 
           trustAnchorId, 
-          count: (count || 0) + 1, // Add 1 to include the trust anchor in the total member count
+          count: (memberCount || 0) + 1, // Add 1 to include the trust anchor in the total member count
           membership: membershipData
         };
       });

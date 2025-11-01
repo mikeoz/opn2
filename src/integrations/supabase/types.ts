@@ -1998,6 +1998,10 @@ export type Database = {
         Args: { merchant_id: string; qr_type?: string }
         Returns: string
       }
+      get_family_member_count: {
+        Args: { family_trust_anchor_id: string }
+        Returns: number
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
