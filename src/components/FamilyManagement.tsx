@@ -345,6 +345,7 @@ export const FamilyManagement: React.FC = () => {
               familyUnits={familyUnits}
               selectedFamilyId={selectedFamilyUnit}
               onSelectFamily={setSelectedFamilyUnit}
+              onCreateFamily={() => setShowCreateDialog(true)}
             />
           </TabsContent>
 

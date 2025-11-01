@@ -1,20 +1,27 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { TreePine, Users, Crown, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { TreePine, Users, Crown, ChevronRight, Plus } from 'lucide-react';
 import { FamilyUnit } from '@/hooks/useFamilyUnits';
 
 interface FamilyTreeVisualizationProps {
   familyUnits: FamilyUnit[];
   onSelectFamily?: (familyId: string) => void;
   selectedFamilyId?: string;
+  onCreateFamily?: () => void;
 }
 
 const FamilyTreeVisualization: React.FC<FamilyTreeVisualizationProps> = ({
   familyUnits,
   onSelectFamily,
-  selectedFamilyId
+  selectedFamilyId,
+  onCreateFamily
 }) => {
+  // Separate owned vs member families
+  const ownedFamilies = familyUnits.filter(f => f.isOwner);
+  const memberFamilies = familyUnits.filter(f => f.isMember && !f.isOwner);
+  
   // Group family units by generation level
   const familyByGeneration = familyUnits.reduce((acc, family) => {
     const generation = family.generation_level;
@@ -76,26 +83,110 @@ const FamilyTreeVisualization: React.FC<FamilyTreeVisualizationProps> = ({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <TreePine className="h-5 w-5" />
-          Family Tree
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-6">
-          {generations.map((generation, index) => (
-            <div key={generation} className="relative">
-              <div className="flex items-center gap-2 mb-4">
-                <Badge variant="outline" className="font-medium">
-                  {getGenerationLabel(generation)}
-                </Badge>
-                <div className="flex-1 h-px bg-border"></div>
-              </div>
-              
-              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                {familyByGeneration[generation].map((family) => (
+    <div className="space-y-4">
+      {/* Prompt to create own family if user only has memberships */}
+      {ownedFamilies.length === 0 && memberFamilies.length > 0 && onCreateFamily && (
+        <Card className="border-2 border-dashed border-primary/50 bg-primary/5">
+          <CardContent className="flex flex-col items-center justify-center py-8">
+            <TreePine className="h-10 w-10 text-primary mb-3" />
+            <h3 className="text-lg font-semibold mb-2">Create Your Own Family Unit</h3>
+            <p className="text-muted-foreground text-center text-sm mb-4 max-w-md">
+              You're currently a member of other family units. Start your own family tree to manage your family relationships and invite others!
+            </p>
+            <Button size="sm" onClick={onCreateFamily}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create Your Family Unit
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Member of families - Compact View */}
+      {memberFamilies.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="text-sm">
+              <Users className="h-3 w-3 mr-1" />
+              Member Of
+            </Badge>
+          </div>
+          <div className="space-y-3">
+            {memberFamilies.map(family => (
+              <Card 
+                key={family.id} 
+                className="hover:bg-accent/50 transition-colors cursor-pointer"
+                onClick={() => handleFamilyClick(family.id)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg mb-1">
+                        Member of {family.family_label}
+                      </h3>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Led by {getDisplayName(family)}
+                      </p>
+                      <div className="flex items-center gap-3 text-sm">
+                        <span className="flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          {family.member_count || 0} members
+                        </span>
+                        <Badge variant="outline" className="text-xs">
+                          Gen {family.generation_level}
+                        </Badge>
+                        {family.membershipDetails?.relationship_label && (
+                          <span className="text-muted-foreground">
+                            ({family.membershipDetails.relationship_label})
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="ml-4"
+                    >
+                      More Details
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Families you own - Tree View */}
+      {ownedFamilies.length > 0 && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Crown className="h-5 w-5" />
+                Your Family Tree
+              </CardTitle>
+              <Badge variant="default" className="text-sm">
+                {ownedFamilies.length} {ownedFamilies.length === 1 ? 'Family' : 'Families'}
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {generations.map((generation, index) => {
+                const ownedInGeneration = familyByGeneration[generation].filter(f => f.isOwner);
+                if (ownedInGeneration.length === 0) return null;
+                
+                return (
+                  <div key={generation} className="relative">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Badge variant="outline" className="font-medium">
+                        {getGenerationLabel(generation)}
+                      </Badge>
+                      <div className="flex-1 h-px bg-border"></div>
+                    </div>
+                    
+                    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                      {ownedInGeneration.map((family) => (
                   <div
                     key={family.id}
                     className={`
@@ -168,37 +259,40 @@ const FamilyTreeVisualization: React.FC<FamilyTreeVisualizationProps> = ({
                       )}
                     </div>
                   </div>
-                ))}
-              </div>
-              
-              {/* Connection lines between generations */}
-              {index < generations.length - 1 && (
-                <div className="flex justify-center mt-4">
-                  <div className="w-px h-6 bg-muted-foreground/50"></div>
+                      ))}
+                    </div>
+                    
+                    {/* Connection lines between generations */}
+                    {index < generations.length - 1 && (
+                      <div className="flex justify-center mt-4">
+                        <div className="w-px h-6 bg-muted-foreground/50"></div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            
+            {ownedFamilies.length > 0 && (
+              <div className="mt-6 pt-4 border-t border-border">
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <div className="flex items-center gap-4">
+                    <span>Total Families: {ownedFamilies.length}</span>
+                    <span>Generations: {generations.length}</span>
+                    <span>Total Members: {ownedFamilies.reduce((sum, f) => sum + (f.member_count || 0), 0)}</span>
+                  </div>
+                  {selectedFamilyId && (
+                    <Badge variant="outline" className="text-xs">
+                      Family Selected
+                    </Badge>
+                  )}
                 </div>
-              )}
-            </div>
-          ))}
-        </div>
-        
-        {familyUnits.length > 0 && (
-          <div className="mt-6 pt-4 border-t border-border">
-            <div className="flex items-center justify-between text-sm text-muted-foreground">
-              <div className="flex items-center gap-4">
-                <span>Total Families: {familyUnits.length}</span>
-                <span>Generations: {generations.length}</span>
-                <span>Total Members: {familyUnits.reduce((sum, f) => sum + (f.member_count || 0), 0)}</span>
               </div>
-              {selectedFamilyId && (
-                <Badge variant="outline" className="text-xs">
-                  Family Selected
-                </Badge>
-              )}
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+            )}
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 };
 
