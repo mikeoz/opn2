@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Mail, Send, X } from 'lucide-react';
+import { Mail, Send, X, UserPlus } from 'lucide-react';
 import { useFamilyInvitations, CreateInvitationData } from '@/hooks/useFamilyInvitations';
 
 interface FamilyInvitationDialogProps {
@@ -46,9 +46,12 @@ export const FamilyInvitationDialog: React.FC<FamilyInvitationDialogProps> = ({
   
   const { sendInvitation } = useFamilyInvitations(familyUnitId);
 
+  const isMinorChild = formData.relationshipRole === 'minor_child';
+  const isFormValid = formData.inviteeName && formData.relationshipRole && (isMinorChild || formData.inviteeEmail);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.inviteeEmail || !formData.relationshipRole) return;
+    if (!isFormValid) return;
 
     setSending(true);
     const success = await sendInvitation({
@@ -89,23 +92,12 @@ export const FamilyInvitationDialog: React.FC<FamilyInvitationDialogProps> = ({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 gap-4">
             <div>
-              <Label htmlFor="inviteeName">Name (Optional)</Label>
+              <Label htmlFor="inviteeName">Name *</Label>
               <Input
                 id="inviteeName"
-                placeholder="Enter their name"
+                placeholder="Enter their name (e.g., Effie Peterson)"
                 value={formData.inviteeName}
                 onChange={(e) => setFormData({ ...formData, inviteeName: e.target.value })}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="inviteeEmail">Email Address *</Label>
-              <Input
-                id="inviteeEmail"
-                type="email"
-                placeholder="Enter their email address"
-                value={formData.inviteeEmail}
-                onChange={(e) => setFormData({ ...formData, inviteeEmail: e.target.value })}
                 required
               />
             </div>
@@ -131,6 +123,26 @@ export const FamilyInvitationDialog: React.FC<FamilyInvitationDialogProps> = ({
             </div>
 
             <div>
+              <Label htmlFor="inviteeEmail">
+                Email Address {isMinorChild ? '(Optional)' : '*'}
+              </Label>
+              <Input
+                id="inviteeEmail"
+                type="email"
+                placeholder={isMinorChild ? "Optional for minor children" : "Enter their email address"}
+                value={formData.inviteeEmail}
+                onChange={(e) => setFormData({ ...formData, inviteeEmail: e.target.value })}
+                required={!isMinorChild}
+                disabled={isMinorChild && !formData.inviteeEmail}
+              />
+              {isMinorChild && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  Optional for minor children - they will be added directly without an invitation
+                </p>
+              )}
+            </div>
+
+            <div>
               <Label htmlFor="personalMessage">Personal Message (Optional)</Label>
               <Textarea
                 id="personalMessage"
@@ -149,10 +161,19 @@ export const FamilyInvitationDialog: React.FC<FamilyInvitationDialogProps> = ({
             </Button>
             <Button
               type="submit"
-              disabled={sending || !formData.inviteeEmail || !formData.relationshipRole}
+              disabled={sending || !isFormValid}
             >
-              <Send className="h-4 w-4 mr-2" />
-              {sending ? 'Sending...' : 'Send Invitation'}
+              {isMinorChild ? (
+                <>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  {sending ? 'Adding...' : 'Add Minor Child'}
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4 mr-2" />
+                  {sending ? 'Sending...' : 'Send Invitation'}
+                </>
+              )}
             </Button>
           </div>
         </form>

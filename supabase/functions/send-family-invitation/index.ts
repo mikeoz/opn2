@@ -14,7 +14,7 @@ const corsHeaders = {
 
 interface FamilyInvitationRequest {
   familyUnitId: string;
-  inviteeEmail: string;
+  inviteeEmail: string; // Can be empty for minor children
   inviteeName?: string;
   relationshipRole: string;
   personalMessage?: string;
@@ -61,8 +61,21 @@ serve(async (req: Request): Promise<Response> => {
     }: FamilyInvitationRequest = await req.json();
 
     // Validate required fields
-    if (!familyUnitId || !inviteeEmail || !relationshipRole) {
+    if (!familyUnitId || !relationshipRole) {
       throw new Error("Missing required fields");
+    }
+
+    const isMinorChild = relationshipRole === 'minor_child';
+    const hasEmail = inviteeEmail && inviteeEmail.trim() !== '';
+
+    // For minor children without email, this function shouldn't be called
+    // The client should handle this case directly
+    if (isMinorChild && !hasEmail) {
+      throw new Error("Minor children without email should be added directly, not via invitation");
+    }
+
+    if (!hasEmail) {
+      throw new Error("Email address is required for invitation");
     }
 
     // Verify user owns the family unit

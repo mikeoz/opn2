@@ -22,7 +22,7 @@ export interface FamilyInvitation {
 
 export interface CreateInvitationData {
   familyUnitId: string;
-  inviteeEmail: string;
+  inviteeEmail: string; // Can be empty for minor children
   inviteeName?: string;
   relationshipRole: string;
   personalMessage?: string;
@@ -93,6 +93,55 @@ export const useFamilyInvitations = (familyUnitId?: string) => {
     }
 
     try {
+      const isMinorChild = invitationData.relationshipRole === 'minor_child';
+      const hasEmail = invitationData.inviteeEmail && invitationData.inviteeEmail.trim() !== '';
+
+      // For minor children without email, create pending profile directly
+      if (isMinorChild && !hasEmail) {
+        console.log('Creating minor child profile directly:', invitationData);
+        
+        // Parse name into first and last name
+        const nameParts = (invitationData.inviteeName || '').trim().split(' ');
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.slice(1).join(' ') || '';
+
+        // Create pending profile directly (no invitation needed)
+        const { error: profileError } = await supabase
+          .from('pending_family_profiles')
+          .insert({
+            family_unit_id: invitationData.familyUnitId,
+            created_by: user.id,
+            first_name: firstName,
+            last_name: lastName,
+            email: `minor-${Date.now()}@placeholder.local`, // Placeholder email for DB constraint
+            relationship_label: invitationData.relationshipRole,
+            member_type: 'dependent',
+            status: 'accepted', // Directly accepted since no invitation needed
+            seed_data: {
+              is_minor: true,
+              has_email: false,
+              personal_message: invitationData.personalMessage
+            }
+          });
+
+        if (profileError) {
+          console.error('Error creating minor child profile:', profileError);
+          throw new Error(`Failed to add minor child: ${profileError.message}`);
+        }
+
+        toast.success(`${invitationData.inviteeName || 'Minor child'} has been added to the family`);
+        
+        // Refresh invitations/profiles list
+        setTimeout(() => fetchInvitations(), 1000);
+        return true;
+      }
+
+      // Regular invitation flow with email
+      if (!hasEmail) {
+        toast.error('Email address is required for this relationship type');
+        return false;
+      }
+
       // Check for existing invitation
       const existingInvitation = await checkExistingInvitation(invitationData.inviteeEmail, invitationData.familyUnitId);
       
