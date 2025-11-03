@@ -346,7 +346,7 @@ export const FamilyManagement: React.FC = () => {
                 <TooltipTrigger asChild>
                   <TabsTrigger 
                     value="tree" 
-                    className="text-xs md:text-sm py-2 data-[state=active]:ring-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-4 data-[state=active]:bg-primary/10 data-[state=active]:scale-105 data-[state=active]:shadow-lg data-[state=active]:font-bold transition-all"
+                    className="text-xs md:text-sm py-2 data-[state=active]:ring-8 data-[state=active]:ring-primary data-[state=active]:ring-offset-8 data-[state=active]:bg-primary/30 data-[state=active]:scale-150 data-[state=active]:shadow-2xl data-[state=active]:shadow-primary/50 data-[state=active]:font-bold transition-all duration-300"
                   >
                     <TreePine className="h-4 w-4 md:mr-2" />
                     <span className="hidden md:inline">Family Tree</span>
@@ -358,7 +358,7 @@ export const FamilyManagement: React.FC = () => {
                 <TooltipTrigger asChild>
                   <TabsTrigger 
                     value="overview" 
-                    className="text-xs md:text-sm py-2 data-[state=active]:ring-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-4 data-[state=active]:bg-primary/10 data-[state=active]:scale-105 data-[state=active]:shadow-lg data-[state=active]:font-bold transition-all"
+                    className="text-xs md:text-sm py-2 data-[state=active]:ring-8 data-[state=active]:ring-primary data-[state=active]:ring-offset-8 data-[state=active]:bg-primary/30 data-[state=active]:scale-150 data-[state=active]:shadow-2xl data-[state=active]:shadow-primary/50 data-[state=active]:font-bold transition-all duration-300"
                   >
                     <Users className="h-4 w-4 md:mr-2" />
                     <span className="hidden md:inline">Generation View</span>
@@ -370,7 +370,7 @@ export const FamilyManagement: React.FC = () => {
                 <TooltipTrigger asChild>
                   <TabsTrigger 
                     value="members" 
-                    className="text-xs md:text-sm py-2 data-[state=active]:ring-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-4 data-[state=active]:bg-primary/10 data-[state=active]:scale-105 data-[state=active]:shadow-lg data-[state=active]:font-bold transition-all"
+                    className="text-xs md:text-sm py-2 data-[state=active]:ring-8 data-[state=active]:ring-primary data-[state=active]:ring-offset-8 data-[state=active]:bg-primary/30 data-[state=active]:scale-150 data-[state=active]:shadow-2xl data-[state=active]:shadow-primary/50 data-[state=active]:font-bold transition-all duration-300"
                   >
                     <Users className="h-4 w-4 md:mr-2" />
                     <span className="hidden md:inline">All Members</span>
