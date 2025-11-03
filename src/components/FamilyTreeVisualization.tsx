@@ -22,8 +22,21 @@ const FamilyTreeVisualization: React.FC<FamilyTreeVisualizationProps> = ({
   const ownedFamilies = familyUnits.filter(f => f.isOwner);
   const memberFamilies = familyUnits.filter(f => f.isMember && !f.isOwner);
   
-  // Group family units by generation level
-  const familyByGeneration = familyUnits.reduce((acc, family) => {
+  // Sort owned families: user's primary family first, then by generation
+  const sortedOwnedFamilies = [...ownedFamilies].sort((a, b) => {
+    // User's primary family (Gen 1, no parent) should always be first
+    const aIsPrimary = a.generation_level === 1 && !a.parent_family_unit_id;
+    const bIsPrimary = b.generation_level === 1 && !b.parent_family_unit_id;
+    
+    if (aIsPrimary && !bIsPrimary) return -1;
+    if (!aIsPrimary && bIsPrimary) return 1;
+    
+    // Otherwise sort by generation level
+    return a.generation_level - b.generation_level;
+  });
+  
+  // Group family units by generation level (using sorted owned families)
+  const familyByGeneration = sortedOwnedFamilies.reduce((acc, family) => {
     const generation = family.generation_level;
     if (!acc[generation]) {
       acc[generation] = [];
