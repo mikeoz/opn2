@@ -37,6 +37,10 @@ export const FamilyManagement: React.FC = () => {
     }
   }, [selectedFamilyUnit]);
 
+  // Get member-of families for label
+  const memberOfFamilies = familyUnits.filter(f => f.isMember && !f.isOwner);
+  const ownedFamilies = familyUnits.filter(f => f.isOwner);
+
   // Sort family units: user's primary family first, then by generation
   const sortedFamilyUnits = [...familyUnits].sort((a, b) => {
     // User's primary family (Gen 1, no parent, is owner) should always be first
@@ -341,7 +345,7 @@ export const FamilyManagement: React.FC = () => {
             <TabsList className="grid grid-cols-3 h-auto gap-1 p-1">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger value="tree" className="text-xs md:text-sm py-2 data-[state=active]:ring-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-2">
+                  <TabsTrigger value="tree" className="text-xs md:text-sm py-2 data-[state=active]:ring-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-2 data-[state=active]:shadow-md">
                     <TreePine className="h-4 w-4 md:mr-2" />
                     <span className="hidden md:inline">Family Tree</span>
                   </TabsTrigger>
@@ -350,7 +354,7 @@ export const FamilyManagement: React.FC = () => {
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger value="overview" className="text-xs md:text-sm py-2 data-[state=active]:ring-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-2">
+                  <TabsTrigger value="overview" className="text-xs md:text-sm py-2 data-[state=active]:ring-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-2 data-[state=active]:shadow-md">
                     <Users className="h-4 w-4 md:mr-2" />
                     <span className="hidden md:inline">Generation View</span>
                   </TabsTrigger>
@@ -359,7 +363,7 @@ export const FamilyManagement: React.FC = () => {
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger value="members" className="text-xs md:text-sm py-2 data-[state=active]:ring-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-2">
+                  <TabsTrigger value="members" className="text-xs md:text-sm py-2 data-[state=active]:ring-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-2 data-[state=active]:shadow-md">
                     <Users className="h-4 w-4 md:mr-2" />
                     <span className="hidden md:inline">All Members</span>
                   </TabsTrigger>
@@ -400,7 +404,7 @@ export const FamilyManagement: React.FC = () => {
             ) : (
               <div className="space-y-6">
                 {/* Prompt to create own family if user only has memberships */}
-                {familyUnits.filter(f => f.isOwner).length === 0 && familyUnits.filter(f => f.isMember).length > 0 && (
+                {ownedFamilies.length === 0 && memberOfFamilies.length > 0 && (
                   <Card className="border-2 border-dashed">
                     <CardContent className="flex flex-col items-center justify-center py-8">
                       <TreePine className="h-10 w-10 text-primary mb-3" />
@@ -416,17 +420,85 @@ export const FamilyManagement: React.FC = () => {
                   </Card>
                 )}
 
+                {/* Families you own - grouped by generation */}
+                {ownedFamilies.length > 0 && (
+                  <>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="default" className="text-sm">
+                          <Crown className="h-3 w-3 mr-1" />
+                          Your Family Tree
+                        </Badge>
+                        <span className="text-sm text-muted-foreground">
+                          {ownedFamilies.length} family unit(s)
+                        </span>
+                      </div>
+                    </div>
+                    {/* Group owned families by generation */}
+                    {Object.keys(groupedByGeneration)
+                      .map(Number)
+                      .sort((a, b) => a - b)
+                      .filter(generation => groupedByGeneration[generation].some(u => u.isOwner))
+                      .map(generation => (
+                        <div key={generation} className="space-y-3">
+                          <div className="flex flex-col gap-2">
+                            <div className="flex items-center gap-2 ml-4">
+                              <Badge variant="outline" className="text-sm">
+                                {generation === 1 ? 'First' : generation === 2 ? 'Second' : generation === 3 ? 'Third' : `${generation}th`} Generation
+                              </Badge>
+                              <span className="text-sm text-muted-foreground">
+                                {groupedByGeneration[generation].filter(u => u.isOwner).length} family unit(s)
+                              </span>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                              {groupedByGeneration[generation].filter(u => u.isOwner).map(unit => (
+                                <FamilyUnitCard
+                                  key={unit.id}
+                                  familyUnit={unit}
+                                  onSelect={() => setSelectedFamilyUnit(unit.id)}
+                                  isSelected={selectedFamilyUnit === unit.id}
+                                  onEdit={handleEditFamilyUnit}
+                                  onDelete={handleDeleteFamilyUnit}
+                                />
+                              ))}
+                            </div>
+                           
+                            <div className="flex gap-2 flex-wrap pt-2">
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button 
+                                    size="sm"
+                                    onClick={() => setShowCreateDialog(true)}
+                                  >
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    Create Family Unit
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Create a new family unit</TooltipContent>
+                              </Tooltip>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    }
+                  </>
+                )}
+
                 {/* Member of families - Compact View */}
-                {familyUnits.filter(f => f.isMember && !f.isOwner).length > 0 && (
+                {memberOfFamilies.length > 0 && (
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       <Badge variant="secondary" className="text-sm">
                         <Users className="h-3 w-3 mr-1" />
-                        Member Of
+                        {memberOfFamilies.length === 1 
+                          ? `Member of ${memberOfFamilies[0].family_label}`
+                          : 'Member Of'
+                        }
                       </Badge>
                     </div>
                     <div className="space-y-3">
-                      {familyUnits.filter(f => f.isMember && !f.isOwner).map(unit => (
+                      {memberOfFamilies.map(unit => (
                         <Card key={unit.id} className="hover:bg-accent/50 transition-colors">
                           <CardContent className="p-4">
                             <div className="flex items-center justify-between">
@@ -467,69 +539,6 @@ export const FamilyManagement: React.FC = () => {
                     </div>
                   </div>
                 )}
-
-                {/* Families you own - grouped by generation */}
-                {familyUnits.filter(f => f.isOwner).length > 0 && (
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="default" className="text-sm">
-                        <Crown className="h-3 w-3 mr-1" />
-                        Your Families
-                      </Badge>
-                      <span className="text-sm text-muted-foreground">
-                        {familyUnits.filter(f => f.isOwner).length} family unit(s)
-                      </span>
-                    </div>
-                  </div>
-                )}
-                {/* Group owned families by generation */}
-                {Object.keys(groupedByGeneration)
-                  .map(Number)
-                  .sort((a, b) => a - b)
-                  .filter(generation => groupedByGeneration[generation].some(u => u.isOwner))
-                  .map(generation => (
-                    <div key={generation} className="space-y-3">
-                      <div className="flex flex-col gap-2">
-                        <div className="flex items-center gap-2 ml-4">
-                          <Badge variant="outline" className="text-sm">
-                            Generation {generation}
-                          </Badge>
-                          <span className="text-sm text-muted-foreground">
-                            {groupedByGeneration[generation].filter(u => u.isOwner).length} family unit(s)
-                          </span>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {groupedByGeneration[generation].filter(u => u.isOwner).map(unit => (
-                            <FamilyUnitCard
-                              key={unit.id}
-                              familyUnit={unit}
-                              onSelect={() => setSelectedFamilyUnit(unit.id)}
-                              isSelected={selectedFamilyUnit === unit.id}
-                              onEdit={handleEditFamilyUnit}
-                              onDelete={handleDeleteFamilyUnit}
-                            />
-                          ))}
-                        </div>
-                       
-                        <div className="flex gap-2 flex-wrap pt-2">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button 
-                                size="sm"
-                                onClick={() => setShowCreateDialog(true)}
-                              >
-                                <Plus className="h-4 w-4 mr-2" />
-                                Create Family Unit
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Create a new family unit</TooltipContent>
-                          </Tooltip>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                }
               </div>
             )}
           </TabsContent>
