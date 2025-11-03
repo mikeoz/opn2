@@ -26,14 +26,12 @@ export const FamilyManagement: React.FC = () => {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingFamilyUnit, setEditingFamilyUnit] = useState<FamilyUnit | null>(null);
   const [selectedFamilyUnit, setSelectedFamilyUnit] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('tree');
 
   // Reset activeTab when switching between family views
   useEffect(() => {
     if (selectedFamilyUnit) {
       setActiveTab('overview');
-    } else {
-      setActiveTab('tree');
     }
   }, [selectedFamilyUnit]);
 
@@ -345,7 +343,7 @@ export const FamilyManagement: React.FC = () => {
             <TabsList className="grid grid-cols-3 h-auto gap-1 p-1">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger value="tree" className="text-xs md:text-sm py-2 data-[state=active]:border-2 data-[state=active]:border-primary data-[state=active]:bg-primary/10">
+                  <TabsTrigger value="tree" className="text-xs md:text-sm py-2 data-[state=active]:outline data-[state=active]:outline-4 data-[state=active]:outline-primary data-[state=active]:outline-offset-0 data-[state=active]:bg-primary/20 data-[state=active]:font-bold">
                     <TreePine className="h-4 w-4 md:mr-2" />
                     <span className="hidden md:inline">Family Tree</span>
                   </TabsTrigger>
@@ -354,7 +352,7 @@ export const FamilyManagement: React.FC = () => {
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger value="overview" className="text-xs md:text-sm py-2 data-[state=active]:border-2 data-[state=active]:border-primary data-[state=active]:bg-primary/10">
+                  <TabsTrigger value="overview" className="text-xs md:text-sm py-2 data-[state=active]:outline data-[state=active]:outline-4 data-[state=active]:outline-primary data-[state=active]:outline-offset-0 data-[state=active]:bg-primary/20 data-[state=active]:font-bold">
                     <Users className="h-4 w-4 md:mr-2" />
                     <span className="hidden md:inline">Generation View</span>
                   </TabsTrigger>
@@ -363,7 +361,7 @@ export const FamilyManagement: React.FC = () => {
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger value="members" className="text-xs md:text-sm py-2 data-[state=active]:border-2 data-[state=active]:border-primary data-[state=active]:bg-primary/10">
+                  <TabsTrigger value="members" className="text-xs md:text-sm py-2 data-[state=active]:outline data-[state=active]:outline-4 data-[state=active]:outline-primary data-[state=active]:outline-offset-0 data-[state=active]:bg-primary/20 data-[state=active]:font-bold">
                     <Users className="h-4 w-4 md:mr-2" />
                     <span className="hidden md:inline">All Members</span>
                   </TabsTrigger>
