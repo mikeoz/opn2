@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Users, Plus, Settings, TreePine, ArrowLeft, Crown } from 'lucide-react';
+import { Users, Plus, Settings, TreePine, ArrowLeft, Crown, Pencil } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFamilyUnits, FamilyUnit } from '@/hooks/useFamilyUnits';
 import { FamilyUnitCard } from './FamilyUnitCard';
@@ -166,10 +166,21 @@ export const FamilyManagement: React.FC = () => {
             <div className="grid gap-6 md:grid-cols-2">
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <TreePine className="h-5 w-5" />
-                    Family Information
-                  </CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <TreePine className="h-5 w-5" />
+                      Family Information
+                    </CardTitle>
+                    {isOwnerOfSelectedFamily && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditFamilyUnit(selectedFamily)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <div>
