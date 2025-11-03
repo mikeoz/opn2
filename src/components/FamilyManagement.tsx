@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import * as TabsPrimitive from "@radix-ui/react-tabs";
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Users, Plus, Settings, TreePine, ArrowLeft, Crown, Pencil } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFamilyUnits, FamilyUnit } from '@/hooks/useFamilyUnits';
 import { FamilyUnitCard } from './FamilyUnitCard';
@@ -18,6 +19,21 @@ import { FamilyInvitationsManager } from './FamilyInvitationsManager';
 import { FamilyTreeTab } from './FamilyTreeTab';
 import { RelationshipCardsView } from './RelationshipCardsView';
 import { Link } from 'react-router-dom';
+
+// Clean, unstyled tab trigger styles for maximum visibility and QA testability
+const tabTriggerBase = 
+  "group relative inline-flex flex-col items-center justify-center gap-1 rounded-xl p-2 " +
+  "text-muted-foreground hover:text-foreground transition-all duration-200 " +
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+
+const tabTriggerActive =
+  "data-[state=active]:text-red-700 data-[state=active]:bg-red-50 " +
+  "data-[state=active]:ring-2 data-[state=active]:ring-red-500 " +
+  "data-[state=active]:font-semibold " +
+  // Unmistakable underline bar indicator
+  "after:absolute after:-bottom-1 after:left-2 after:right-2 after:h-1 " +
+  "after:rounded-full after:opacity-0 after:transition-opacity after:duration-200 " +
+  "data-[state=active]:after:opacity-100 data-[state=active]:after:bg-red-600";
 
 export const FamilyManagement: React.FC = () => {
   const { user } = useAuth();
@@ -115,74 +131,102 @@ export const FamilyManagement: React.FC = () => {
       {selectedFamily ? (
         // Individual Family Management View
         <TooltipProvider>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="grid grid-cols-3 md:grid-cols-7 h-auto gap-1 p-1">
+          <TabsPrimitive.Root value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+            <TabsPrimitive.List className="grid grid-cols-3 md:grid-cols-7 h-auto gap-2 p-2 rounded-xl bg-muted/30">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger value="overview" className="text-xs md:text-sm py-2 data-[state=active]:ring-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-2">
-                    <TreePine className="h-4 w-4 md:mr-2" />
-                    <span className="hidden md:inline">Overview</span>
-                  </TabsTrigger>
+                  <TabsPrimitive.Trigger 
+                    value="overview" 
+                    data-tab="overview"
+                    className={cn(tabTriggerBase, tabTriggerActive, "text-xs md:text-sm")}
+                  >
+                    <TreePine className="h-4 w-4" />
+                    <span className="hidden md:inline text-xs">Overview</span>
+                  </TabsPrimitive.Trigger>
                 </TooltipTrigger>
                 <TooltipContent className="md:hidden">Overview</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger value="members" className="text-xs md:text-sm py-2 data-[state=active]:ring-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-2">
-                    <Users className="h-4 w-4 md:mr-2" />
-                    <span className="hidden md:inline">Members</span>
-                  </TabsTrigger>
+                  <TabsPrimitive.Trigger 
+                    value="members" 
+                    data-tab="members"
+                    className={cn(tabTriggerBase, tabTriggerActive, "text-xs md:text-sm")}
+                  >
+                    <Users className="h-4 w-4" />
+                    <span className="hidden md:inline text-xs">Members</span>
+                  </TabsPrimitive.Trigger>
                 </TooltipTrigger>
                 <TooltipContent className="md:hidden">Members</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger value="relationships" className="text-xs md:text-sm py-2 data-[state=active]:ring-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-2">
-                    <Users className="h-4 w-4 md:mr-2" />
-                    <span className="hidden md:inline">Relationships</span>
-                  </TabsTrigger>
+                  <TabsPrimitive.Trigger 
+                    value="relationships" 
+                    data-tab="relationships"
+                    className={cn(tabTriggerBase, tabTriggerActive, "text-xs md:text-sm")}
+                  >
+                    <Users className="h-4 w-4" />
+                    <span className="hidden md:inline text-xs">Relations</span>
+                  </TabsPrimitive.Trigger>
                 </TooltipTrigger>
                 <TooltipContent className="md:hidden">Relationships</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger value="cards" className="text-xs md:text-sm py-2 data-[state=active]:ring-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-2">
-                    <Settings className="h-4 w-4 md:mr-2" />
-                    <span className="hidden md:inline">Cards</span>
-                  </TabsTrigger>
+                  <TabsPrimitive.Trigger 
+                    value="cards" 
+                    data-tab="cards"
+                    className={cn(tabTriggerBase, tabTriggerActive, "text-xs md:text-sm")}
+                  >
+                    <Settings className="h-4 w-4" />
+                    <span className="hidden md:inline text-xs">Cards</span>
+                  </TabsPrimitive.Trigger>
                 </TooltipTrigger>
                 <TooltipContent className="md:hidden">Cards</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger value="settings" className="text-xs md:text-sm py-2 data-[state=active]:ring-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-2">
-                    <Settings className="h-4 w-4 md:mr-2" />
-                    <span className="hidden md:inline">Settings</span>
-                  </TabsTrigger>
+                  <TabsPrimitive.Trigger 
+                    value="settings" 
+                    data-tab="settings"
+                    className={cn(tabTriggerBase, tabTriggerActive, "text-xs md:text-sm")}
+                  >
+                    <Settings className="h-4 w-4" />
+                    <span className="hidden md:inline text-xs">Settings</span>
+                  </TabsPrimitive.Trigger>
                 </TooltipTrigger>
                 <TooltipContent className="md:hidden">Settings</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger value="invitations" className="text-xs md:text-sm py-2 data-[state=active]:ring-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-2">
-                    <Users className="h-4 w-4 md:mr-2" />
-                    <span className="hidden md:inline">Invites</span>
-                  </TabsTrigger>
+                  <TabsPrimitive.Trigger 
+                    value="invitations" 
+                    data-tab="invitations"
+                    className={cn(tabTriggerBase, tabTriggerActive, "text-xs md:text-sm")}
+                  >
+                    <Users className="h-4 w-4" />
+                    <span className="hidden md:inline text-xs">Invites</span>
+                  </TabsPrimitive.Trigger>
                 </TooltipTrigger>
                 <TooltipContent className="md:hidden">Invitations</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger value="tree" className="text-xs md:text-sm py-2 data-[state=active]:ring-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-2">
-                    <TreePine className="h-4 w-4 md:mr-2" />
-                    <span className="hidden md:inline">Tree</span>
-                  </TabsTrigger>
+                  <TabsPrimitive.Trigger 
+                    value="tree" 
+                    data-tab="tree"
+                    className={cn(tabTriggerBase, tabTriggerActive, "text-xs md:text-sm")}
+                  >
+                    <TreePine className="h-4 w-4" />
+                    <span className="hidden md:inline text-xs">Tree</span>
+                  </TabsPrimitive.Trigger>
                 </TooltipTrigger>
                 <TooltipContent className="md:hidden">Tree</TooltipContent>
               </Tooltip>
-            </TabsList>
+            </TabsPrimitive.List>
 
-          <TabsContent value="overview" className="space-y-6">
+          <TabsPrimitive.Content value="overview" className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
               <Card>
                 <CardHeader>
@@ -270,9 +314,9 @@ export const FamilyManagement: React.FC = () => {
                 </CardContent>
               </Card>
             </div>
-          </TabsContent>
+          </TabsPrimitive.Content>
 
-          <TabsContent value="members">
+          <TabsPrimitive.Content value="members">
             <FamilyMemberManager
               familyUnitId={selectedFamily.id}
               familyUnitLabel={selectedFamily.family_label}
@@ -280,13 +324,13 @@ export const FamilyManagement: React.FC = () => {
               trustAnchorUserId={selectedFamily.trust_anchor_user_id}
               isOwner={isOwnerOfSelectedFamily}
             />
-          </TabsContent>
+          </TabsPrimitive.Content>
 
-          <TabsContent value="relationships">
+          <TabsPrimitive.Content value="relationships">
             <RelationshipCardsView />
-          </TabsContent>
+          </TabsPrimitive.Content>
 
-          <TabsContent value="cards">
+          <TabsPrimitive.Content value="cards">
             <div className="space-y-6">
               <Card>
                 <CardHeader>
@@ -311,85 +355,88 @@ export const FamilyManagement: React.FC = () => {
                 </CardContent>
               </Card>
             </div>
-          </TabsContent>
+          </TabsPrimitive.Content>
 
-          <TabsContent value="invitations">
+          <TabsPrimitive.Content value="invitations">
             <FamilyInvitationsManager
               familyUnitId={selectedFamily.id}
               familyUnitLabel={selectedFamily.family_label}
               isOwner={selectedFamily.trust_anchor_user_id === user?.id}
             />
-          </TabsContent>
+          </TabsPrimitive.Content>
 
-          <TabsContent value="tree">
+          <TabsPrimitive.Content value="tree">
             <FamilyTreeTab
               familyUnitId={selectedFamily.id}
               familyUnitLabel={selectedFamily.family_label}
               isOwner={selectedFamily.trust_anchor_user_id === user?.id}
             />
-          </TabsContent>
+          </TabsPrimitive.Content>
 
-          <TabsContent value="settings">
+          <TabsPrimitive.Content value="settings">
             <FamilySettings
               familyUnit={selectedFamily}
               isOwner={isOwnerOfSelectedFamily}
             />
-          </TabsContent>
-          </Tabs>
+          </TabsPrimitive.Content>
+          </TabsPrimitive.Root>
         </TooltipProvider>
       ) : (
         // Family Overview/List View
         <TooltipProvider>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="grid grid-cols-3 h-auto gap-1 p-1">
+          <TabsPrimitive.Root value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+            <TabsPrimitive.List className="grid grid-cols-3 h-auto gap-2 p-2 rounded-xl bg-muted/30">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger 
+                  <TabsPrimitive.Trigger 
                     value="tree" 
-                    className="text-xs md:text-sm py-2 data-[state=active]:!border-[16px] data-[state=active]:!border-red-700 data-[state=active]:!bg-red-700 data-[state=active]:!text-white data-[state=active]:!font-extrabold data-[state=active]:!shadow-[0_0_60px_rgba(185,28,28,1)] transition-all duration-300"
+                    data-tab="tree"
+                    className={cn(tabTriggerBase, tabTriggerActive, "text-xs md:text-sm")}
                   >
-                    <TreePine className="h-4 w-4 md:mr-2" />
-                    <span className="hidden md:inline">Family Tree</span>
-                  </TabsTrigger>
+                    <TreePine className="h-4 w-4" />
+                    <span className="hidden md:inline text-xs">Family Tree</span>
+                  </TabsPrimitive.Trigger>
                 </TooltipTrigger>
                 <TooltipContent className="md:hidden">Family Tree</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger 
+                  <TabsPrimitive.Trigger 
                     value="overview" 
-                    className="text-xs md:text-sm py-2 data-[state=active]:!border-[16px] data-[state=active]:!border-red-700 data-[state=active]:!bg-red-700 data-[state=active]:!text-white data-[state=active]:!font-extrabold data-[state=active]:!shadow-[0_0_60px_rgba(185,28,28,1)] transition-all duration-300"
+                    data-tab="overview"
+                    className={cn(tabTriggerBase, tabTriggerActive, "text-xs md:text-sm")}
                   >
-                    <Users className="h-4 w-4 md:mr-2" />
-                    <span className="hidden md:inline">Generation View</span>
-                  </TabsTrigger>
+                    <Users className="h-4 w-4" />
+                    <span className="hidden md:inline text-xs">Generation View</span>
+                  </TabsPrimitive.Trigger>
                 </TooltipTrigger>
                 <TooltipContent className="md:hidden">Generation View</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger 
+                  <TabsPrimitive.Trigger 
                     value="members" 
-                    className="text-xs md:text-sm py-2 data-[state=active]:!border-[16px] data-[state=active]:!border-red-700 data-[state=active]:!bg-red-700 data-[state=active]:!text-white data-[state=active]:!font-extrabold data-[state=active]:!shadow-[0_0_60px_rgba(185,28,28,1)] transition-all duration-300"
+                    data-tab="members"
+                    className={cn(tabTriggerBase, tabTriggerActive, "text-xs md:text-sm")}
                   >
-                    <Users className="h-4 w-4 md:mr-2" />
-                    <span className="hidden md:inline">All Members</span>
-                  </TabsTrigger>
+                    <Users className="h-4 w-4" />
+                    <span className="hidden md:inline text-xs">All Members</span>
+                  </TabsPrimitive.Trigger>
                 </TooltipTrigger>
                 <TooltipContent className="md:hidden">All Members</TooltipContent>
               </Tooltip>
-            </TabsList>
+            </TabsPrimitive.List>
 
-          <TabsContent value="tree">
+          <TabsPrimitive.Content value="tree">
             <FamilyTreeVisualization
               familyUnits={familyUnits}
               selectedFamilyId={selectedFamilyUnit}
               onSelectFamily={setSelectedFamilyUnit}
               onCreateFamily={() => setShowCreateDialog(true)}
             />
-          </TabsContent>
+          </TabsPrimitive.Content>
 
-          <TabsContent value="overview" className="space-y-6">
+          <TabsPrimitive.Content value="overview" className="space-y-6">
             {familyUnits.length === 0 ? (
               <Card>
                 <CardContent className="flex flex-col items-center justify-center py-12">
@@ -549,12 +596,12 @@ export const FamilyManagement: React.FC = () => {
                 )}
               </div>
             )}
-          </TabsContent>
+          </TabsPrimitive.Content>
 
-          <TabsContent value="members" className="space-y-4">
+          <TabsPrimitive.Content value="members" className="space-y-4">
             <FamilyMembersView familyUnits={familyUnits} />
-          </TabsContent>
-          </Tabs>
+          </TabsPrimitive.Content>
+          </TabsPrimitive.Root>
         </TooltipProvider>
       )}
 
