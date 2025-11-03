@@ -27,12 +27,12 @@ const tabTriggerBase =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
 
 const tabTriggerActive =
-  "data-[state=active]:text-red-700 data-[state=active]:bg-red-50 " +
+  "data-[state=active]:text-red-700 data-[state=active]:bg-red-200 " +
   "data-[state=active]:ring-2 data-[state=active]:ring-red-500 " +
   "data-[state=active]:font-semibold " +
-  // Unmistakable underline bar indicator
-  "after:absolute after:-bottom-1 after:left-2 after:right-2 after:h-1 " +
-  "after:rounded-full after:opacity-0 after:transition-opacity after:duration-200 " +
+  // Unmistakable underline bar indicator - CRITICAL: content property required for pseudo-element to render
+  "after:content-[''] after:absolute after:bottom-0 after:left-2 after:right-2 after:h-1.5 " +
+  "after:rounded-full after:opacity-0 after:transition-opacity after:duration-200 after:shadow-sm " +
   "data-[state=active]:after:opacity-100 data-[state=active]:after:bg-red-600";
 
 export const FamilyManagement: React.FC = () => {
