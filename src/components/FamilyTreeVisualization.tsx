@@ -95,13 +95,6 @@ const FamilyTreeVisualization: React.FC<FamilyTreeVisualizationProps> = ({
     );
   }
 
-  console.log('🌳 [FamilyTreeVisualization] Rendering:', {
-    totalFamilies: familyUnits.length,
-    ownedCount: ownedFamilies.length,
-    memberCount: memberFamilies.length,
-    memberFamilyNames: memberFamilies.map(f => f.family_label)
-  });
-
   return (
     <div className="space-y-4">
       {/* Prompt to create own family if user only has memberships */}
@@ -121,7 +114,62 @@ const FamilyTreeVisualization: React.FC<FamilyTreeVisualizationProps> = ({
         </Card>
       )}
 
-      {/* Families you own - Tree View - MOVED TO TOP */}
+      {/* Member of families - Compact View */}
+      {memberFamilies.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="text-sm">
+              <Users className="h-3 w-3 mr-1" />
+              Member Of
+            </Badge>
+          </div>
+          <div className="space-y-3">
+            {memberFamilies.map(family => (
+              <Card 
+                key={family.id} 
+                className="hover:bg-accent/50 transition-colors cursor-pointer"
+                onClick={() => handleFamilyClick(family.id)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg mb-1">
+                        Member of {family.family_label}
+                      </h3>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Led by {getDisplayName(family)}
+                      </p>
+                      <div className="flex items-center gap-3 text-sm">
+                        <span className="flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          {family.member_count || 0} members
+                        </span>
+                        <Badge variant="outline" className="text-xs">
+                          Gen {family.generation_level}
+                        </Badge>
+                        {family.membershipDetails?.relationship_label && (
+                          <span className="text-muted-foreground">
+                            ({family.membershipDetails.relationship_label})
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="ml-4"
+                    >
+                      More Details
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Families you own - Tree View */}
       {ownedFamilies.length > 0 && (
         <Card>
           <CardHeader>
@@ -256,66 +304,6 @@ const FamilyTreeVisualization: React.FC<FamilyTreeVisualizationProps> = ({
             )}
           </CardContent>
         </Card>
-      )}
-
-      {/* Member of families - Compact View - MOVED TO BOTTOM */}
-      {memberFamilies.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="text-sm">
-              <Users className="h-3 w-3 mr-1" />
-              {memberFamilies.length === 1 
-                ? `Member of ${memberFamilies[0].family_label}` 
-                : 'Member Of'}
-            </Badge>
-          </div>
-          <div className="space-y-3">
-            {memberFamilies.map(family => {
-              console.log('🏠 [FamilyTreeVisualization] Rendering member family:', family.family_label);
-              return (
-                <Card 
-                  key={family.id} 
-                  className="hover:bg-accent/50 transition-colors cursor-pointer"
-                  onClick={() => handleFamilyClick(family.id)}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-lg mb-1">
-                          Member of {family.family_label}
-                        </h3>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Led by {getDisplayName(family)}
-                        </p>
-                        <div className="flex items-center gap-3 text-sm">
-                          <span className="flex items-center gap-1">
-                            <Users className="h-3 w-3" />
-                            {family.member_count || 0} members
-                          </span>
-                          <Badge variant="outline" className="text-xs">
-                            Gen {family.generation_level}
-                          </Badge>
-                          {family.membershipDetails?.relationship_label && (
-                            <span className="text-muted-foreground">
-                              ({family.membershipDetails.relationship_label})
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="ml-4"
-                      >
-                        More Details
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
       )}
     </div>
   );
