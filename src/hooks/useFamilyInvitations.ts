@@ -113,14 +113,15 @@ export const useFamilyInvitations = (familyUnitId?: string) => {
             created_by: user.id,
             first_name: firstName,
             last_name: lastName,
-            email: `minor-${Date.now()}@placeholder.local`, // Placeholder email for DB constraint
+            email: `minor-${Date.now()}@pending.family`, // Placeholder email for DB constraint
             relationship_label: invitationData.relationshipRole,
-            member_type: 'dependent',
-            status: 'accepted', // Directly accepted since no invitation needed
+            member_type: 'minor',
+            status: 'claimed', // Claimed = immediately part of family, parent retains control
             seed_data: {
               is_minor: true,
               has_email: false,
-              personal_message: invitationData.personalMessage
+              personal_message: invitationData.personalMessage,
+              added_without_email: true
             }
           });
 
@@ -129,7 +130,10 @@ export const useFamilyInvitations = (familyUnitId?: string) => {
           throw new Error(`Failed to add minor child: ${profileError.message}`);
         }
 
-        toast.success(`${invitationData.inviteeName || 'Minor child'} has been added to the family`);
+        toast.success(
+          `${invitationData.inviteeName || 'Minor child'} has been added to the family.`,
+          { description: 'You can transfer account ownership to them when ready.' }
+        );
         
         // Refresh invitations/profiles list
         setTimeout(() => fetchInvitations(), 1000);
