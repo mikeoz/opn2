@@ -37,24 +37,7 @@ export const FamilyManagement: React.FC = () => {
     }
   }, [selectedFamilyUnit]);
 
-  // Sort family units: user's primary family first, then by generation
-  const sortedFamilyUnits = [...familyUnits].sort((a, b) => {
-    // User's primary family (Gen 1, no parent, is owner) should always be first
-    const aIsPrimary = a.generation_level === 1 && !a.parent_family_unit_id && a.isOwner;
-    const bIsPrimary = b.generation_level === 1 && !b.parent_family_unit_id && b.isOwner;
-    
-    if (aIsPrimary && !bIsPrimary) return -1;
-    if (!aIsPrimary && bIsPrimary) return 1;
-    
-    // Prioritize owned families over member families
-    if (a.isOwner && !b.isOwner) return -1;
-    if (!a.isOwner && b.isOwner) return 1;
-    
-    // Otherwise sort by generation level
-    return a.generation_level - b.generation_level;
-  });
-
-  const groupedByGeneration = sortedFamilyUnits.reduce((acc, unit) => {
+  const groupedByGeneration = familyUnits.reduce((acc, unit) => {
     const gen = unit.generation_level;
     if (!acc[gen]) acc[gen] = [];
     acc[gen].push(unit);

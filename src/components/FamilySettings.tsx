@@ -7,7 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
-import { Settings, Users, Shield, Eye, EyeOff, AlertTriangle, Edit, X, Save } from 'lucide-react';
+import { Settings, Users, Shield, Eye, EyeOff, AlertTriangle } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -49,7 +49,6 @@ const FamilySettings: React.FC<FamilySettingsProps> = ({
   const { updateFamilyUnit, deactivateFamilyUnit } = useFamilyUnits();
   const [isUpdating, setIsUpdating] = useState(false);
   const [showDangerZone, setShowDangerZone] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
 
   const form = useForm<FamilySettingsFormData>({
     defaultValues: {
@@ -95,7 +94,6 @@ const FamilySettings: React.FC<FamilySettingsProps> = ({
       });
 
       if (success) {
-        setIsEditing(false);
         toast({
           title: "Settings updated",
           description: "Family unit settings have been saved successfully.",
@@ -111,11 +109,6 @@ const FamilySettings: React.FC<FamilySettingsProps> = ({
     } finally {
       setIsUpdating(false);
     }
-  };
-
-  const handleCancelEdit = () => {
-    form.reset();
-    setIsEditing(false);
   };
 
   const handleDeactivateFamily = async () => {
@@ -149,27 +142,15 @@ const FamilySettings: React.FC<FamilySettingsProps> = ({
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Settings className="h-5 w-5" />
-              Family Settings
-              {!isOwner && (
-                <Badge variant="outline" className="text-xs">
-                  View Only
-                </Badge>
-              )}
-            </CardTitle>
-            {isOwner && !isEditing && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsEditing(true)}
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Edit
-              </Button>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            Family Settings
+            {!isOwner && (
+              <Badge variant="outline" className="text-xs">
+                View Only
+              </Badge>
             )}
-          </div>
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -186,7 +167,7 @@ const FamilySettings: React.FC<FamilySettingsProps> = ({
                     <FormItem>
                       <FormLabel>Family Name</FormLabel>
                       <FormControl>
-                        <Input {...field} disabled={!isOwner || !isEditing} />
+                        <Input {...field} disabled={!isOwner} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -203,8 +184,7 @@ const FamilySettings: React.FC<FamilySettingsProps> = ({
                         <Textarea
                           placeholder="Describe your family unit..."
                           {...field}
-                          disabled={!isOwner || !isEditing}
-                          rows={3}
+                          disabled={!isOwner}
                         />
                       </FormControl>
                       <FormDescription>
@@ -241,7 +221,7 @@ const FamilySettings: React.FC<FamilySettingsProps> = ({
                           <Switch
                             checked={field.value}
                             onCheckedChange={field.onChange}
-                            disabled={!isOwner || !isEditing}
+                            disabled={!isOwner}
                           />
                         </FormControl>
                       </FormItem>
@@ -263,7 +243,7 @@ const FamilySettings: React.FC<FamilySettingsProps> = ({
                           <Switch
                             checked={field.value}
                             onCheckedChange={field.onChange}
-                            disabled={!isOwner || !isEditing}
+                            disabled={!isOwner}
                           />
                         </FormControl>
                       </FormItem>
@@ -285,7 +265,7 @@ const FamilySettings: React.FC<FamilySettingsProps> = ({
                           <Switch
                             checked={field.value}
                             onCheckedChange={field.onChange}
-                            disabled={!isOwner || !isEditing}
+                            disabled={!isOwner}
                           />
                         </FormControl>
                       </FormItem>
@@ -307,7 +287,7 @@ const FamilySettings: React.FC<FamilySettingsProps> = ({
                           <Switch
                             checked={field.value}
                             onCheckedChange={field.onChange}
-                            disabled={!isOwner || !isEditing}
+                            disabled={!isOwner}
                           />
                         </FormControl>
                       </FormItem>
@@ -341,7 +321,7 @@ const FamilySettings: React.FC<FamilySettingsProps> = ({
                           <Switch
                             checked={field.value}
                             onCheckedChange={field.onChange}
-                            disabled={!isOwner || !isEditing}
+                            disabled={!isOwner}
                           />
                         </FormControl>
                       </FormItem>
@@ -363,7 +343,7 @@ const FamilySettings: React.FC<FamilySettingsProps> = ({
                           <Switch
                             checked={field.value}
                             onCheckedChange={field.onChange}
-                            disabled={!isOwner || !isEditing}
+                            disabled={!isOwner}
                           />
                         </FormControl>
                       </FormItem>
@@ -385,7 +365,7 @@ const FamilySettings: React.FC<FamilySettingsProps> = ({
                           <Switch
                             checked={field.value}
                             onCheckedChange={field.onChange}
-                            disabled={!isOwner || !isEditing}
+                            disabled={!isOwner}
                           />
                         </FormControl>
                       </FormItem>
@@ -407,7 +387,7 @@ const FamilySettings: React.FC<FamilySettingsProps> = ({
                           <Switch
                             checked={field.value}
                             onCheckedChange={field.onChange}
-                            disabled={!isOwner || !isEditing}
+                            disabled={!isOwner}
                           />
                         </FormControl>
                       </FormItem>
@@ -416,21 +396,10 @@ const FamilySettings: React.FC<FamilySettingsProps> = ({
                 </div>
               </div>
 
-              {isOwner && isEditing && (
+              {isOwner && (
                 <div className="flex gap-3">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={handleCancelEdit}
-                    disabled={isUpdating}
-                    className="flex-1"
-                  >
-                    <X className="h-4 w-4 mr-2" />
-                    Cancel
-                  </Button>
                   <Button type="submit" disabled={isUpdating} className="flex-1">
-                    <Save className="h-4 w-4 mr-2" />
-                    {isUpdating ? 'Saving...' : 'Save Changes'}
+                    {isUpdating ? 'Saving...' : 'Save Settings'}
                   </Button>
                 </div>
               )}
