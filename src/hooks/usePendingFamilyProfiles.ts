@@ -115,7 +115,10 @@ export const usePendingFamilyProfiles = (familyUnitId?: string) => {
           relationship_label: profileData.relationshipLabel,
           generation_level: profileData.generationLevel,
           member_type: profileData.memberType,
-          seed_data: profileData.seedData || {}
+          status: profileData.memberType === 'minor' ? 'claimed' : 'pending',
+          seed_data: profileData.memberType === 'minor' 
+            ? { has_email: !!profileData.email && !profileData.email.includes('@pending.'), controlled_by_parent: true }
+            : (profileData.seedData || {})
         })
         .select()
         .single();
@@ -124,8 +127,13 @@ export const usePendingFamilyProfiles = (familyUnitId?: string) => {
 
       toast.success(
         profileData.memberType === 'minor' 
-          ? 'Minor child profile created. You retain control until ownership transfer.'
-          : 'Adult child profile created successfully.'
+          ? 'Minor child added to your family. Use "Transfer Ownership" when ready to transfer control.'
+          : 'Adult child profile created. Invitation email sent.',
+        {
+          description: profileData.memberType === 'minor'
+            ? `${profileData.firstName} is now visible in your family members list.`
+            : undefined
+        }
       );
       
       await fetchProfiles();

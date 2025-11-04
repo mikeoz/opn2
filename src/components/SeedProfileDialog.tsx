@@ -159,7 +159,7 @@ export const SeedProfileDialog: React.FC<SeedProfileDialogProps> = ({
         familyUnitId,
         firstName: minorFirstName,
         lastName: minorLastName,
-        email: minorEmail || `minor_${Date.now()}@pending.opn2.com`,
+        email: minorEmail || `minor-${Date.now()}@pending.family`,
         phone: minorPhone,
         relationshipLabel: minorRelationship,
         generationLevel,
