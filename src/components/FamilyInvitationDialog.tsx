@@ -133,7 +133,6 @@ export const FamilyInvitationDialog: React.FC<FamilyInvitationDialogProps> = ({
                 value={formData.inviteeEmail}
                 onChange={(e) => setFormData({ ...formData, inviteeEmail: e.target.value })}
                 required={!isMinorChild}
-                disabled={isMinorChild && !formData.inviteeEmail}
               />
               {isMinorChild && (
                 <p className="text-sm text-muted-foreground mt-1">
