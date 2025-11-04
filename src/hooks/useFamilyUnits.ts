@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -310,7 +310,7 @@ export const useFamilyUnits = () => {
     }
   };
 
-  const fetchFamilyMembers = async (trustAnchorUserId: string): Promise<FamilyMember[]> => {
+  const fetchFamilyMembers = useCallback(async (trustAnchorUserId: string): Promise<FamilyMember[]> => {
     try {
       const { data, error } = await supabase
         .from('organization_memberships')
@@ -340,7 +340,7 @@ export const useFamilyUnits = () => {
       toast.error('Failed to load family members');
       return [];
     }
-  };
+  }, []); // Empty deps - function doesn't depend on any external values
 
   useEffect(() => {
     if (!user) return;
