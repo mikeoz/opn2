@@ -4,6 +4,23 @@
 
 **URL**: https://lovable.dev/projects/550d9f96-560b-47ec-b177-abb37a954647
 
+## Docs
+
+Authoritative project docs live in `/docs`. Start here:
+
+- **Opn2 SPA Routing Spec — One-Pager (with snippets)**  
+  `docs/opn2-routing-spec-one-pager_with-snippets.md`
+
+- **Lessons Learned (engineering notes & postmortems)**  
+  `docs/Lessons_Learned.md`
+
+<!-- Add these links after you upload the files to /docs -->
+<!-- - PR Reviewer Checklist — Family Management  -->
+<!--   docs/opn2-pr-reviewer-checklist.md -->
+<!-- - AI_HRF-4 Task Spec (current iteration) -->
+<!--   docs/AI_HRF-4_Task_Spec_09NOV25.md -->
+
+
 ## How can I edit this code?
 
 There are several ways of editing your application.
