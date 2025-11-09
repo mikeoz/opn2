@@ -143,6 +143,89 @@ When implementing rings, borders, or similar visual feedback:
 
 ---
 
+### Lesson: Using Semantic Tokens Instead of Tailwind Default Colors (November 9, 2025)
+
+**Context:**  
+Following the fix to apply the highlight ring to the correct icon grid elements, the implementation used `ring-blue-500` from Tailwind's default palette. However, the Consulting Engineer's review identified that the project follows a semantic token design system.
+
+**Initial Implementation:**  
+All TabsTrigger components in the 7-icon navigation grid used `ring-blue-500`:
+```tsx
+className="... focus-visible:ring-blue-500 data-[state=active]:ring-blue-500 ..."
+```
+
+**Problem Encountered:**  
+While the ring worked visually, it violated the project's design system conventions:
+- The project uses semantic tokens (primary, secondary, muted, accent) defined in `index.css`
+- Direct color values (blue-500, red-500, etc.) break theming consistency
+- Future theme changes would require finding/replacing hardcoded colors
+
+**Root Cause Analysis:**  
+1. **Unstated Assumption:** Initial implementation assumed Tailwind's default palette was the standard approach
+2. **Design System Not Referenced:** Failed to check `index.css` and `tailwind.config.ts` for established color conventions
+3. **Missing Documentation:** Previous fix added blue-500 to the config without emphasizing the semantic-first principle
+
+**Solution:**  
+Replaced all instances of `ring-blue-500` with `ring-primary` semantic token:
+
+1. **Updated 7-Icon Navigation Grid** (lines 100-183 in FamilyManagement.tsx):
+   ```tsx
+   // Before:
+   className="... focus-visible:ring-blue-500 data-[state=active]:ring-blue-500 ..."
+   
+   // After:
+   className="... focus-visible:ring-primary data-[state=active]:ring-primary ..."
+   ```
+
+2. **Updated Overview TabsList** (lines 346-372 in FamilyManagement.tsx):
+   Same replacement for consistency across all tab instances
+
+**Key Takeaways:**
+
+1. **Design System First:** Always check `index.css` and `tailwind.config.ts` before choosing color tokens. The project's design system defines the available semantic tokens.
+
+2. **Semantic Tokens Enable Theming:** Using `ring-primary` instead of `ring-blue-500` allows:
+   - Brand color changes without code modifications
+   - Dark mode and theme variants
+   - Consistent visual identity across the application
+
+3. **Pre-flight Checklist:** Before implementing any visual feature:
+   - [ ] Review available semantic tokens in the design system
+   - [ ] Use semantic tokens (primary, secondary, muted, accent, etc.)
+   - [ ] Only use specific colors if explicitly required by design spec
+   - [ ] Document any deviations from semantic tokens
+
+4. **Consulting Engineer's Pre-flight Box:** The CE report included an "Implementation Pre-flight" checklist that should be followed for all future work:
+   - **Color tokens:** This project uses semantic tokens. Replace palette examples with `ring-primary`.
+   - **Top icon grid is authoritative:** Implement as controlled Tabs bound to ?tab=.
+   - **Visual rule:** Always show `data-[state=active]:ring-*` on active trigger plus `focus-visible:ring-*`.
+   - **Containers:** No overflow-hidden on trigger's immediate parent; use p-3 and rounded-2xl.
+
+5. **Standard Ring Class Pattern:**
+   ```tsx
+   // Active state (persistent location indicator)
+   data-[state=active]:ring-2 
+   data-[state=active]:ring-offset-2 
+   data-[state=active]:ring-primary 
+   data-[state=active]:ring-offset-background
+   data-[state=active]:bg-transparent 
+   data-[state=active]:shadow-none
+   
+   // Focus state (keyboard accessibility)
+   focus-visible:outline-none 
+   focus-visible:ring-2 
+   focus-visible:ring-offset-2 
+   focus-visible:ring-primary
+   ```
+
+**Files Modified:**
+- `src/components/FamilyManagement.tsx` - Replaced `ring-blue-500` with `ring-primary` in both TabsList sections (lines 100-183 and 346-372)
+
+**Design Principle Established:**  
+"Use semantic tokens from the design system for all color-related styling. This ensures brand consistency, enables theming, and reduces technical debt. Only deviate when explicitly required by the design specification."
+
+---
+
 ## Authentication & User Management
 
 _[Future lessons to be documented here]_
