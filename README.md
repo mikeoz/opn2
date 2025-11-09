@@ -9,10 +9,11 @@
 Authoritative project docs live in `/docs`. Start here:
 
 - **Opn2 SPA Routing Spec — One-Pager (with snippets)**  
-  `docs/opn2-routing-spec-one-pager_with-snippets.md`
+  [docs/opn2-routing-spec-one-pager_with-snippets.md](./docs/opn2-routing-spec-one-pager_with-snippets.md)
 
 - **Lessons Learned (engineering notes & postmortems)**  
-  `docs/Lessons_Learned.md`
+  [docs/Lessons_Learned.md](./docs/Lessons_Learned.md)
+
 
 <!-- Add these links after you upload the files to /docs -->
 <!-- - PR Reviewer Checklist — Family Management  -->
