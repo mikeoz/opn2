@@ -57,6 +57,92 @@ We chose to add the blue palette rather than using `ring-primary` because:
 
 ---
 
+### Lesson: Ring Appearing on Wrong Element (November 9, 2025)
+
+**Context:**  
+After successfully implementing the persistent highlight ring in `tabs.tsx`, users reported that the ring appeared around the "Pending (0)" button in the Family Invitations section instead of around the icon navigation grid at the top of the Family Management page.
+
+**Initial Implementation:**  
+Added ring styling classes globally to the `TabsTrigger` component in `src/components/ui/tabs.tsx`, expecting all tab triggers across the application to display the ring when active.
+
+**Problem Encountered:**  
+The highlight ring appeared on an unintended element (Family Invitations "Pending" tab) but not on the target element (icon grid navigation). This proved the CSS was working but being applied to the wrong component instance.
+
+**Root Cause Analysis:**  
+
+1. **Multiple TabsTrigger Instances:** The application uses `TabsTrigger` components in multiple locations:
+   - Icon grid navigation in FamilyManagement.tsx (intended target)
+   - Status tabs in FamilyInvitationsManager.tsx ("Pending", "Accepted", "Expired", "Cancelled")
+
+2. **Global Styling Affected All Instances:** Modifying the base `TabsTrigger` component affected ALL instances, not just the intended icon grid.
+
+3. **Insufficient Component-Specific Styling:** The icon grid's `TabsList` container had:
+   - Minimal padding (`p-1`) insufficient for ring-offset-2 to be visible
+   - Small gap (`gap-1`) causing cramped layout
+   - TabsTrigger elements lacked `rounded-xl p-2` needed for proper ring display
+
+4. **Container Clipping:** The minimal padding meant the `ring-offset-2` was being cut off by the container boundaries.
+
+**Solution:**  
+Applied the Consulting Engineer's recommendations to fix the icon grid specifically in `FamilyManagement.tsx`:
+
+1. **Updated TabsList Container** (line 99):
+   ```tsx
+   // Before:
+   <TabsList className="grid grid-cols-3 md:grid-cols-7 h-auto gap-1 p-1">
+   
+   // After:
+   <TabsList className="grid grid-cols-3 md:grid-cols-7 gap-3 rounded-2xl bg-muted/40 p-3">
+   ```
+   - Increased padding from `p-1` to `p-3` to prevent ring clipping
+   - Increased gap from `gap-1` to `gap-3` for better visual spacing
+   - Added rounded corners and subtle background for visual structure
+
+2. **Updated Each TabsTrigger** (lines 102-176 for all 7 triggers):
+   ```tsx
+   <TabsTrigger 
+     value="overview" 
+     className="rounded-xl p-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 data-[state=active]:ring-2 data-[state=active]:ring-offset-2 data-[state=active]:ring-blue-500 data-[state=active]:ring-offset-background data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+   >
+   ```
+   
+   Key classes added:
+   - `rounded-xl p-2` - Proper clickable area and ring visibility
+   - `data-[state=active]:ring-offset-background` - Ring visibility against any background
+   - `data-[state=active]:bg-transparent` - Neutralize shadcn's default background
+   - `data-[state=active]:shadow-none` - Remove conflicting shadow effects
+
+**Key Takeaways:**
+
+1. **Component-Specific Styling Required:** Global UI component changes affect all instances. When specific visual behavior is needed, apply targeted styles at the usage site, not just in the base component.
+
+2. **Container Padding is Critical:** Ring offsets require adequate parent padding. A `ring-offset-2` needs at least 3px of container padding to be fully visible.
+
+3. **Override Default Styles Explicitly:** shadcn components have opinionated defaults. Custom active states must explicitly override with `bg-transparent` and `shadow-none`.
+
+4. **Test All Component Instances:** When modifying shared UI components, identify and test ALL instances across the application to ensure intended behavior in each context.
+
+5. **Value of External Review:** The Consulting Engineer's analysis identified that the CSS was working correctly but applied to the wrong element - something internal testing had missed.
+
+**Implementation Checklist for Future Visual Indicators:**
+
+When implementing rings, borders, or similar visual feedback:
+- [ ] Identify ALL instances of the target component across the codebase
+- [ ] Verify parent containers have adequate padding (minimum 3px for offset effects)
+- [ ] Apply appropriate border-radius (`rounded-xl`) to elements receiving the effect
+- [ ] Include both accessibility (focus-visible) and persistent (data-state) states
+- [ ] Explicitly neutralize conflicting framework defaults
+- [ ] Check for `overflow-hidden` containers that might clip effects
+- [ ] Test on actual target elements, not just similar components
+
+**Files Modified:**
+- `src/components/FamilyManagement.tsx` - Updated icon grid TabsList and all 7 TabsTrigger components with proper ring styling and container padding
+
+**Design Principle Established:**  
+"Wayfinding indicators must be visible and unambiguous. When adding visual feedback to UI components, always consider container constraints, conflicting defaults, and all component instances across the application."
+
+---
+
 ## Authentication & User Management
 
 _[Future lessons to be documented here]_

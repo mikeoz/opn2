@@ -96,10 +96,13 @@ export const FamilyManagement: React.FC = () => {
         // Individual Family Management View
         <TooltipProvider>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="grid grid-cols-3 md:grid-cols-7 h-auto gap-1 p-1">
+            <TabsList className="grid grid-cols-3 md:grid-cols-7 gap-3 rounded-2xl bg-muted/40 p-3">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger value="overview" className="text-xs md:text-sm py-2 data-[state=active]:ring-2 data-[state=active]:ring-offset-2 data-[state=active]:ring-blue-500 data-[state=active]:shadow-none data-[state=active]:bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500">
+                  <TabsTrigger 
+                    value="overview" 
+                    className="rounded-xl p-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 data-[state=active]:ring-2 data-[state=active]:ring-offset-2 data-[state=active]:ring-blue-500 data-[state=active]:ring-offset-background data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                  >
                     <TreePine className="h-4 w-4 md:mr-2" />
                     <span className="hidden md:inline">Overview</span>
                   </TabsTrigger>
@@ -108,7 +111,10 @@ export const FamilyManagement: React.FC = () => {
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger value="members" className="text-xs md:text-sm py-2 data-[state=active]:ring-2 data-[state=active]:ring-offset-2 data-[state=active]:ring-blue-500 data-[state=active]:shadow-none data-[state=active]:bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500">
+                  <TabsTrigger 
+                    value="members" 
+                    className="rounded-xl p-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 data-[state=active]:ring-2 data-[state=active]:ring-offset-2 data-[state=active]:ring-blue-500 data-[state=active]:ring-offset-background data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                  >
                     <Users className="h-4 w-4 md:mr-2" />
                     <span className="hidden md:inline">Members</span>
                   </TabsTrigger>
@@ -117,7 +123,10 @@ export const FamilyManagement: React.FC = () => {
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger value="relationships" className="text-xs md:text-sm py-2 data-[state=active]:ring-2 data-[state=active]:ring-offset-2 data-[state=active]:ring-blue-500 data-[state=active]:shadow-none data-[state=active]:bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500">
+                  <TabsTrigger 
+                    value="relationships" 
+                    className="rounded-xl p-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 data-[state=active]:ring-2 data-[state=active]:ring-offset-2 data-[state=active]:ring-blue-500 data-[state=active]:ring-offset-background data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                  >
                     <Users className="h-4 w-4 md:mr-2" />
                     <span className="hidden md:inline">Relationships</span>
                   </TabsTrigger>
@@ -126,7 +135,10 @@ export const FamilyManagement: React.FC = () => {
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger value="cards" className="text-xs md:text-sm py-2 data-[state=active]:ring-2 data-[state=active]:ring-offset-2 data-[state=active]:ring-blue-500 data-[state=active]:shadow-none data-[state=active]:bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500">
+                  <TabsTrigger 
+                    value="cards" 
+                    className="rounded-xl p-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 data-[state=active]:ring-2 data-[state=active]:ring-offset-2 data-[state=active]:ring-blue-500 data-[state=active]:ring-offset-background data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                  >
                     <Settings className="h-4 w-4 md:mr-2" />
                     <span className="hidden md:inline">Cards</span>
                   </TabsTrigger>
@@ -135,7 +147,10 @@ export const FamilyManagement: React.FC = () => {
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger value="settings" className="text-xs md:text-sm py-2 data-[state=active]:ring-2 data-[state=active]:ring-offset-2 data-[state=active]:ring-blue-500 data-[state=active]:shadow-none data-[state=active]:bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500">
+                  <TabsTrigger 
+                    value="settings" 
+                    className="rounded-xl p-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 data-[state=active]:ring-2 data-[state=active]:ring-offset-2 data-[state=active]:ring-blue-500 data-[state=active]:ring-offset-background data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                  >
                     <Settings className="h-4 w-4 md:mr-2" />
                     <span className="hidden md:inline">Settings</span>
                   </TabsTrigger>
@@ -144,7 +159,10 @@ export const FamilyManagement: React.FC = () => {
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger value="invitations" className="text-xs md:text-sm py-2 data-[state=active]:ring-2 data-[state=active]:ring-offset-2 data-[state=active]:ring-blue-500 data-[state=active]:shadow-none data-[state=active]:bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500">
+                  <TabsTrigger 
+                    value="invitations" 
+                    className="rounded-xl p-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 data-[state=active]:ring-2 data-[state=active]:ring-offset-2 data-[state=active]:ring-blue-500 data-[state=active]:ring-offset-background data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                  >
                     <Users className="h-4 w-4 md:mr-2" />
                     <span className="hidden md:inline">Invites</span>
                   </TabsTrigger>
@@ -153,7 +171,10 @@ export const FamilyManagement: React.FC = () => {
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger value="tree" className="text-xs md:text-sm py-2 data-[state=active]:ring-2 data-[state=active]:ring-offset-2 data-[state=active]:ring-blue-500 data-[state=active]:shadow-none data-[state=active]:bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500">
+                  <TabsTrigger 
+                    value="tree" 
+                    className="rounded-xl p-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 data-[state=active]:ring-2 data-[state=active]:ring-offset-2 data-[state=active]:ring-blue-500 data-[state=active]:ring-offset-background data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                  >
                     <TreePine className="h-4 w-4 md:mr-2" />
                     <span className="hidden md:inline">Tree</span>
                   </TabsTrigger>
