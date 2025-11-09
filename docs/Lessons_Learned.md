@@ -226,6 +226,155 @@ Replaced all instances of `ring-blue-500` with `ring-primary` semantic token:
 
 ---
 
+### Lesson: URL-Based Tab Routing for Family Management (November 9, 2025)
+
+**Context:**  
+Following successful implementation of the semantic token highlight ring (AI-HRF-3), the Consulting Engineer identified that tab navigation still lacked URL query parameter integration. This was documented as AI-HRF-4, requiring restoration of the 7-icon grid with proper `?tab=` routing for deep linking and browser history support.
+
+**Initial Implementation:**  
+The FamilyManagement component used `useState` to manage active tab state:
+```tsx
+const [activeTab, setActiveTab] = useState('overview');
+<Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+```
+
+**Problem Encountered:**  
+1. Navigation state lost on browser Back/Forward button
+2. Cannot deep-link to specific tabs (e.g., `/family-management?tab=members`)
+3. Poor user experience for "you are here" wayfinding - tab state not reflected in URL
+4. Tab names inconsistent between selected family view and overview
+
+**Root Cause Analysis:**  
+1. **Missing URL Integration:** Component used local React state instead of URL query parameters
+2. **No useSearchParams:** react-router-dom's `useSearchParams` hook not imported or utilized
+3. **Tab Name Inconsistency:** Selected family view used "overview, members, relationships, cards, settings, invitations, tree" while CE spec required "tree, generation, members, relationship-cards, family-cards, settings, invitations"
+4. **No Deep Link Support:** URL changes didn't trigger tab changes, and tab changes didn't update URL
+
+**Solution Implemented:**  
+
+1. **Added URL Query Parameter Support:**
+   ```tsx
+   import { useSearchParams } from 'react-router-dom';
+   
+   const [searchParams, setSearchParams] = useSearchParams();
+   const activeTab = searchParams.get('tab') || (selectedFamilyUnit ? 'info' : 'tree');
+   
+   const handleTabChange = (newTab: string) => {
+     setSearchParams({ tab: newTab });
+   };
+   
+   <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
+   ```
+
+2. **Standardized 7-Icon Navigation Grid:**
+   Both selected family view AND overview list view now use identical 7-icon grids:
+   - tree (TreePine icon)
+   - generation (UserCircle icon)  
+   - members (Users icon)
+   - relationship-cards (IdCard icon)
+   - family-cards (IdCard icon)
+   - settings (Settings icon)
+   - invitations (Users icon)
+
+3. **Consistent Semantic Token Implementation:**
+   All TabsTrigger components use the complete ring styling pattern:
+   ```tsx
+   className="rounded-xl p-2 transition 
+     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary 
+     data-[state=active]:ring-2 data-[state=active]:ring-offset-2 data-[state=active]:ring-primary 
+     data-[state=active]:ring-offset-background data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+   ```
+
+4. **Added Accessibility Improvements:**
+   - `aria-label` attributes on all TabsTrigger components
+   - Tooltips for mobile icon-only views  
+   - Preserved keyboard navigation with focus-visible rings
+
+5. **Tab Content Placeholders:**
+   Added placeholder content for all 7 tabs in overview mode with user-friendly messaging to select a family.
+
+**Key Takeaways:**
+
+1. **Always Use URL State for Navigation:** Tab navigation should be URL-driven to enable:
+   - Deep linking to specific views
+   - Browser Back/Forward support
+   - Shareable links to specific application states
+   - Better SEO and analytics tracking
+
+2. **Consistent Component Patterns:** When a component exists in multiple contexts (selected vs. overview), maintain identical navigation structures to avoid user confusion.
+
+3. **Pre-flight Checklists Prevent Rework:** The Consulting Engineer's checklist in AI_HRF-4_Task_Spec_09NOV25 outlined all requirements upfront:
+   - ✅ Semantic color tokens (`ring-primary`)
+   - ✅ Controlled Tabs bound to `?tab=` query parameter  
+   - ✅ All 7 required data-state classes on TabsTrigger
+   - ✅ A11y preserved with focus-visible rings and aria-labels
+   - ✅ Proper padding and container styling to prevent clipping
+   - ✅ No `overflow-hidden` on parent elements
+
+4. **Coordinated Development Model:** The `/docs` directory serves as authoritative control:
+   - Action Instruction (AI) defines business objectives
+   - Task analysis documents root causes
+   - Specification provides implementation details  
+   - QA checklist gates approval
+   - Lessons Learned captures institutional knowledge
+
+5. **Testing Requirements:** Per 04b-11_Opnli_PE_Reviewer_Checklist_09NOV25:
+   - Verify all 7 icons visible on every view (desktop + mobile)
+   - Test URL `?tab=` updates and deep links work correctly
+   - Confirm active icon shows persistent ring (not clipped)
+   - Validate Browser Back/Forward restores correct view and ring
+   - Verify focus-visible ring on keyboard navigation
+   - Screenshot each tab route for QA documentation
+
+**Files Modified:**
+- `src/components/FamilyManagement.tsx` - Added `useSearchParams` integration, standardized 7-icon grid across both views, added URL-driven tab routing
+- `docs/Lessons_Learned.md` - Documented URL routing pattern and CE pre-flight process
+
+**Design Principles Established:**
+
+1. **Navigation State in URL:** Application navigation state belongs in the URL, not in component-local state. This enables better UX, sharing, and debugging.
+
+2. **Semantic Tokens Are Mandatory:** Never use hardcoded colors (`ring-blue-500`). Always use design system tokens (`ring-primary`) for:
+   - Theme consistency across the application
+   - Brand customization without code changes  
+   - Dark mode support without additional styling
+   - Future-proof design system evolution
+
+3. **Consistent Visual Language:** The same navigation structure should appear identically across all application contexts where it's used.
+
+**Standard Implementation Pattern for URL-Based Tabs:**
+
+```tsx
+// 1. Import useSearchParams
+import { useSearchParams } from 'react-router-dom';
+
+// 2. Get and set search params
+const [searchParams, setSearchParams] = useSearchParams();
+const activeTab = searchParams.get('tab') || 'default-tab';
+
+// 3. Create handler to update URL
+const handleTabChange = (newTab: string) => {
+  setSearchParams({ tab: newTab });
+};
+
+// 4. Bind to Tabs component
+<Tabs value={activeTab} onValueChange={handleTabChange}>
+  <TabsList>
+    <TabsTrigger value="tab1" aria-label="Tab 1">Tab 1</TabsTrigger>
+    <TabsTrigger value="tab2" aria-label="Tab 2">Tab 2</TabsTrigger>
+  </TabsList>
+  <TabsContent value="tab1">Content 1</TabsContent>
+  <TabsContent value="tab2">Content 2</TabsContent>
+</Tabs>
+```
+
+**Reference Documents:**
+- AI_HRF-4_Task_09NOV25 (Consulting Engineer's analysis)
+- AI_HRF-4_Task_Spec_09NOV25 (Implementation specification)
+- 04b-11_Opnli_PE_Reviewer_Checklist_09NOV25 (QA validation checklist)
+
+---
+
 ## Authentication & User Management
 
 _[Future lessons to be documented here]_
