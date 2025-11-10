@@ -8,8 +8,10 @@ Use this catalog to find the latest, in-force documents.
 ---
 
 ## 1) Start Here
-- **[FIRST PRINCIPLES]**
+- **[FIRST PRINCIPLES STATEMENT]**
   'https://github.com/mikeoz/opn2/blob/main/docs/Opn2_First_Principles_Statement.md'
+- **[FIRST PRINCIPLES FRAMEWORK]**
+  'opn2_first_principles_framework_v1.md'
 - **[SPEC] Opn2 SPA Routing Spec — One-Pager (with snippets)**  
   `opn2-routing-spec-one-pager_with-snippets.md`
 - **[Glossary]**
