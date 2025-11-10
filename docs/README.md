@@ -12,6 +12,8 @@ Use this catalog to find the latest, in-force documents.
   'https://github.com/mikeoz/opn2/blob/main/docs/Opn2_First_Principles_Statement.md'
 - **[SPEC] Opn2 SPA Routing Spec — One-Pager (with snippets)**  
   `opn2-routing-spec-one-pager_with-snippets.md`
+- **[Glossary]**
+  'https://github.com/mikeoz/opn2/blob/main/docs/Opn2_Glossary_v1.md'
 - **[LL] Lessons Learned (engineering notes & postmortems)**  
   `Lessons_Learned.md`
 
