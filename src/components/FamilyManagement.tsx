@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Users, Plus, Settings, TreePine, ArrowLeft, Crown, Pencil, IdCard, UserCircle } from 'lucide-react';
+import { Users, Plus, Settings, TreePine, ArrowLeft, Crown, Pencil } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFamilyUnits, FamilyUnit } from '@/hooks/useFamilyUnits';
 import { FamilyUnitCard } from './FamilyUnitCard';
@@ -17,24 +17,25 @@ import FamilySettings from './FamilySettings';
 import { FamilyInvitationsManager } from './FamilyInvitationsManager';
 import { FamilyTreeTab } from './FamilyTreeTab';
 import { RelationshipCardsView } from './RelationshipCardsView';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 export const FamilyManagement: React.FC = () => {
   const { user } = useAuth();
   const { familyUnits, loading, updateFamilyUnit, deactivateFamilyUnit } = useFamilyUnits();
-  const [searchParams, setSearchParams] = useSearchParams();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingFamilyUnit, setEditingFamilyUnit] = useState<FamilyUnit | null>(null);
   const [selectedFamilyUnit, setSelectedFamilyUnit] = useState<string | null>(null);
-  
-  // Get activeTab from URL query parameter, default to 'tree' for overview or 'info' for selected family
-  const activeTab = searchParams.get('tab') || (selectedFamilyUnit ? 'info' : 'tree');
+  const [activeTab, setActiveTab] = useState('overview');
 
-  // Handle tab change - update URL query parameter
-  const handleTabChange = (newTab: string) => {
-    setSearchParams({ tab: newTab });
-  };
+  // Reset activeTab when switching between family views
+  useEffect(() => {
+    if (selectedFamilyUnit) {
+      setActiveTab('overview');
+    } else {
+      setActiveTab('tree');
+    }
+  }, [selectedFamilyUnit]);
 
   const groupedByGeneration = familyUnits.reduce((acc, unit) => {
     const gen = unit.generation_level;
@@ -94,39 +95,24 @@ export const FamilyManagement: React.FC = () => {
       {selectedFamily ? (
         // Individual Family Management View
         <TooltipProvider>
-          <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
             <TabsList className="grid grid-cols-3 md:grid-cols-7 gap-3 rounded-2xl bg-muted/40 p-3">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <TabsTrigger 
-                    value="tree"
-                    aria-label="Tree"
+                    value="overview" 
                     className="rounded-xl p-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary data-[state=active]:ring-2 data-[state=active]:ring-offset-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-background data-[state=active]:bg-transparent data-[state=active]:shadow-none"
                   >
                     <TreePine className="h-4 w-4 md:mr-2" />
-                    <span className="hidden md:inline">Tree</span>
+                    <span className="hidden md:inline">Overview</span>
                   </TabsTrigger>
                 </TooltipTrigger>
-                <TooltipContent className="md:hidden">Tree</TooltipContent>
+                <TooltipContent className="md:hidden">Overview</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <TabsTrigger 
-                    value="generation"
-                    aria-label="Generation"
-                    className="rounded-xl p-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary data-[state=active]:ring-2 data-[state=active]:ring-offset-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-background data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-                  >
-                    <UserCircle className="h-4 w-4 md:mr-2" />
-                    <span className="hidden md:inline">Generation</span>
-                  </TabsTrigger>
-                </TooltipTrigger>
-                <TooltipContent className="md:hidden">Generation</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <TabsTrigger 
-                    value="members"
-                    aria-label="Members"
+                    value="members" 
                     className="rounded-xl p-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary data-[state=active]:ring-2 data-[state=active]:ring-offset-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-background data-[state=active]:bg-transparent data-[state=active]:shadow-none"
                   >
                     <Users className="h-4 w-4 md:mr-2" />
@@ -138,34 +124,31 @@ export const FamilyManagement: React.FC = () => {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <TabsTrigger 
-                    value="relationship-cards"
-                    aria-label="Relationship Cards"
+                    value="relationships" 
                     className="rounded-xl p-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary data-[state=active]:ring-2 data-[state=active]:ring-offset-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-background data-[state=active]:bg-transparent data-[state=active]:shadow-none"
                   >
-                    <IdCard className="h-4 w-4 md:mr-2" />
-                    <span className="hidden md:inline">R-Cards</span>
+                    <Users className="h-4 w-4 md:mr-2" />
+                    <span className="hidden md:inline">Relationships</span>
                   </TabsTrigger>
                 </TooltipTrigger>
-                <TooltipContent className="md:hidden">Relationship Cards</TooltipContent>
+                <TooltipContent className="md:hidden">Relationships</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <TabsTrigger 
-                    value="family-cards"
-                    aria-label="Family Cards"
+                    value="cards" 
                     className="rounded-xl p-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary data-[state=active]:ring-2 data-[state=active]:ring-offset-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-background data-[state=active]:bg-transparent data-[state=active]:shadow-none"
                   >
-                    <IdCard className="h-4 w-4 md:mr-2" />
-                    <span className="hidden md:inline">F-Cards</span>
+                    <Settings className="h-4 w-4 md:mr-2" />
+                    <span className="hidden md:inline">Cards</span>
                   </TabsTrigger>
                 </TooltipTrigger>
-                <TooltipContent className="md:hidden">Family Cards</TooltipContent>
+                <TooltipContent className="md:hidden">Cards</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <TabsTrigger 
-                    value="settings"
-                    aria-label="Settings"
+                    value="settings" 
                     className="rounded-xl p-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary data-[state=active]:ring-2 data-[state=active]:ring-offset-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-background data-[state=active]:bg-transparent data-[state=active]:shadow-none"
                   >
                     <Settings className="h-4 w-4 md:mr-2" />
@@ -177,8 +160,7 @@ export const FamilyManagement: React.FC = () => {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <TabsTrigger 
-                    value="invitations"
-                    aria-label="Invitations"
+                    value="invitations" 
                     className="rounded-xl p-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary data-[state=active]:ring-2 data-[state=active]:ring-offset-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-background data-[state=active]:bg-transparent data-[state=active]:shadow-none"
                   >
                     <Users className="h-4 w-4 md:mr-2" />
@@ -187,17 +169,21 @@ export const FamilyManagement: React.FC = () => {
                 </TooltipTrigger>
                 <TooltipContent className="md:hidden">Invitations</TooltipContent>
               </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <TabsTrigger 
+                    value="tree" 
+                    className="rounded-xl p-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary data-[state=active]:ring-2 data-[state=active]:ring-offset-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-background data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                  >
+                    <TreePine className="h-4 w-4 md:mr-2" />
+                    <span className="hidden md:inline">Tree</span>
+                  </TabsTrigger>
+                </TooltipTrigger>
+                <TooltipContent className="md:hidden">Tree</TooltipContent>
+              </Tooltip>
             </TabsList>
 
-          <TabsContent value="tree">
-            <FamilyTreeTab
-              familyUnitId={selectedFamily.id}
-              familyUnitLabel={selectedFamily.family_label}
-              isOwner={selectedFamily.trust_anchor_user_id === user?.id}
-            />
-          </TabsContent>
-
-          <TabsContent value="generation" className="space-y-6">
+          <TabsContent value="overview" className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
               <Card>
                 <CardHeader>
@@ -297,11 +283,11 @@ export const FamilyManagement: React.FC = () => {
             />
           </TabsContent>
 
-          <TabsContent value="relationship-cards">
+          <TabsContent value="relationships">
             <RelationshipCardsView />
           </TabsContent>
 
-          <TabsContent value="family-cards">
+          <TabsContent value="cards">
             <div className="space-y-6">
               <Card>
                 <CardHeader>
@@ -328,13 +314,6 @@ export const FamilyManagement: React.FC = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="settings">
-            <FamilySettings
-              familyUnit={selectedFamily}
-              isOwner={isOwnerOfSelectedFamily}
-            />
-          </TabsContent>
-
           <TabsContent value="invitations">
             <FamilyInvitationsManager
               familyUnitId={selectedFamily.id}
@@ -342,103 +321,54 @@ export const FamilyManagement: React.FC = () => {
               isOwner={selectedFamily.trust_anchor_user_id === user?.id}
             />
           </TabsContent>
+
+          <TabsContent value="tree">
+            <FamilyTreeTab
+              familyUnitId={selectedFamily.id}
+              familyUnitLabel={selectedFamily.family_label}
+              isOwner={selectedFamily.trust_anchor_user_id === user?.id}
+            />
+          </TabsContent>
+
+          <TabsContent value="settings">
+            <FamilySettings
+              familyUnit={selectedFamily}
+              isOwner={isOwnerOfSelectedFamily}
+            />
+          </TabsContent>
           </Tabs>
         </TooltipProvider>
       ) : (
         // Family Overview/List View
         <TooltipProvider>
-          <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
-            <TabsList className="grid grid-cols-3 md:grid-cols-7 gap-3 rounded-2xl bg-muted/40 p-3">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+            <TabsList className="grid grid-cols-3 h-auto gap-1 p-1">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger 
-                    value="tree"
-                    aria-label="Tree"
-                    className="rounded-xl p-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary data-[state=active]:ring-2 data-[state=active]:ring-offset-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-background data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-                  >
+                  <TabsTrigger value="tree" className="text-xs md:text-sm py-2 data-[state=active]:ring-2 data-[state=active]:ring-offset-2 data-[state=active]:ring-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary">
                     <TreePine className="h-4 w-4 md:mr-2" />
-                    <span className="hidden md:inline">Tree</span>
+                    <span className="hidden md:inline">Family Tree</span>
                   </TabsTrigger>
                 </TooltipTrigger>
-                <TooltipContent className="md:hidden">Tree</TooltipContent>
+                <TooltipContent className="md:hidden">Family Tree</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger 
-                    value="generation"
-                    aria-label="Generation"
-                    className="rounded-xl p-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary data-[state=active]:ring-2 data-[state=active]:ring-offset-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-background data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-                  >
-                    <UserCircle className="h-4 w-4 md:mr-2" />
-                    <span className="hidden md:inline">Generation</span>
-                  </TabsTrigger>
-                </TooltipTrigger>
-                <TooltipContent className="md:hidden">Generation</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <TabsTrigger 
-                    value="members"
-                    aria-label="Members"
-                    className="rounded-xl p-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary data-[state=active]:ring-2 data-[state=active]:ring-offset-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-background data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-                  >
+                  <TabsTrigger value="overview" className="text-xs md:text-sm py-2 data-[state=active]:ring-2 data-[state=active]:ring-offset-2 data-[state=active]:ring-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary">
                     <Users className="h-4 w-4 md:mr-2" />
-                    <span className="hidden md:inline">Members</span>
+                    <span className="hidden md:inline">Generation View</span>
                   </TabsTrigger>
                 </TooltipTrigger>
-                <TooltipContent className="md:hidden">Members</TooltipContent>
+                <TooltipContent className="md:hidden">Generation View</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <TabsTrigger 
-                    value="relationship-cards"
-                    aria-label="Relationship Cards"
-                    className="rounded-xl p-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary data-[state=active]:ring-2 data-[state=active]:ring-offset-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-background data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-                  >
-                    <IdCard className="h-4 w-4 md:mr-2" />
-                    <span className="hidden md:inline">R-Cards</span>
-                  </TabsTrigger>
-                </TooltipTrigger>
-                <TooltipContent className="md:hidden">Relationship Cards</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <TabsTrigger 
-                    value="family-cards"
-                    aria-label="Family Cards"
-                    className="rounded-xl p-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary data-[state=active]:ring-2 data-[state=active]:ring-offset-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-background data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-                  >
-                    <IdCard className="h-4 w-4 md:mr-2" />
-                    <span className="hidden md:inline">F-Cards</span>
-                  </TabsTrigger>
-                </TooltipTrigger>
-                <TooltipContent className="md:hidden">Family Cards</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <TabsTrigger 
-                    value="settings"
-                    aria-label="Settings"
-                    className="rounded-xl p-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary data-[state=active]:ring-2 data-[state=active]:ring-offset-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-background data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-                  >
-                    <Settings className="h-4 w-4 md:mr-2" />
-                    <span className="hidden md:inline">Settings</span>
-                  </TabsTrigger>
-                </TooltipTrigger>
-                <TooltipContent className="md:hidden">Settings</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <TabsTrigger 
-                    value="invitations"
-                    aria-label="Invitations"
-                    className="rounded-xl p-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary data-[state=active]:ring-2 data-[state=active]:ring-offset-2 data-[state=active]:ring-primary data-[state=active]:ring-offset-background data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-                  >
+                  <TabsTrigger value="members" className="text-xs md:text-sm py-2 data-[state=active]:ring-2 data-[state=active]:ring-offset-2 data-[state=active]:ring-primary data-[state=active]:shadow-none data-[state=active]:bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary">
                     <Users className="h-4 w-4 md:mr-2" />
-                    <span className="hidden md:inline">Invites</span>
+                    <span className="hidden md:inline">All Members</span>
                   </TabsTrigger>
                 </TooltipTrigger>
-                <TooltipContent className="md:hidden">Invitations</TooltipContent>
+                <TooltipContent className="md:hidden">All Members</TooltipContent>
               </Tooltip>
             </TabsList>
 
@@ -451,7 +381,7 @@ export const FamilyManagement: React.FC = () => {
             />
           </TabsContent>
 
-          <TabsContent value="generation" className="space-y-6">
+          <TabsContent value="overview" className="space-y-6">
             {familyUnits.length === 0 ? (
               <Card>
                 <CardContent className="flex flex-col items-center justify-center py-12">
@@ -610,54 +540,6 @@ export const FamilyManagement: React.FC = () => {
 
           <TabsContent value="members" className="space-y-4">
             <FamilyMembersView familyUnits={familyUnits} />
-          </TabsContent>
-
-          <TabsContent value="relationship-cards" className="space-y-4">
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <IdCard className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Select a family to view relationship cards</h3>
-                <p className="text-muted-foreground text-center">
-                  Choose a family from the list above to manage relationship cards
-                </p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="family-cards" className="space-y-4">
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <IdCard className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Select a family to view family cards</h3>
-                <p className="text-muted-foreground text-center">
-                  Choose a family from the list above to manage family cards
-                </p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="settings" className="space-y-4">
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <Settings className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Select a family to view settings</h3>
-                <p className="text-muted-foreground text-center">
-                  Choose a family from the list above to manage settings
-                </p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="invitations" className="space-y-4">
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <Users className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Select a family to manage invitations</h3>
-                <p className="text-muted-foreground text-center">
-                  Choose a family from the list above to send and manage invitations
-                </p>
-              </CardContent>
-            </Card>
           </TabsContent>
           </Tabs>
         </TooltipProvider>
