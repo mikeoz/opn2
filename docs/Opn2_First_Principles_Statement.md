@@ -45,6 +45,6 @@ This discipline will apply to human and AI contributors alike. Every team member
 ## How This Will Be Used
 
 This document lives in `/docs/` and will be referenced:
-- At the start of each HRF (High-Resolution Feature) work cycle.
+- At the start of each work cycle.
 - In all implementation specs (`_Task_Spec.md`), as the basis for architecture.
 - In QA gates and postmortem reviews.
